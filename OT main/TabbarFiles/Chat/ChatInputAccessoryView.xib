@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB"
+          version="3.0"
+          toolsVersion="24128"
+          targetRuntime="iOS.CocoaTouch"
+          propertyAccessControl="none"
+          useAutolayout="YES"
+          useTraitCollections="YES">
+  <dependencies>
+    <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24063"/>
+    <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+    <capability name="System colors in document resources" minToolsVersion="11.0"/>
+  </dependencies>
+
+  <objects>
+    <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+    <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+
+    <!-- Top-level view: must match your UIView subclass and module -->
+    <view contentMode="scaleToFill" id="ROOT" customClass="ChatInputAccessoryView" customModule="Screens1" customModuleProvider="target">
+      <rect key="frame" x="0.0" y="0.0" width="428" height="56"/>
+      <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+      <subviews>
+        <textField placeholder="Message" opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="TEXTFIELD">
+          <rect key="frame" x="12" y="10" width="320" height="36"/>
+          <fontDescription key="fontDescription" type="system" pointSize="16"/>
+        </textField>
+
+        <button opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="SEND">
+          <rect key="frame" x="344" y="10" width="72" height="36"/>
+          <state key="normal" title="Send"/>
+        </button>
+      </subviews>
+
+      <!-- Wire the outlets on the custom view to the subviews -->
+      <connections>
+        <outlet property="textField" destination="TEXTFIELD" id="outlet-textfield"/>
+        <outlet property="sendButton" destination="SEND" id="outlet-sendbutton"/>
+      </connections>
+
+      <color key="backgroundColor" systemColor="systemGray6Color"/>
+      <constraints>
+        <!-- TEXTFIELD constraints -->
+        <constraint firstItem="TEXTFIELD" firstAttribute="leading" secondItem="ROOT" secondAttribute="leading" constant="12" id="c1"/>
+        <constraint firstItem="TEXTFIELD" firstAttribute="centerY" secondItem="ROOT" secondAttribute="centerY" id="c2"/>
+        <constraint firstItem="TEXTFIELD" firstAttribute="trailing" secondItem="SEND" secondAttribute="leading" constant="-8" id="c3"/>
+        <constraint firstItem="TEXTFIELD" firstAttribute="height" constant="36" id="c4"/>
+
+        <!-- SEND constraints -->
+        <constraint firstItem="SEND" firstAttribute="trailing" secondItem="ROOT" secondAttribute="trailing" constant="-12" id="c5"/>
+        <constraint firstItem="SEND" firstAttribute="centerY" secondItem="ROOT" secondAttribute="centerY" id="c6"/>
+        <constraint firstItem="SEND" firstAttribute="height" constant="36" id="c7"/>
+        <constraint firstItem="SEND" firstAttribute="width" constant="72" id="c8"/>
+      </constraints>
+    </view>
+  </objects>
+</document>

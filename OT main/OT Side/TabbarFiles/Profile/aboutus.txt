@@ -1,0 +1,17 @@
+TheraSync is an early-stage prototype application designed to support
+Occupational Therapists and individuals with Autism Spectrum Disorder (ASD)
+through a structured, intuitive, and highly personalized therapeutic workflow.
+
+Our mission is to bridge the communication and coordination gap between
+therapists, caregivers, and patients by providing a modern, reliable, and
+easy-to-use digital platform. TheraSync focuses on simplifying assessment
+processes, recording developmental progress, and helping therapists deliver
+more effective and consistent therapy sessions.
+
+As we continue developing TheraSync, we aim to integrate advanced tools,
+data-driven insights, and accessible interfaces to make therapy smoother,
+more engaging, and more meaningful for every user involved.
+
+TheraSync is in its prototypical phase, and we value all feedback as we build
+towards a comprehensive, full-fledged occupational therapy companion platform.
+

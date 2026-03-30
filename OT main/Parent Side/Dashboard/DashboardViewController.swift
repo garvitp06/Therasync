@@ -23,27 +23,34 @@ final class DashboardViewController: UIViewController {
         return l
     }()
 
-    private let progressArc = ProgressArcView()
+    private let quoteContainerView: UIView = {
+        let v = UIView()
+        v.backgroundColor = UIColor.secondarySystemBackground.withAlphaComponent(0.3)
+        v.layer.cornerRadius = 16
+        return v
+    }()
 
-    private let percentLabel: UILabel = {
+    private let quoteTextLabel: UILabel = {
         let l = UILabel()
-        l.text = "33%"
-        l.font = .systemFont(ofSize: 28, weight: .bold)
+        l.font = .italicSystemFont(ofSize: 18)
+        l.numberOfLines = 0
         l.textAlignment = .center
-        // DYNAMIC: Black -> White
         l.textColor = .dynamicLabel
         return l
     }()
-
-    private let progressTextLabel: UILabel = {
-        let l = UILabel()
-        l.text = "Progress Complete"
-        l.font = .systemFont(ofSize: 14, weight: .medium)
-        l.textAlignment = .center
-        // DYNAMIC: Uses secondary style for sub-headings
-        l.textColor = .secondaryLabel
-        return l
-    }()
+    
+    private let parentQuotes: [String] = [
+        "\"There is no such thing as a perfect parent. So just be a real one.\" - Sue Atkins",
+        "\"Children are not things to be molded, but are people to be unfolded.\" - Jess Lair",
+        "\"The way we talk to our children becomes their inner voice.\" - Peggy O'Mara",
+        "\"To be in your children's memories tomorrow, you have to be in their lives today.\" - Barbara Johnson",
+        "\"There is no single effort more radical in its potential for saving the world than a transformation of the way we raise our children.\" - Marianne Williamson",
+        "\"Behind every young child who believes in himself is a parent who believed first.\" - Matthew Jacobson",
+        "\"Your kids require you most of all to love them for who they are, not to spend your whole time trying to correct them.\" - Bill Ayers",
+        "\"The best inheritance a parent can give his children is a few minutes of his time each day.\" - O.A. Battista",
+        "\"We may not be able to prepare the future for our children, but we can at least prepare our children for the future.\" - Franklin D. Roosevelt",
+        "\"Encourage your child to have muddy, roly-poly, grubby, active, loud, and noisy adventures.\" - Penny Whitehouse"
+    ]
 
     private let quickAccessLabel: UILabel = {
         let l = UILabel()
@@ -98,7 +105,10 @@ final class DashboardViewController: UIViewController {
         setupLayout()
         setupActions()
         verifyLinkingAndLoadData()
-        progressArc.progress = 0.33
+        
+        if let randomQuote = parentQuotes.randomElement() {
+            quoteTextLabel.text = randomQuote
+        }
         
         // Listen for the theme toggle to refresh the Arc if necessary
         NotificationCenter.default.addObserver(self, selector: #selector(applyTheme), name: NSNotification.Name("AppThemeChanged"), object: nil)
@@ -316,12 +326,15 @@ final class DashboardViewController: UIViewController {
             let grid = makeGrid()
 
             [
-                titleLabel, subtitleLabel, progressArc,
-                percentLabel, progressTextLabel, quickAccessLabel, grid
+                titleLabel, subtitleLabel, quoteContainerView,
+                quickAccessLabel, grid
             ].forEach {
                 $0.translatesAutoresizingMaskIntoConstraints = false
                 view.addSubview($0)
             }
+            
+            quoteContainerView.addSubview(quoteTextLabel)
+            quoteTextLabel.translatesAutoresizingMaskIntoConstraints = false
 
             NSLayoutConstraint.activate([
                 // --- ADJUSTMENT START ---
@@ -334,18 +347,16 @@ final class DashboardViewController: UIViewController {
                 subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 2),
                 subtitleLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
 
-                progressArc.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: 20),
-                progressArc.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-                progressArc.widthAnchor.constraint(equalToConstant: 260),
-                progressArc.heightAnchor.constraint(equalToConstant: 140),
+                quoteContainerView.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: 20),
+                quoteContainerView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+                quoteContainerView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+                
+                quoteTextLabel.topAnchor.constraint(equalTo: quoteContainerView.topAnchor, constant: 16),
+                quoteTextLabel.leadingAnchor.constraint(equalTo: quoteContainerView.leadingAnchor, constant: 16),
+                quoteTextLabel.trailingAnchor.constraint(equalTo: quoteContainerView.trailingAnchor, constant: -16),
+                quoteTextLabel.bottomAnchor.constraint(equalTo: quoteContainerView.bottomAnchor, constant: -16),
 
-                percentLabel.centerXAnchor.constraint(equalTo: progressArc.centerXAnchor),
-                percentLabel.topAnchor.constraint(equalTo: progressArc.bottomAnchor, constant: -34),
-
-                progressTextLabel.centerXAnchor.constraint(equalTo: percentLabel.centerXAnchor),
-                progressTextLabel.topAnchor.constraint(equalTo: percentLabel.bottomAnchor, constant: 4),
-
-                quickAccessLabel.topAnchor.constraint(equalTo: progressTextLabel.bottomAnchor, constant: 20),
+                quickAccessLabel.topAnchor.constraint(equalTo: quoteContainerView.bottomAnchor, constant: 30),
                 quickAccessLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
 
                 grid.topAnchor.constraint(equalTo: quickAccessLabel.bottomAnchor, constant: 14),

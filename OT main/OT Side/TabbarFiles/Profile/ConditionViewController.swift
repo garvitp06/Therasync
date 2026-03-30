@@ -5,7 +5,6 @@ final class ConditionViewController: UIViewController {
     // MARK: - Tab Bar Hiding Fix
     override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
-        // Ensures the floating tab bar is hidden when this screen is active
         self.hidesBottomBarWhenPushed = true
     }
     
@@ -13,41 +12,19 @@ final class ConditionViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
 
-    // MARK: - UI Components
-    
-    // The Container Card
-    private let cardView: UIView = {
-        let view = UIView()
-        view.backgroundColor = .white
-        view.layer.cornerRadius = 24
-        // Elevation shadows
-        view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOpacity = 0.12
-        view.layer.shadowOffset = CGSize(width: 0, height: 8)
-        view.layer.shadowRadius = 15
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
-    }()
-
     private let textView: UITextView = {
         let tv = UITextView()
         tv.isEditable = false
         tv.alwaysBounceVertical = true
         tv.font = .systemFont(ofSize: 16, weight: .regular)
-        tv.backgroundColor = .clear // Transparent to use card's white background
-        tv.textColor = .darkGray
-        
-        // JUSTIFIED ALIGNMENT
+        tv.backgroundColor = .white
+        tv.textColor = .darkGray 
         tv.textAlignment = .justified
-        
-        // ENABLE HYPHENATION (via LayoutManager)
         tv.layoutManager.hyphenationFactor = 1.0
-        
         tv.showsVerticalScrollIndicator = true
-        tv.textContainerInset = UIEdgeInsets(top: 20, left: 15, bottom: 20, right: 15)
+        tv.textContainerInset = UIEdgeInsets(top: 20, left: 20, bottom: 20, right: 20)
         tv.translatesAutoresizingMaskIntoConstraints = false
         tv.isScrollEnabled = false
-        
         return tv
     }()
 
@@ -57,6 +34,7 @@ final class ConditionViewController: UIViewController {
         textView.isScrollEnabled = true
         textView.setContentOffset(.zero, animated: false) // Force jump to top
     }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -73,7 +51,6 @@ final class ConditionViewController: UIViewController {
     }
 
     // MARK: - Setup
-    
     private func setupGradientBackground() {
         let gradientView = GradientView(frame: view.bounds)
         gradientView.translatesAutoresizingMaskIntoConstraints = false
@@ -92,9 +69,9 @@ final class ConditionViewController: UIViewController {
         title = "Terms & Conditions"
         
         let appearance = UINavigationBarAppearance()
-        appearance.configureWithTransparentBackground()
-        // Using black title for better readability on light gradients
-        appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = .white
+        appearance.titleTextAttributes = [.foregroundColor: UIColor.black]
         
         navigationController?.navigationBar.standardAppearance = appearance
         navigationController?.navigationBar.scrollEdgeAppearance = appearance
@@ -108,23 +85,15 @@ final class ConditionViewController: UIViewController {
     }
 
     private func setupLayout() {
-        view.addSubview(cardView)
-        cardView.addSubview(textView)
+        view.addSubview(textView)
         
         let guide = view.safeAreaLayoutGuide
 
         NSLayoutConstraint.activate([
-            // Card positioning with 20pt margin
-            cardView.topAnchor.constraint(equalTo: guide.topAnchor, constant: 20),
-            cardView.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 20),
-            cardView.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -20),
-            cardView.bottomAnchor.constraint(equalTo: guide.bottomAnchor, constant: -30),
-
-            // TextView fills the card
-            textView.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 5),
-            textView.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 5),
-            textView.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -5),
-            textView.bottomAnchor.constraint(equalTo: cardView.bottomAnchor, constant: -5)
+            textView.topAnchor.constraint(equalTo: guide.topAnchor),
+            textView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            textView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            textView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
     }
 

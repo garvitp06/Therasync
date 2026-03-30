@@ -56,7 +56,7 @@ class AppointmentViewController: UIViewController,
         
         // Native add button
         let addBtn = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(didTapAdd))
-        addBtn.tintColor = .
+        addBtn.tintColor = .white
         
         navigationItem.rightBarButtonItem = addBtn
         

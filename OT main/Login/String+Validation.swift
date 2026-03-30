@@ -4,12 +4,7 @@
 //
 //  Created by Alishri Poddar on 09/11/25.
 //
-//
-//  String+Validation.swift
-//  TheraSync
-//
-//  Created by Alishri Poddar on 09/11/25.
-//
+
 
 import Foundation
 

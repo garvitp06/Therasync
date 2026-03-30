@@ -16,44 +16,6 @@ class addPatient: UIViewController {
     private var selectedImage: UIImage?
 
     // MARK: - UI Components
-    private let customNavBar: UIView = {
-        let view = UIView()
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
-    }()
-
-    private let titleLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Add Patient"
-        label.font = .systemFont(ofSize: 18, weight: .bold)
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-
-    private let closeButton: UIButton = {
-        let btn = UIButton(type: .system)
-        btn.setImage(UIImage(systemName: "xmark"), for: .normal)
-        btn.tintColor = .black
-        btn.backgroundColor = .white
-        btn.layer.cornerRadius = 20
-        btn.translatesAutoresizingMaskIntoConstraints = false
-        // Shadow for the button
-        btn.layer.shadowColor = UIColor.black.cgColor
-        btn.layer.shadowOpacity = 0.1
-        btn.layer.shadowOffset = CGSize(width: 0, height: 2)
-        return btn
-    }()
-
-    private let saveButton: UIButton = {
-        let btn = UIButton(type: .system)
-        btn.setImage(UIImage(systemName: "checkmark"), for: .normal)
-        btn.tintColor = .white
-        btn.backgroundColor = .systemBlue
-        btn.layer.cornerRadius = 20
-        btn.translatesAutoresizingMaskIntoConstraints = false
-        return btn
-    }()
-
     private let scrollView: UIScrollView = {
         let sv = UIScrollView()
         sv.translatesAutoresizingMaskIntoConstraints = false
@@ -67,13 +29,12 @@ class addPatient: UIViewController {
         return view
     }()
 
-    // FIXED: Perfectly circular profile image
     private let profileImageView: UIImageView = {
         let iv = UIImageView()
         iv.image = UIImage(systemName: "person.circle.fill")
         iv.tintColor = .systemGray4
         iv.contentMode = .scaleAspectFill
-        iv.layer.cornerRadius = 60 // Half of 120
+        iv.layer.cornerRadius = 60
         iv.clipsToBounds = true
         iv.isUserInteractionEnabled = true
         iv.translatesAutoresizingMaskIntoConstraints = false
@@ -103,42 +64,45 @@ class addPatient: UIViewController {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        navigationController?.setNavigationBarHidden(true, animated: false)
+        self.title = "Add Patient"
+        view.backgroundColor = UIColor.systemGroupedBackground
+        
+        navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .close, target: self, action: #selector(didTapClose))
+        navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Save", style: .done, target: self, action: #selector(didTapSave))
+        
         setupUI()
         setupGenderPicker()
         setupKeyboardObservers()
         datePicker.maximumDate = Date()
         
         let fields: [UITextField] = [
-                firstNameTextField, lastNameTextField, genderTextField,
-                bloodGroupTextField, addressTextField, parentNameTextField,
-                parentContactTextField, referredByTextField, existingDiagnosisTextField,
-                existingMedicationTextField
-            ]
+            firstNameTextField, lastNameTextField, genderTextField,
+            bloodGroupTextField, addressTextField, parentNameTextField,
+            parentContactTextField, referredByTextField, existingDiagnosisTextField,
+            existingMedicationTextField
+        ]
             
-            fields.forEach { tf in
-                tf.delegate = self
-                tf.returnKeyType = .next
-            }
+        fields.forEach { tf in
+            tf.delegate = self
+            tf.returnKeyType = .next
+        }
             
-            // The last field should show "Done"
-            existingMedicationTextField.returnKeyType = .done
+        existingMedicationTextField.returnKeyType = .done
             
-            // Tap to dismiss keyboard
-            let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
-            tap.cancelsTouchesInView = false
-            view.addGestureRecognizer(tap)
+        let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        tap.cancelsTouchesInView = false
+        view.addGestureRecognizer(tap)
     }
+
     @objc private func dismissKeyboard() {
         view.endEditing(true)
     }
+    
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         switch textField {
         case firstNameTextField:
             lastNameTextField.becomeFirstResponder()
         case lastNameTextField:
-            // Skip DOB (Picker) and Gender (Picker) to go to Blood Group
-            // or you can set them as first responders if they are text fields
             bloodGroupTextField.becomeFirstResponder()
         case bloodGroupTextField:
             addressTextField.becomeFirstResponder()
@@ -154,29 +118,22 @@ class addPatient: UIViewController {
             existingMedicationTextField.becomeFirstResponder()
         case existingMedicationTextField:
             textField.resignFirstResponder()
-            didTapSave() // Auto-trigger save on "Done"
+            didTapSave()
         default:
             textField.resignFirstResponder()
         }
         return true
     }
+    
     private func setupUI() {
-        view.backgroundColor = UIColor(red: 0.94, green: 0.94, blue: 0.94, alpha: 1.0)
-        
-        view.addSubview(customNavBar)
-        customNavBar.addSubview(closeButton)
-        customNavBar.addSubview(titleLabel)
-        customNavBar.addSubview(saveButton)
-        
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
 
-        // Cards layout
         let nameCard = addPatient.makeCard(fields: [firstNameTextField, lastNameTextField])
         
         let dobLabel = UILabel()
         dobLabel.text = "DOB"
-        dobLabel.font = .systemFont(ofSize: 16, weight: .medium)
+        dobLabel.font = .systemFont(ofSize: 16, weight: .regular)
         let dobRow = UIStackView(arrangedSubviews: [dobLabel, datePicker])
         dobRow.distribution = .equalSpacing
         let dobCard = addPatient.makeCard(fields: [dobRow])
@@ -187,38 +144,13 @@ class addPatient: UIViewController {
 
         let mainStack = UIStackView(arrangedSubviews: [profileImageView, nameCard, dobCard, genderCard, infoCard, medicalCard])
         mainStack.axis = .vertical
-        mainStack.alignment = .center // Ensures the profile pic doesn't stretch
-        mainStack.spacing = 15
+        mainStack.alignment = .center
+        mainStack.spacing = 20 // Native forms space out groups slightly more
         mainStack.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(mainStack)
         
-        saveButton.addSubview(saveSpinner)
         NSLayoutConstraint.activate([
-            saveSpinner.centerXAnchor.constraint(equalTo: saveButton.centerXAnchor),
-            saveSpinner.centerYAnchor.constraint(equalTo: saveButton.centerYAnchor)
-        ])
-        NSLayoutConstraint.activate([
-            // Custom Nav Bar
-            customNavBar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            customNavBar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            customNavBar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            customNavBar.heightAnchor.constraint(equalToConstant: 60),
-
-            closeButton.leadingAnchor.constraint(equalTo: customNavBar.leadingAnchor, constant: 20),
-            closeButton.centerYAnchor.constraint(equalTo: customNavBar.centerYAnchor),
-            closeButton.widthAnchor.constraint(equalToConstant: 40),
-            closeButton.heightAnchor.constraint(equalToConstant: 40),
-
-            titleLabel.centerXAnchor.constraint(equalTo: customNavBar.centerXAnchor),
-            titleLabel.centerYAnchor.constraint(equalTo: customNavBar.centerYAnchor),
-
-            saveButton.trailingAnchor.constraint(equalTo: customNavBar.trailingAnchor, constant: -20),
-            saveButton.centerYAnchor.constraint(equalTo: customNavBar.centerYAnchor),
-            saveButton.widthAnchor.constraint(equalToConstant: 40),
-            saveButton.heightAnchor.constraint(equalToConstant: 40),
-
-            // ScrollView
-            scrollView.topAnchor.constraint(equalTo: customNavBar.bottomAnchor),
+            scrollView.topAnchor.constraint(equalTo: view.topAnchor),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
@@ -229,11 +161,9 @@ class addPatient: UIViewController {
             contentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
             contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
 
-            // FIXED: Image Constraints (Explicitly 120x120)
             profileImageView.heightAnchor.constraint(equalToConstant: 120),
             profileImageView.widthAnchor.constraint(equalToConstant: 120),
             
-            // Cards need to be full width
             nameCard.leadingAnchor.constraint(equalTo: mainStack.leadingAnchor),
             nameCard.trailingAnchor.constraint(equalTo: mainStack.trailingAnchor),
             dobCard.leadingAnchor.constraint(equalTo: mainStack.leadingAnchor),
@@ -245,26 +175,28 @@ class addPatient: UIViewController {
             medicalCard.leadingAnchor.constraint(equalTo: mainStack.leadingAnchor),
             medicalCard.trailingAnchor.constraint(equalTo: mainStack.trailingAnchor),
 
-            mainStack.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10),
+            mainStack.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 16),
             mainStack.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             mainStack.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             mainStack.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -20)
         ])
 
-        closeButton.addTarget(self, action: #selector(didTapClose), for: .touchUpInside)
-        saveButton.addTarget(self, action: #selector(didTapSave), for: .touchUpInside)
         profileImageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(didTapPhoto)))
     }
-    private let saveSpinner: UIActivityIndicatorView = {
-        let spinner = UIActivityIndicatorView(style: .medium)
-        spinner.color = .white // White to match the button text/icon
-        spinner.hidesWhenStopped = true
-        spinner.translatesAutoresizingMaskIntoConstraints = false
-        return spinner
-    }()
-    // MARK: - Handlers
+
+    private func setLoading(_ isLoading: Bool) {
+        if isLoading {
+            let spinner = UIActivityIndicatorView(style: .medium)
+            spinner.startAnimating()
+            navigationItem.rightBarButtonItem = UIBarButtonItem(customView: spinner)
+            view.isUserInteractionEnabled = false
+        } else {
+            navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Save", style: .done, target: self, action: #selector(didTapSave))
+            view.isUserInteractionEnabled = true
+        }
+    }
+
     @objc func didTapSave() {
-        // 1. Validate Fields
         guard let fName = validateField(firstNameTextField, fieldName: "First Name"),
               let lName = validateField(lastNameTextField, fieldName: "Last Name"),
               let gender = validateField(genderTextField, fieldName: "Gender"),
@@ -277,13 +209,11 @@ class addPatient: UIViewController {
               let med = validateField(existingMedicationTextField, fieldName: "Medication")
         else { return }
 
-        // basic validation
         if !validBloodGroups.contains(blood) {
             showAlert(title: "Invalid Input", message: "Invalid Blood Group")
             return
         }
         
-        // 2. Start Loading State
         setLoading(true)
 
         let randomID = String(format: "%05d", Int.random(in: 10000...99999))
@@ -292,17 +222,14 @@ class addPatient: UIViewController {
             do {
                 var finalImageURL: String? = nil
                 
-                // --- STEP A: UPLOAD TO STORAGE ---
                 if let img = selectedImage, let data = img.jpegData(compressionQuality: 0.5) {
                     let fileName = "\(UUID().uuidString).jpg"
                     let filePath = "profiles/\(fileName)"
                     
-                    // Upload to 'patient-photos' bucket
                     try await supabase.storage
                         .from("patient-photos")
                         .upload(path: filePath, file: data, options: .init(contentType: "image/jpeg"))
                     
-                    // Get Public URL
                     let publicURL = try supabase.storage
                         .from("patient-photos")
                         .getPublicURL(path: filePath)
@@ -310,7 +237,6 @@ class addPatient: UIViewController {
                     finalImageURL = publicURL.absoluteString
                 }
 
-                // --- STEP B: SAVE TO DATABASE ---
                 let patient = Patient(
                     firstName: fName,
                     lastName: lName,
@@ -323,7 +249,7 @@ class addPatient: UIViewController {
                     referredBy: ref,
                     diagnosis: diag,
                     medication: med,
-                    profileImage: nil, // Note: We don't store binary in DB
+                    profileImage: nil,
                     imageURL: finalImageURL,
                     parentID: nil,
                     patientID: randomID
@@ -343,18 +269,6 @@ class addPatient: UIViewController {
                     print("❌ Supabase Error: \(error)")
                 }
             }
-        }
-    }
-    // Helper to toggle button state
-    private func setLoading(_ isLoading: Bool) {
-        if isLoading {
-            saveSpinner.startAnimating()
-            saveButton.setImage(nil, for: .normal) // Hide checkmark
-            saveButton.isEnabled = false // Prevent double tap
-        } else {
-            saveSpinner.stopAnimating()
-            saveButton.setImage(UIImage(systemName: "checkmark"), for: .normal) // Show checkmark
-            saveButton.isEnabled = true
         }
     }
 
@@ -441,8 +355,8 @@ extension addPatient {
 
     static func makeCard(fields: [UIView]) -> UIView {
         let card = UIView()
-        card.backgroundColor = .white
-        card.layer.cornerRadius = 22
+        card.backgroundColor = .secondarySystemGroupedBackground
+        card.layer.cornerRadius = 10
         card.translatesAutoresizingMaskIntoConstraints = false
         
         let stack = UIStackView(arrangedSubviews: [])
@@ -454,18 +368,18 @@ extension addPatient {
             stack.addArrangedSubview(field)
             if index < fields.count - 1 {
                 let line = UIView()
-                line.backgroundColor = UIColor.systemGray5
+                line.backgroundColor = UIColor.separator
                 line.translatesAutoresizingMaskIntoConstraints = false
-                line.heightAnchor.constraint(equalToConstant: 1).isActive = true
+                line.heightAnchor.constraint(equalToConstant: 0.5).isActive = true
                 stack.addArrangedSubview(line)
             }
         }
         
         NSLayoutConstraint.activate([
-            stack.topAnchor.constraint(equalTo: card.topAnchor, constant: 8),
-            stack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 20),
-            stack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -20),
-            stack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -8)
+            stack.topAnchor.constraint(equalTo: card.topAnchor, constant: 4),
+            stack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 16),
+            stack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -16),
+            stack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -4)
         ])
         return card
     }

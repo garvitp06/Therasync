@@ -23,21 +23,7 @@ class AppointmentViewController: UIViewController,
     // MARK: - UI Elements
     private var customCalendar: OTCalendarView!
 
-    private let titleLabel: UILabel = {
-        let lbl = UILabel()
-        lbl.text = "Appointments"
-        lbl.font = .systemFont(ofSize: 34, weight: .bold)
-        lbl.textColor = .white
-        return lbl
-    }()
-
-    private let addButton: UIButton = {
-        let btn = UIButton(type: .system)
-        let config = UIImage.SymbolConfiguration(pointSize: 22, weight: .medium)
-        btn.setImage(UIImage(systemName: "plus", withConfiguration: config), for: .normal)
-        btn.tintColor = .white
-        return btn
-    }()
+    // ✅ titleLabel and addButton REMOVED — replaced by native nav bar
 
     // ✅ Dropdown filter button
     private lazy var filterButton: UIButton = {
@@ -64,6 +50,7 @@ class AppointmentViewController: UIViewController,
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupNavBar()   // ✅ Configure native nav bar
         setupUI()
         setupFilterMenu()
         updateFilterMenuTitle()
@@ -71,8 +58,40 @@ class AppointmentViewController: UIViewController,
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        navigationController?.setNavigationBarHidden(true, animated: animated)
+        // ✅ Show the nav bar (was previously hidden)
+        navigationController?.setNavigationBarHidden(false, animated: animated)
         fetchAppointments()
+    }
+
+    // MARK: - ✅ Native Nav Bar Setup
+    private func setupNavBar() {
+        // Large title "Appointments" in white
+        title = "Appointments"
+        navigationController?.navigationBar.prefersLargeTitles = true
+        navigationItem.largeTitleDisplayMode = .always
+
+        // Transparent appearance so the gradient background shows through
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithTransparentBackground()
+        appearance.largeTitleTextAttributes = [
+            .foregroundColor: UIColor.white,
+            .font: UIFont.systemFont(ofSize: 34, weight: .bold)
+        ]
+        appearance.titleTextAttributes = [
+            .foregroundColor: UIColor.white
+        ]
+
+        navigationController?.navigationBar.standardAppearance = appearance
+        navigationController?.navigationBar.scrollEdgeAppearance = appearance
+        navigationController?.navigationBar.compactAppearance = appearance
+        navigationController?.navigationBar.tintColor = .white  // Makes the + icon white
+
+        // ✅ Native system "+" bar button item
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            barButtonSystemItem: .add,
+            target: self,
+            action: #selector(didTapAdd)
+        )
     }
 
     // MARK: - Fetching Logic
@@ -338,8 +357,7 @@ class AppointmentViewController: UIViewController,
         gradient.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         view.insertSubview(gradient, at: 0)
 
-        view.addSubview(titleLabel)
-        view.addSubview(addButton)
+        // ✅ titleLabel and addButton removed — nav bar handles both now
         view.addSubview(filterButton)
 
         customCalendar = OTCalendarView()
@@ -350,20 +368,12 @@ class AppointmentViewController: UIViewController,
         tableView.dataSource = self
         view.addSubview(tableView)
 
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        addButton.translatesAutoresizingMaskIntoConstraints = false
         customCalendar.translatesAutoresizingMaskIntoConstraints = false
         tableView.translatesAutoresizingMaskIntoConstraints = false
 
         NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
-            titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-
-            addButton.centerYAnchor.constraint(equalTo: titleLabel.centerYAnchor),
-            addButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-
-            // ✅ dropdown below title
-            filterButton.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 8),
+            // ✅ filterButton now anchors directly under the safe area (nav bar handles the title)
+            filterButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
             filterButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
 
             customCalendar.topAnchor.constraint(equalTo: filterButton.bottomAnchor, constant: 12),
@@ -376,7 +386,5 @@ class AppointmentViewController: UIViewController,
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
-
-        addButton.addTarget(self, action: #selector(didTapAdd), for: .touchUpInside)
     }
 }

@@ -23,6 +23,7 @@ class AppointmentViewController: UIViewController,
     // MARK: - UI Elements
     private var customCalendar: OTCalendarView!
 
+<<<<<<< HEAD
     // ✅ titleLabel and addButton REMOVED — replaced by native nav bar
 
     // ✅ Dropdown filter button
@@ -36,6 +37,21 @@ class AppointmentViewController: UIViewController,
         btn.contentEdgeInsets = UIEdgeInsets(top: 6, left: 12, bottom: 6, right: 12)
         btn.translatesAutoresizingMaskIntoConstraints = false
         return btn
+=======
+    // ✅ Segmented control
+    private lazy var segmentedControl: UISegmentedControl = {
+        let items = ["Selected Day", "Upcoming"]
+        let sc = UISegmentedControl(items: items)
+        sc.selectedSegmentIndex = 0
+        sc.addTarget(self, action: #selector(segmentChanged(_:)), for: .valueChanged)
+        sc.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Native iOS Segment styling suitable for a dark/gradient background
+        sc.selectedSegmentTintColor = .white
+        sc.setTitleTextAttributes([.foregroundColor: UIColor.black], for: .selected)
+        sc.setTitleTextAttributes([.foregroundColor: UIColor.white], for: .normal)
+        return sc
+>>>>>>> main
     }()
 
     private let tableView: UITableView = {
@@ -50,16 +66,44 @@ class AppointmentViewController: UIViewController,
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
+<<<<<<< HEAD
         setupNavBar()   // ✅ Configure native nav bar
+=======
+        
+        self.title = "Appointments"
+        navigationItem.largeTitleDisplayMode = .always
+        
+        // Native add button
+        let addBtn = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(didTapAdd))
+        addBtn.tintColor = .white
+        navigationItem.rightBarButtonItem = addBtn
+        
+        setupNativeNavBar()
+>>>>>>> main
         setupUI()
-        setupFilterMenu()
-        updateFilterMenuTitle()
+    }
+
+    private func setupNativeNavBar() {
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithTransparentBackground()
+        appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
+        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.white]
+        
+        navigationController?.navigationBar.standardAppearance = appearance
+        navigationController?.navigationBar.scrollEdgeAppearance = appearance
+        navigationController?.navigationBar.compactAppearance = appearance
+        navigationController?.navigationBar.tintColor = .white
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+<<<<<<< HEAD
         // ✅ Show the nav bar (was previously hidden)
         navigationController?.setNavigationBarHidden(false, animated: animated)
+=======
+        navigationController?.setNavigationBarHidden(false, animated: animated)
+        navigationController?.navigationBar.prefersLargeTitles = true
+>>>>>>> main
         fetchAppointments()
     }
 
@@ -132,6 +176,7 @@ class AppointmentViewController: UIViewController,
 
                 await MainActor.run {
                     self.appointments = fetchedAppointments
+                    self.customCalendar.appointmentDates = fetchedAppointments.map { $0.date }
                     self.applyFilter()
                 }
 
@@ -193,7 +238,7 @@ class AppointmentViewController: UIViewController,
 
         // ✅ Automatically show Selected Day when user taps calendar
         filterMode = .selectedDay
-        updateFilterMenuTitle()
+        segmentedControl.selectedSegmentIndex = 0
         applyFilter()
     }
 
@@ -217,44 +262,13 @@ class AppointmentViewController: UIViewController,
         present(nav, animated: true)
     }
 
-    // MARK: - Dropdown Menu
-    private func setupFilterMenu() {
-
-        let selectedDayAction = UIAction(
-            title: "Selected Day",
-            image: UIImage(systemName: "calendar")
-        ) { [weak self] _ in
-            guard let self else { return }
-            self.filterMode = .selectedDay
-            self.updateFilterMenuTitle()
-            self.applyFilter()
+    @objc private func segmentChanged(_ sender: UISegmentedControl) {
+        if sender.selectedSegmentIndex == 0 {
+            filterMode = .selectedDay
+        } else {
+            filterMode = .upcoming
         }
-
-        let upcomingAction = UIAction(
-            title: "Upcoming Appointments",
-            image: UIImage(systemName: "clock")
-        ) { [weak self] _ in
-            guard let self else { return }
-            self.filterMode = .upcoming
-            self.updateFilterMenuTitle()
-            self.applyFilter()
-        }
-
-        filterButton.menu = UIMenu(title: "", options: .displayInline, children: [
-            selectedDayAction,
-            upcomingAction
-        ])
-
-        filterButton.showsMenuAsPrimaryAction = true
-    }
-
-    private func updateFilterMenuTitle() {
-        switch filterMode {
-        case .selectedDay:
-            filterButton.setTitle("Selected Day ▾", for: .normal)
-        case .upcoming:
-            filterButton.setTitle("Upcoming ▾", for: .normal)
-        }
+        applyFilter()
     }
 
     // MARK: - TableView Data Source
@@ -357,8 +371,12 @@ class AppointmentViewController: UIViewController,
         gradient.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         view.insertSubview(gradient, at: 0)
 
+<<<<<<< HEAD
         // ✅ titleLabel and addButton removed — nav bar handles both now
         view.addSubview(filterButton)
+=======
+        view.addSubview(segmentedControl)
+>>>>>>> main
 
         customCalendar = OTCalendarView()
         customCalendar.delegate = self
@@ -372,11 +390,21 @@ class AppointmentViewController: UIViewController,
         tableView.translatesAutoresizingMaskIntoConstraints = false
 
         NSLayoutConstraint.activate([
+<<<<<<< HEAD
             // ✅ filterButton now anchors directly under the safe area (nav bar handles the title)
             filterButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
             filterButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
 
             customCalendar.topAnchor.constraint(equalTo: filterButton.bottomAnchor, constant: 12),
+=======
+            // ✅ native segmented control attached to safe area
+            segmentedControl.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
+            segmentedControl.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            segmentedControl.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            segmentedControl.heightAnchor.constraint(equalToConstant: 32),
+
+            customCalendar.topAnchor.constraint(equalTo: segmentedControl.bottomAnchor, constant: 16),
+>>>>>>> main
             customCalendar.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             customCalendar.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             customCalendar.heightAnchor.constraint(equalToConstant: 320),

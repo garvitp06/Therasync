@@ -15,6 +15,12 @@ class OTCalendarView: UIView, UICollectionViewDelegate, UICollectionViewDataSour
 
     weak var delegate: OTCalendarViewDelegate?
     
+    var appointmentDates: [Date] = [] {
+        didSet {
+            collectionView.reloadData()
+        }
+    }
+    
     private var baseDate: Date = Date()
     private var selectedDate: Date = Date()
     private let calendar = Calendar.current
@@ -182,10 +188,16 @@ class OTCalendarView: UIView, UICollectionViewDelegate, UICollectionViewDataSour
             let selectedComp = calendar.dateComponents([.day, .month, .year], from: selectedDate)
             let isSelected = (d == selectedComp.day && baseComp.month == selectedComp.month && baseComp.year == selectedComp.year)
             
-            cell.configure(isToday: isToday, isSelected: isSelected)
+            // 3. Check if there are any appointments on this date
+            let hasAppointment = appointmentDates.contains { apptDate in
+                let comp = calendar.dateComponents([.day, .month, .year], from: apptDate)
+                return d == comp.day && baseComp.month == comp.month && baseComp.year == comp.year
+            }
+            
+            cell.configure(isToday: isToday, isSelected: isSelected, hasAppointment: hasAppointment)
         } else {
             // Empty cell (padding)
-            cell.configure(isToday: false, isSelected: false)
+            cell.configure(isToday: false, isSelected: false, hasAppointment: false)
         }
         
         return cell
@@ -240,16 +252,27 @@ class CalendarDayCell: UICollectionViewCell {
         return v
     }()
     
+    // The colored dot indicating an appointment
+    private let dotView: UIView = {
+        let v = UIView()
+        v.backgroundColor = .systemOrange
+        v.layer.cornerRadius = 2
+        v.isHidden = true
+        return v
+    }()
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         // Order matters: selection behind, today ring on top/behind text
         contentView.addSubview(selectionLayer)
         contentView.addSubview(todayRing)
         contentView.addSubview(label)
+        contentView.addSubview(dotView)
         
         selectionLayer.translatesAutoresizingMaskIntoConstraints = false
         todayRing.translatesAutoresizingMaskIntoConstraints = false
         label.translatesAutoresizingMaskIntoConstraints = false
+        dotView.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
             // Center Selection Layer
@@ -266,16 +289,23 @@ class CalendarDayCell: UICollectionViewCell {
             
             // Center Label
             label.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-            label.centerYAnchor.constraint(equalTo: contentView.centerYAnchor)
+            label.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            
+            // Dot View
+            dotView.centerXAnchor.constraint(equalTo: label.centerXAnchor),
+            dotView.topAnchor.constraint(equalTo: label.bottomAnchor, constant: -2),
+            dotView.widthAnchor.constraint(equalToConstant: 4),
+            dotView.heightAnchor.constraint(equalToConstant: 4)
         ])
     }
     
     required init?(coder: NSCoder) { fatalError() }
     
-    func configure(isToday: Bool, isSelected: Bool) {
+    func configure(isToday: Bool, isSelected: Bool, hasAppointment: Bool) {
         // Toggle Views
         todayRing.isHidden = !isToday
         selectionLayer.isHidden = !isSelected
+        dotView.isHidden = !hasAppointment
         
         // Logic for Text Color
         if isSelected {

@@ -4,11 +4,8 @@
 //
 //  Created by Garvit Pareek on 14/11/2025.
 //
-
 import UIKit
-
 // NOTE: We do NOT import Supabase here anymore, ensuring no "AnyJSON" errors.
-
 class register: UIViewController {
     
     // MARK: - Outlets & Properties
@@ -299,7 +296,7 @@ class register: UIViewController {
             "first_name": firstName,
             "last_name": lastName,
             "contact_no": contactNo,
-            "nbcot_number": "",
+            "aiota_number": "",
             "degree": "",
             "experience": ""
         ]
@@ -315,7 +312,7 @@ class register: UIViewController {
                 return
             }
             
-            userDetails["nbcot_number"] = nbcot
+            userDetails["aiota_number"] = nbcot
             userDetails["degree"] = degree
             userDetails["experience"] = experience
         }

@@ -1,40 +1,29 @@
 import UIKit
 import Supabase
-
-
 struct OTProfileUpdatePayloads: Encodable {
     let first_name: String
     let last_name: String
     let contact_no: String
-    let nbcot_number: String
+    let aiota_number: String
     let degree: String
     let experience: String
-    var avatar_url: String? = nil // Optional so it's omitted if nil
+    var avatar_url: String? = nil
 }
-
 class UpdateProfileViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-
     // MARK: - Properties
-    // We add this to track if the user actually picked a new photo
     private var hasChangedPhoto = false
-
     // MARK: - Init
     override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
         self.hidesBottomBarWhenPushed = true
     }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
     // MARK: - UI Components
     private let backgroundView: GradientView = {
-        let view = GradientView()
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
+        let v = GradientView()
+        v.translatesAutoresizingMaskIntoConstraints = false
+        return v
     }()
-
     private let scrollView: UIScrollView = {
         let sv = UIScrollView()
         sv.translatesAutoresizingMaskIntoConstraints = false
@@ -42,277 +31,213 @@ class UpdateProfileViewController: UIViewController, UIImagePickerControllerDele
         sv.keyboardDismissMode = .interactive
         return sv
     }()
-
     private let contentView: UIView = {
-        let view = UIView()
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
+        let v = UIView()
+        v.translatesAutoresizingMaskIntoConstraints = false
+        return v
     }()
-
     private let profileImageView: UIImageView = {
         let iv = UIImageView()
         iv.translatesAutoresizingMaskIntoConstraints = false
         iv.image = UIImage(systemName: "person.circle.fill")
         iv.contentMode = .scaleAspectFill
         iv.tintColor = .white.withAlphaComponent(0.8)
-        iv.layer.cornerRadius = 60
+        iv.layer.cornerRadius = 50
         iv.layer.masksToBounds = true
-        iv.layer.borderWidth = 4
+        iv.layer.borderWidth = 3
         iv.layer.borderColor = UIColor.white.cgColor
         return iv
     }()
-    
     private let changePhotoButton: UIButton = {
         let btn = UIButton(type: .system)
         btn.translatesAutoresizingMaskIntoConstraints = false
         btn.setTitle("Change Photo", for: .normal)
-        btn.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .bold)
-        btn.setTitleColor(.black, for: .normal)
+        btn.titleLabel?.font = .systemFont(ofSize: 14, weight: .bold)
         return btn
     }()
-
-    // Inputs
-    private lazy var firstNameField = createTextField(value: "", placeholder: "First Name")
-    private lazy var lastNameField = createTextField(value: "", placeholder: "Last Name")
-    private lazy var nbcotField = createTextField(value: "", placeholder: "NBCOT Number", isNumber: true)
-    private lazy var degreeField = createTextField(value: "", placeholder: "Degree (e.g. MSOT)")
-    private lazy var experienceField = createTextField(value: "", placeholder: "Experience (e.g. 5 years)")
-    private lazy var contactField = createTextField(value: "", placeholder: "Contact Number", isNumber: true)
-
-    // Cards
+    // MARK: - Text Fields (right-aligned values)
+    private lazy var firstNameField   = makeField(placeholder: "First Name")
+    private lazy var lastNameField    = makeField(placeholder: "Last Name")
+    private lazy var aiotaField       = makeField(placeholder: "AIOTA Number", isNumber: true)
+    private lazy var degreeField      = makeField(placeholder: "e.g. BOT")
+    private lazy var experienceField  = makeField(placeholder: "Years")
+    private lazy var contactField     = makeField(placeholder: "Contact Number", isNumber: true)
+    // MARK: - Cards (built from label+field rows)
     private lazy var nameCard: UIView = {
-        return createCardContainer(with: [firstNameField, lastNameField])
+        return createCard(rows: [
+            ("First Name", firstNameField),
+            ("Last Name",  lastNameField),
+        ])
     }()
-    
     private lazy var professionalCard: UIView = {
-        return createCardContainer(with: [nbcotField, degreeField, experienceField])
+        return createCard(rows: [
+            ("AIOTA Number", aiotaField),
+            ("Degree",     degreeField),
+            ("Experience", experienceField),
+        ])
     }()
-    
     private lazy var contactCard: UIView = {
-        return createCardContainer(with: [contactField])
+        return createCard(rows: [
+            ("Contact", contactField),
+        ])
     }()
-    
     private let cardsStackView: UIStackView = {
-        let stack = UIStackView()
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        stack.axis = .vertical
-        stack.spacing = 20
-        stack.alignment = .fill
-        stack.distribution = .fill
-        return stack
+        let s = UIStackView()
+        s.translatesAutoresizingMaskIntoConstraints = false
+        s.axis = .vertical
+        s.spacing = 20
+        return s
     }()
-
-    private let saveButton: UIButton = {
-        let btn = UIButton(type: .system)
-        btn.translatesAutoresizingMaskIntoConstraints = false
-        btn.setTitle("Save Changes", for: .normal)
-        btn.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .bold)
-        btn.backgroundColor = .systemBlue
-        btn.setTitleColor(.white, for: .normal)
-        btn.layer.cornerRadius = 25
-        btn.layer.shadowColor = UIColor.black.cgColor
-        btn.layer.shadowOpacity = 0.2
-        btn.layer.shadowOffset = CGSize(width: 0, height: 4)
-        btn.layer.shadowRadius = 4
-        return btn
+    // MARK: - Nav Bar Items
+    private lazy var saveBarButton = UIBarButtonItem(
+        title: "Save",
+        style: .done,
+        target: self,
+        action: #selector(handleSave)
+    )
+    private let navSpinner: UIActivityIndicatorView = {
+        let s = UIActivityIndicatorView(style: .medium)
+        s.color = .darkGray
+        s.hidesWhenStopped = true
+        return s
     }()
-    
-    private let activityIndicator: UIActivityIndicatorView = {
-        let spinner = UIActivityIndicatorView(style: .medium)
-        spinner.color = .white
-        spinner.hidesWhenStopped = true
-        spinner.translatesAutoresizingMaskIntoConstraints = false
-        return spinner
-    }()
-
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
+        title = "Edit Profile"
+        navigationItem.rightBarButtonItem = saveBarButton
+        navigationItem.leftBarButtonItem = UIBarButtonItem(
+            image: UIImage(systemName: "chevron.backward"),
+            style: .plain, target: self, action: #selector(didTapBack)
+        )
         setupUI()
         setupConstraints()
         setupActions()
-        
-        // Setup Keyboard Handling
         setupKeyboardHandling()
         setupTapToDismiss()
-        
-        fetchProfileData() // Load data
+        fetchProfileData()
     }
-    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         let appearance = UINavigationBarAppearance()
         appearance.configureWithTransparentBackground()
         appearance.titleTextAttributes = [.foregroundColor: UIColor.black]
-        navigationController?.navigationBar.standardAppearance = appearance
+        navigationController?.navigationBar.standardAppearance   = appearance
         navigationController?.navigationBar.scrollEdgeAppearance = appearance
         navigationController?.navigationBar.tintColor = .black
     }
-    
-    deinit {
-        NotificationCenter.default.removeObserver(self)
+    deinit { NotificationCenter.default.removeObserver(self) }
+    // MARK: - Nav Bar Saving State
+    private func setNavBarSaving(_ saving: Bool) {
+        if saving {
+            navSpinner.startAnimating()
+            navigationItem.rightBarButtonItem = UIBarButtonItem(customView: navSpinner)
+        } else {
+            navSpinner.stopAnimating()
+            navigationItem.rightBarButtonItem = saveBarButton
+        }
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = !saving
     }
-
-    // MARK: - Database Logic
+    // MARK: - Database
     private func fetchProfileData() {
         guard let user = supabase.auth.currentUser else { return }
-        
-        saveButton.setTitle("", for: .normal)
-        activityIndicator.startAnimating()
-        
+        setNavBarSaving(true)
         Task {
             do {
                 let profile: OTProfileDetails = try await supabase
-                    .from("profiles")
-                    .select()
+                    .from("profiles").select()
                     .eq("id", value: user.id)
-                    .single()
-                    .execute()
-                    .value
-                
+                    .single().execute().value
                 await MainActor.run {
-                    self.firstNameField.text = profile.first_name
-                    self.lastNameField.text = profile.last_name
-                    self.contactField.text = profile.contact_no
-                    self.nbcotField.text = profile.nbcot_number
-                    self.degreeField.text = profile.degree
+                    self.firstNameField.text  = profile.first_name
+                    self.lastNameField.text   = profile.last_name
+                    self.contactField.text    = profile.contact_no
+                    self.aiotaField.text      = profile.aiota_number
+                    self.degreeField.text     = profile.degree
                     self.experienceField.text = profile.experience
-                    
-                    self.activityIndicator.stopAnimating()
-                    self.saveButton.setTitle("Save Changes", for: .normal)
+                    self.setNavBarSaving(false)
                 }
             } catch {
-                print("Error loading profile: \(error)")
-                await MainActor.run {
-                    self.activityIndicator.stopAnimating()
-                    self.saveButton.setTitle("Save Changes", for: .normal)
-                }
+                print("Profile load error: \(error)")
+                await MainActor.run { self.setNavBarSaving(false) }
             }
         }
     }
-    
     @objc private func handleSave() {
-            guard let user = supabase.auth.currentUser else { return }
-            
-            saveButton.isEnabled = false
-            saveButton.setTitle("", for: .normal)
-            activityIndicator.startAnimating()
-            
-            Task {
-                do {
-                    var finalImageURL: String? = nil
-                    
-                    // 1. Only upload to storage if the photo was actually changed
-                    if hasChangedPhoto, let imageToUpload = profileImageView.image,
-                       let data = imageToUpload.jpegData(compressionQuality: 0.5) {
-                        
-                        let fileName = "\(user.id.uuidString)_profile.jpg"
-                        let filePath = "ot_profiles/\(fileName)"
-                        
-                        // Upload to "patient-photos" bucket
-                        _ = try await supabase.storage
-                            .from("patient-photos")
-                            .upload(path: filePath, file: data, options: .init(upsert: true))
-                        
-                        // Get public URL
-                        let publicURL = try supabase.storage
-                            .from("patient-photos")
-                            .getPublicURL(path: filePath)
-                        
-                        finalImageURL = publicURL.absoluteString
-                    }
-                    
-                    // 2. Prepare Payload
-                    let updateData = OTProfileUpdatePayloads(
-                        first_name: firstNameField.text ?? "",
-                        last_name: lastNameField.text ?? "",
-                        contact_no: contactField.text ?? "",
-                        nbcot_number: nbcotField.text ?? "",
-                        degree: degreeField.text ?? "",
-                        experience: experienceField.text ?? "",
-                        avatar_url: finalImageURL
+        guard let user = supabase.auth.currentUser else { return }
+        setNavBarSaving(true)
+        Task {
+            do {
+                var finalImageURL: String? = nil
+                if hasChangedPhoto,
+                   let img = profileImageView.image,
+                   let data = img.jpegData(compressionQuality: 0.5) {
+                    let filePath = "ot_profiles/\(user.id.uuidString)_profile.jpg"
+                    _ = try await supabase.storage
+                        .from("patient-photos")
+                        .upload(path: filePath, file: data, options: .init(upsert: true))
+                    finalImageURL = try supabase.storage
+                        .from("patient-photos")
+                        .getPublicURL(path: filePath).absoluteString
+                }
+                let payload = OTProfileUpdatePayloads(
+                    first_name:   firstNameField.text  ?? "",
+                    last_name:    lastNameField.text   ?? "",
+                    contact_no:   contactField.text    ?? "",
+                    aiota_number: aiotaField.text      ?? "",
+                    degree:       degreeField.text     ?? "",
+                    experience:   experienceField.text ?? "",
+                    avatar_url:   finalImageURL
+                )
+                try await supabase.from("profiles").update(payload)
+                    .eq("id", value: user.id).execute()
+                await MainActor.run {
+                    self.setNavBarSaving(false)
+                    UINotificationFeedbackGenerator().notificationOccurred(.success)
+                    let alert = UIAlertController(
+                        title: "Success",
+                        message: "Your profile has been updated successfully.",
+                        preferredStyle: .alert
                     )
-                    
-                    // 3. Execute Update
-                    try await supabase
-                        .from("profiles")
-                        .update(updateData)
-                        .eq("id", value: user.id)
-                        .execute()
-                    
-                    // 4. Success UI & Popup
-                    await MainActor.run {
-                        self.activityIndicator.stopAnimating()
-                        self.saveButton.setTitle("Saved!", for: .normal)
-                        UINotificationFeedbackGenerator().notificationOccurred(.success)
-                        
-                        // Create and show the success popup
-                        let alert = UIAlertController(title: "Success", message: "Your profile has been updated successfully.", preferredStyle: .alert)
-                        
-                        // Add an "OK" button that pops the view controller when tapped
-                        alert.addAction(UIAlertAction(title: "OK", style: .default, handler: { _ in
-                            self.navigationController?.popViewController(animated: true)
-                        }))
-                        
-                        self.present(alert, animated: true)
-                    }
-                } catch {
-                    print("Update Error: \(error)")
-                    await MainActor.run {
-                        self.saveButton.isEnabled = true
-                        self.saveButton.setTitle("Save Changes", for: .normal)
-                        self.activityIndicator.stopAnimating()
-                        self.showAlert(message: "Failed to update profile: \(error.localizedDescription)")
-                    }
+                    alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in
+                        self.navigationController?.popViewController(animated: true)
+                    })
+                    self.present(alert, animated: true)
+                }
+            } catch {
+                print("Update Error: \(error)")
+                await MainActor.run {
+                    self.setNavBarSaving(false)
+                    self.showAlert(message: "Failed to update profile: \(error.localizedDescription)")
                 }
             }
         }
-
-    // MARK: - Helpers
-    private func showAlert(message: String) {
-        let alert = UIAlertController(title: nil, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
     }
-
+    private func showAlert(message: String) {
+        let a = UIAlertController(title: nil, message: message, preferredStyle: .alert)
+        a.addAction(UIAlertAction(title: "OK", style: .default))
+        present(a, animated: true)
+    }
     // MARK: - Setup UI
     private func setupUI() {
-        title = "Edit Profile"
-        
-        // Back Button Logic
-        navigationItem.leftBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "chevron.backward"), style: .plain, target: self, action: #selector(didTapBack))
-
         view.addSubview(backgroundView)
         view.sendSubviewToBack(backgroundView)
-        
         view.addSubview(scrollView)
-        view.addSubview(saveButton)
-        saveButton.addSubview(activityIndicator)
-        
         scrollView.addSubview(contentView)
         contentView.addSubview(profileImageView)
         contentView.addSubview(changePhotoButton)
         contentView.addSubview(cardsStackView)
-        
         cardsStackView.addArrangedSubview(nameCard)
         cardsStackView.addArrangedSubview(professionalCard)
         cardsStackView.addArrangedSubview(contactCard)
-        
-        NSLayoutConstraint.activate([
-            activityIndicator.centerXAnchor.constraint(equalTo: saveButton.centerXAnchor),
-            activityIndicator.centerYAnchor.constraint(equalTo: saveButton.centerYAnchor)
-        ])
     }
-    
     private func setupActions() {
         changePhotoButton.addTarget(self, action: #selector(handleChangePhoto), for: .touchUpInside)
-        saveButton.addTarget(self, action: #selector(handleSave), for: .touchUpInside)
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleChangePhoto))
         profileImageView.isUserInteractionEnabled = true
-        profileImageView.addGestureRecognizer(tapGesture)
+        profileImageView.addGestureRecognizer(
+            UITapGestureRecognizer(target: self, action: #selector(handleChangePhoto))
+        )
     }
-
-    // Improved Back Button Logic
     @objc private func didTapBack() {
         if let nav = navigationController, nav.viewControllers.count > 1 {
             nav.popViewController(animated: true)
@@ -320,147 +245,148 @@ class UpdateProfileViewController: UIViewController, UIImagePickerControllerDele
             dismiss(animated: true)
         }
     }
-    
     @objc private func handleChangePhoto() {
         let picker = UIImagePickerController()
         picker.delegate = self
         picker.sourceType = .photoLibrary
         present(picker, animated: true)
     }
-    
-    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+    func imagePickerController(_ picker: UIImagePickerController,
+                               didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
         if let img = info[.originalImage] as? UIImage {
             profileImageView.image = img
-            hasChangedPhoto = true // Trigger the boolean so handleSave knows to upload it
+            hasChangedPhoto = true
         }
         dismiss(animated: true)
     }
-
-    // MARK: - Keyboard Handling
+    // MARK: - Keyboard
     private func setupKeyboardHandling() {
-        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow), name: UIResponder.keyboardWillShowNotification, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide), name: UIResponder.keyboardWillHideNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow),
+                                               name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide),
+                                               name: UIResponder.keyboardWillHideNotification, object: nil)
     }
-    
     private func setupTapToDismiss() {
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
-        tapGesture.cancelsTouchesInView = false
-        view.addGestureRecognizer(tapGesture)
+        let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        tap.cancelsTouchesInView = false
+        view.addGestureRecognizer(tap)
     }
-
-    @objc private func dismissKeyboard() {
-        view.endEditing(true)
-    }
-
+    @objc private func dismissKeyboard() { view.endEditing(true) }
     @objc private func keyboardWillShow(notification: NSNotification) {
-        guard let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue else { return }
-        
-        let keyboardHeight = keyboardFrame.cgRectValue.height
-        let bottomSafeArea = view.safeAreaInsets.bottom
-        
-        // Add extra padding so the button isn't covered
-        let contentInsets = UIEdgeInsets(top: 0, left: 0, bottom: keyboardHeight - bottomSafeArea + 80, right: 0)
-        
-        scrollView.contentInset = contentInsets
-        scrollView.scrollIndicatorInsets = contentInsets
+        guard let frame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue else { return }
+        let insets = UIEdgeInsets(top: 0, left: 0,
+                                  bottom: frame.cgRectValue.height - view.safeAreaInsets.bottom + 20,
+                                  right: 0)
+        scrollView.contentInset          = insets
+        scrollView.scrollIndicatorInsets  = insets
     }
-
     @objc private func keyboardWillHide(notification: NSNotification) {
-        let contentInsets = UIEdgeInsets.zero
-        scrollView.contentInset = contentInsets
-        scrollView.scrollIndicatorInsets = contentInsets
+        scrollView.contentInset          = .zero
+        scrollView.scrollIndicatorInsets  = .zero
     }
-
     // MARK: - Constraints
     private func setupConstraints() {
-        let contentGuide = scrollView.contentLayoutGuide
-        let frameGuide = scrollView.frameLayoutGuide
-        
+        let cg = scrollView.contentLayoutGuide
+        let fg = scrollView.frameLayoutGuide
         NSLayoutConstraint.activate([
             backgroundView.topAnchor.constraint(equalTo: view.topAnchor),
             backgroundView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             backgroundView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             backgroundView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            
-            // Save Button (Fixed at bottom)
-            saveButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
-            saveButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            saveButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            saveButton.heightAnchor.constraint(equalToConstant: 55),
-            
-            // ScrollView (Takes up remaining space)
             scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: saveButton.topAnchor, constant: -20),
-            
-            contentView.topAnchor.constraint(equalTo: contentGuide.topAnchor),
-            contentView.leadingAnchor.constraint(equalTo: contentGuide.leadingAnchor),
-            contentView.trailingAnchor.constraint(equalTo: contentGuide.trailingAnchor),
-            contentView.bottomAnchor.constraint(equalTo: contentGuide.bottomAnchor),
-            contentView.widthAnchor.constraint(equalTo: frameGuide.widthAnchor),
-            
-            profileImageView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 20),
+            scrollView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            contentView.topAnchor.constraint(equalTo: cg.topAnchor),
+            contentView.leadingAnchor.constraint(equalTo: cg.leadingAnchor),
+            contentView.trailingAnchor.constraint(equalTo: cg.trailingAnchor),
+            contentView.bottomAnchor.constraint(equalTo: cg.bottomAnchor),
+            contentView.widthAnchor.constraint(equalTo: fg.widthAnchor),
+            profileImageView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 24),
             profileImageView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-            profileImageView.widthAnchor.constraint(equalToConstant: 120),
-            profileImageView.heightAnchor.constraint(equalToConstant: 120),
-            
+            profileImageView.widthAnchor.constraint(equalToConstant: 100),
+            profileImageView.heightAnchor.constraint(equalToConstant: 100),
             changePhotoButton.topAnchor.constraint(equalTo: profileImageView.bottomAnchor, constant: 8),
             changePhotoButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-            
-            cardsStackView.topAnchor.constraint(equalTo: changePhotoButton.bottomAnchor, constant: 30),
+            cardsStackView.topAnchor.constraint(equalTo: changePhotoButton.bottomAnchor, constant: 28),
             cardsStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
             cardsStackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
-            cardsStackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -20)
+            cardsStackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -30),
         ])
     }
-    
-    // MARK: - Component Helpers
-    private func createTextField(value: String, placeholder: String, isNumber: Bool = false) -> UITextField {
+    // MARK: - Factory: Text Field
+    private func makeField(placeholder: String, isNumber: Bool = false) -> UITextField {
         let tf = UITextField()
         tf.translatesAutoresizingMaskIntoConstraints = false
-        tf.text = value
-        tf.attributedPlaceholder = NSAttributedString(string: placeholder, attributes: [.foregroundColor: UIColor.systemGray3])
-        tf.backgroundColor = .clear
-        tf.textColor = .black
-        tf.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+        tf.attributedPlaceholder = NSAttributedString(
+            string: placeholder,
+            attributes: [.foregroundColor: UIColor.tertiaryLabel]
+        )
+        tf.backgroundColor  = .clear
+        tf.font             = .systemFont(ofSize: 16)
+        tf.textColor        = .secondaryLabel
+        tf.textAlignment    = .right
         if isNumber { tf.keyboardType = .phonePad }
-        tf.heightAnchor.constraint(equalToConstant: 55).isActive = true
         return tf
     }
-    
-    private func createCardContainer(with fields: [UITextField]) -> UIView {
-        let container = UIView()
-        container.translatesAutoresizingMaskIntoConstraints = false
-        container.backgroundColor = .white
-        container.layer.cornerRadius = 25
-        container.layer.masksToBounds = true
-        
-        let stack = UIStackView()
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        stack.axis = .vertical
-        stack.spacing = 0
-        stack.distribution = .fill
-        container.addSubview(stack)
-        
-        NSLayoutConstraint.activate([
-            stack.topAnchor.constraint(equalTo: container.topAnchor, constant: 10),
-            stack.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -10),
-            stack.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 20),
-            stack.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -20)
-        ])
-        
-        for (index, field) in fields.enumerated() {
-            stack.addArrangedSubview(field)
-            if index < fields.count - 1 {
+    // MARK: - Factory: Card with labelled rows
+    /// Creates a white rounded card containing rows of (left label + right text field)
+    private func createCard(rows: [(String, UITextField)]) -> UIView {
+        let card = UIView()
+        card.translatesAutoresizingMaskIntoConstraints = false
+        card.backgroundColor = .white
+        card.layer.cornerRadius = 20
+        card.layer.masksToBounds = true
+        var previousBottom = card.topAnchor
+        for (index, (labelText, field)) in rows.enumerated() {
+            let row = makeRow(labelText: labelText, field: field)
+            card.addSubview(row)
+            NSLayoutConstraint.activate([
+                row.topAnchor.constraint(equalTo: previousBottom),
+                row.leadingAnchor.constraint(equalTo: card.leadingAnchor),
+                row.trailingAnchor.constraint(equalTo: card.trailingAnchor),
+                row.heightAnchor.constraint(equalToConstant: 52),
+            ])
+            if index == rows.count - 1 {
+                row.bottomAnchor.constraint(equalTo: card.bottomAnchor).isActive = true
+            } else {
                 let sep = UIView()
-                sep.backgroundColor = UIColor.systemGray5
                 sep.translatesAutoresizingMaskIntoConstraints = false
-                sep.heightAnchor.constraint(equalToConstant: 1).isActive = true
-                stack.addArrangedSubview(sep)
+                sep.backgroundColor = UIColor.separator.withAlphaComponent(0.3)
+                card.addSubview(sep)
+                NSLayoutConstraint.activate([
+                    sep.topAnchor.constraint(equalTo: row.bottomAnchor),
+                    sep.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 20),
+                    sep.trailingAnchor.constraint(equalTo: card.trailingAnchor),
+                    sep.heightAnchor.constraint(equalToConstant: 0.5),
+                ])
             }
+            previousBottom = row.bottomAnchor
         }
-        return container
+        return card
+    }
+    // MARK: - Factory: Single Row (label + field)
+    private func makeRow(labelText: String, field: UITextField) -> UIView {
+        let row = UIView()
+        row.translatesAutoresizingMaskIntoConstraints = false
+        let lbl = UILabel()
+        lbl.translatesAutoresizingMaskIntoConstraints = false
+        lbl.text = labelText
+        lbl.font = .systemFont(ofSize: 16, weight: .medium)
+        lbl.textColor = .label
+        lbl.setContentHuggingPriority(.required, for: .horizontal)
+        lbl.setContentCompressionResistancePriority(.required, for: .horizontal)
+        field.textAlignment = .right
+        field.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        row.addSubview(lbl)
+        row.addSubview(field)
+        NSLayoutConstraint.activate([
+            lbl.leadingAnchor.constraint(equalTo: row.leadingAnchor, constant: 20),
+            lbl.centerYAnchor.constraint(equalTo: row.centerYAnchor),
+            field.leadingAnchor.constraint(equalTo: lbl.trailingAnchor, constant: 12),
+            field.trailingAnchor.constraint(equalTo: row.trailingAnchor, constant: -20),
+            field.centerYAnchor.constraint(equalTo: row.centerYAnchor),
+        ])
+        return row
     }
 }
-

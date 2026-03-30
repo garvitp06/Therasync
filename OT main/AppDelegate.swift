@@ -6,14 +6,31 @@
 //
 
 import UIKit
+import Supabase
+import FirebaseCore
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
-
-
+   
+    func saveDeviceToken(_ token: String) {
+        Task {
+            do {
+                let user = try await supabase.auth.session.user
+                try await supabase
+                    .from("profiles")
+                    .update(["fcm_token": token])
+                    .eq("id", value: user.id)
+                    .execute()
+            } catch {
+                print("❌ Failed to save token: \(error)")
+            }
+        }
+    }
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // Register "false" as the default for Dark Mode
+        FirebaseApp.configure()
+        UserDefaults.standard.register(defaults: ["Dark Mode": false])
         return true
     }
 

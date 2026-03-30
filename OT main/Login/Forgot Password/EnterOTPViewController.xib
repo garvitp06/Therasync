@@ -1,20 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="24128" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="24412" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
     <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24063"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24405"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
-        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="EnterOTPViewController" customModule="TheraSync_Final" customModuleProvider="target">
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="EnterOTPViewController" customModule="OT_main" customModuleProvider="target">
             <connections>
-                <outlet property="doneButton" destination="2pU-WZ-wi6" id="cm7-eQ-Bjn"/>
-                <outlet property="otpField1" destination="rjZ-qt-rdv" id="F9n-EK-pWD"/>
-                <outlet property="otpField2" destination="i7T-uo-HNc" id="pMH-bG-HRU"/>
-                <outlet property="otpField3" destination="XZQ-zK-6ju" id="pZN-rt-bzj"/>
-                <outlet property="otpField4" destination="662-DF-CRW" id="vgj-QX-x3T"/>
                 <outlet property="view" destination="i5M-Pr-FkT" id="sfx-zR-JGt"/>
             </connections>
         </placeholder>
@@ -24,9 +19,9 @@
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
                 <stackView opaque="NO" contentMode="scaleToFill" spacing="10" translatesAutoresizingMaskIntoConstraints="NO" id="gll-yf-drr">
-                    <rect key="frame" x="81.666666666666686" y="165" width="230" height="50"/>
+                    <rect key="frame" x="21.666666666666657" y="165" width="350" height="50"/>
                     <subviews>
-                        <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="line" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="rjZ-qt-rdv">
+                        <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="rjZ-qt-rdv">
                             <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
                             <constraints>
                                 <constraint firstAttribute="height" constant="50" id="050-Dg-EEN"/>
@@ -35,8 +30,8 @@
                             <fontDescription key="fontDescription" type="system" pointSize="14"/>
                             <textInputTraits key="textInputTraits"/>
                         </textField>
-                        <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="line" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="i7T-uo-HNc">
-                            <rect key="frame" x="59.999999999999986" y="0.0" width="50" height="50"/>
+                        <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="i7T-uo-HNc">
+                            <rect key="frame" x="60" y="0.0" width="50" height="50"/>
                             <constraints>
                                 <constraint firstAttribute="height" constant="50" id="Xsl-qs-b5b"/>
                                 <constraint firstAttribute="width" constant="50" id="qP4-cr-6TF"/>
@@ -44,7 +39,7 @@
                             <fontDescription key="fontDescription" type="system" pointSize="14"/>
                             <textInputTraits key="textInputTraits"/>
                         </textField>
-                        <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="line" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="XZQ-zK-6ju">
+                        <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="XZQ-zK-6ju">
                             <rect key="frame" x="120" y="0.0" width="50" height="50"/>
                             <constraints>
                                 <constraint firstAttribute="height" constant="50" id="Hhm-lx-j8Z"/>
@@ -53,8 +48,17 @@
                             <fontDescription key="fontDescription" type="system" pointSize="14"/>
                             <textInputTraits key="textInputTraits"/>
                         </textField>
-                        <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="line" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="662-DF-CRW">
+                        <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="T0I-MH-x8a">
                             <rect key="frame" x="180" y="0.0" width="50" height="50"/>
+                            <constraints>
+                                <constraint firstAttribute="height" constant="50" id="TKU-Wm-qWz"/>
+                                <constraint firstAttribute="width" constant="50" id="V8R-DE-4CL"/>
+                            </constraints>
+                            <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                            <textInputTraits key="textInputTraits"/>
+                        </textField>
+                        <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="662-DF-CRW">
+                            <rect key="frame" x="240" y="0.0" width="50" height="50"/>
                             <constraints>
                                 <constraint firstAttribute="width" constant="50" id="9Us-I8-wOO"/>
                                 <constraint firstAttribute="height" constant="50" id="fmr-Gi-i5s"/>
@@ -62,7 +66,26 @@
                             <fontDescription key="fontDescription" type="system" pointSize="14"/>
                             <textInputTraits key="textInputTraits"/>
                         </textField>
+                        <textField opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="248" contentHorizontalAlignment="left" contentVerticalAlignment="center" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="P11-gK-f7b">
+                            <rect key="frame" x="300" y="0.0" width="50" height="50"/>
+                            <constraints>
+                                <constraint firstAttribute="height" constant="50" id="5Qt-vo-LTs"/>
+                                <constraint firstAttribute="width" constant="50" id="aqf-vJ-whQ"/>
+                            </constraints>
+                            <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                            <textInputTraits key="textInputTraits"/>
+                        </textField>
                     </subviews>
+                    <constraints>
+                        <constraint firstItem="T0I-MH-x8a" firstAttribute="leading" secondItem="XZQ-zK-6ju" secondAttribute="trailing" constant="10" id="SFt-dm-4TE"/>
+                        <constraint firstAttribute="bottom" secondItem="P11-gK-f7b" secondAttribute="bottom" id="TF6-Sf-QlR"/>
+                        <constraint firstItem="P11-gK-f7b" firstAttribute="top" secondItem="gll-yf-drr" secondAttribute="top" id="ant-AT-IOK"/>
+                        <constraint firstItem="P11-gK-f7b" firstAttribute="leading" secondItem="662-DF-CRW" secondAttribute="trailing" constant="10" id="jQ0-hp-mIm"/>
+                        <constraint firstAttribute="trailing" secondItem="P11-gK-f7b" secondAttribute="trailing" id="obv-ga-4p1"/>
+                        <constraint firstItem="T0I-MH-x8a" firstAttribute="top" secondItem="gll-yf-drr" secondAttribute="top" id="rZL-Qa-1qn"/>
+                        <constraint firstAttribute="bottom" secondItem="T0I-MH-x8a" secondAttribute="bottom" id="s71-zz-xgr"/>
+                        <constraint firstItem="662-DF-CRW" firstAttribute="leading" secondItem="T0I-MH-x8a" secondAttribute="trailing" constant="10" id="tuJ-k9-bh9"/>
+                    </constraints>
                 </stackView>
                 <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="2pU-WZ-wi6">
                     <rect key="frame" x="16" y="275" width="361" height="40"/>
@@ -72,9 +95,6 @@
                     </constraints>
                     <state key="normal" title="Button"/>
                     <buttonConfiguration key="configuration" style="filled" title="Done"/>
-                    <connections>
-                        <action selector="doneTapped:" destination="-1" eventType="touchUpInside" id="dzJ-Ol-wyF"/>
-                    </connections>
                 </button>
             </subviews>
             <viewLayoutGuide key="safeArea" id="fnl-2z-Ty3"/>

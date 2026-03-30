@@ -16,28 +16,26 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         
         guard let windowScene = (scene as? UIWindowScene) else { return }
-//        window = UIWindow(windowScene: windowScene)
-//        
-//        let mainTabBarController = MainTabBarController()
-//            
-//            // 2. Set it as the app's root view controller
-//            window?.rootViewController = mainTabBarController
-//            window?.makeKeyAndVisible()
-            let loginVC = NewLoginViewController()
-            
-            // 2. --- CRITICAL STEP: Wrap it in a Navigation Controller ---
-            // This gives the login screen the ability to "push" other screens.
-            let navigationController = UINavigationController(rootViewController: loginVC)
-            
-            // 3. Hide the top bar for the login screen (optional, looks cleaner)
-            navigationController.setNavigationBarHidden(true, animated: false)
-            
-            // 4. Set the Navigation Controller (NOT the loginVC) as the root
-        window?.rootViewController = navigationController
 
-        window?.makeKeyAndVisible()
+            // 1. Initialize the window
+            let window = UIWindow(windowScene: windowScene)
+            
+            // 2. Check the saved Dark Mode setting
+            // If "Dark Mode" hasn't been set yet, this returns false (Light Mode)
+            let isDarkMode = UserDefaults.standard.bool(forKey: "Dark Mode")
+            
+            // 3. Force the window to follow your app's setting, NOT the system setting
+            window.overrideUserInterfaceStyle = isDarkMode ? .dark : .light
+            
+            // 4. Setup your Root View Controller
+            let splashVC = SplashViewController()
+            window.rootViewController = splashVC
+            
+            // 5. Assign and make visible
+            self.window = window
+            window.makeKeyAndVisible()
         
-        
+    }
         func sceneDidDisconnect(_ scene: UIScene) {
             // Called as the scene is being released by the system.
             // This occurs shortly after the scene enters the background, or when its session is discarded.
@@ -68,4 +66,4 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         
         
     }
-}
+

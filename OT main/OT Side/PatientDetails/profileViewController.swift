@@ -143,13 +143,13 @@ class ProfileViewController: UIViewController, PHPickerViewControllerDelegate {
         let appearance = UINavigationBarAppearance()
         appearance.configureWithTransparentBackground()
         
-        let whiteTextAttributes: [NSAttributedString.Key: Any] = [
+        appearance.titleTextAttributes = [
             .foregroundColor: UIColor.white,
             .font: UIFont.systemFont(ofSize: 18, weight: .bold)
         ]
         
-        appearance.titleTextAttributes = whiteTextAttributes
-        appearance.largeTitleTextAttributes = whiteTextAttributes
+        // Let large titles inherit system sizing, just enforce white:
+        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.white]
         
         // This is the critical part to merge:
         navigationController?.navigationBar.standardAppearance = appearance
@@ -159,10 +159,11 @@ class ProfileViewController: UIViewController, PHPickerViewControllerDelegate {
         
         self.tabBarController?.tabBar.isHidden = true
     }
+    
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         // Restore tab bar when leaving the profile
-        self.tabBarController?.tabBar.isHidden = true
+        self.tabBarController?.tabBar.isHidden = false
     }
     // MARK: - Edit Mode Logic (UPDATED)
     
@@ -213,13 +214,12 @@ class ProfileViewController: UIViewController, PHPickerViewControllerDelegate {
             let appearance = UINavigationBarAppearance()
             appearance.configureWithTransparentBackground()
             
-            let whiteTextAttributes: [NSAttributedString.Key: Any] = [
+            appearance.titleTextAttributes = [
                 .foregroundColor: UIColor.white,
                 .font: UIFont.systemFont(ofSize: 18, weight: .bold)
             ]
             
-            appearance.titleTextAttributes = whiteTextAttributes
-            appearance.largeTitleTextAttributes = whiteTextAttributes
+            appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.white]
             
             navigationController?.navigationBar.standardAppearance = appearance
             navigationController?.navigationBar.scrollEdgeAppearance = appearance
@@ -337,6 +337,7 @@ class ProfileViewController: UIViewController, PHPickerViewControllerDelegate {
     func populateData() {
             guard let patient = patientData else { return }
             self.title = "Patient ID: \(patient.patientID)"
+            navigationItem.largeTitleDisplayMode = .never
             nameLabel.text = patient.fullName
             
             // 1. Handle Profile Image Loading

@@ -156,10 +156,14 @@ class ChatDetailViewController: UIViewController, UITableViewDataSource, UITable
 
     private func setupNativeNavBar() {
         self.title = chatName
+        navigationItem.largeTitleDisplayMode = .never
+        
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
         appearance.backgroundColor = UIColor(red: 0.00, green: 0.48, blue: 1.00, alpha: 1)
         appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
+        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.white]
+        
         navigationController?.navigationBar.standardAppearance = appearance
         navigationController?.navigationBar.scrollEdgeAppearance = appearance
         navigationController?.navigationBar.tintColor = .white

@@ -13,6 +13,8 @@ import FirebaseFirestore
 class ParentChatDetailViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, ChatInputAccessoryViewDelegate {
 
     // MARK: - Properties
+    var patientID: String?
+    
     private let db = Firestore.firestore()
     private var allMessages: [MessageModel] = []
     
@@ -121,9 +123,17 @@ class ParentChatDetailViewController: UIViewController, UITableViewDelegate, UIT
                 let user = try await supabase.auth.session.user
                 let parentAuthId = user.id.uuidString
                 
+                let targetPatientID = self.patientID ?? UserDefaults.standard.string(forKey: "LastSelectedChildID")
+                
+                guard let searchID = targetPatientID else {
+                    await MainActor.run { self.loadingIndicator.stopAnimating() }
+                    return
+                }
+                
                 let response = try await supabase
                     .from("patients")
                     .select("id, ot_id")
+                    .eq("patient_id_number", value: searchID)
                     .eq("parent_uid", value: parentAuthId)
                     .single()
                     .execute()

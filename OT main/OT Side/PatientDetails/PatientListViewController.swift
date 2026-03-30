@@ -1,6 +1,7 @@
 import UIKit
 import Supabase
 
+// MARK: - Models
 struct Patient: Codable {
     var id: UUID?
     var firstName: String
@@ -26,7 +27,6 @@ struct Patient: Codable {
 
     // MARK: - Safety Fix for Age
     var age: Int {
-        // Safe unwrap: If dateOfBirth is nil, return 0 instead of crashing
         guard let dob = dateOfBirth else { return 0 }
         return Calendar.current.dateComponents([.year], from: dob, to: Date()).year ?? 0
     }
@@ -59,7 +59,11 @@ class PatientListViewController: UIViewController {
     private let tableView: UITableView = {
         let tv = UITableView(frame: .zero, style: .insetGrouped)
         tv.translatesAutoresizingMaskIntoConstraints = false
-        tv.backgroundColor = .systemGroupedBackground
+        
+        // Background updates applied here
+        tv.backgroundColor = .clear
+        tv.backgroundView = GradientView()
+        
         tv.rowHeight = 84
         return tv
     }()
@@ -109,23 +113,22 @@ class PatientListViewController: UIViewController {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
         
-        
+        // Changed to clear to prevent white flashing around edges
+        view.backgroundColor = .clear
         
         setupNavigationBar()
         setupSearchController()
         setupTableView()
         setupEmptyState()
         setupLoadingIndicator()
-        
         fetchPatients()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        // Ensure standard large native title bar is visible
+        navigationController?.navigationBar.largeTitleTextAttributes = [.foregroundColor: UIColor.white]
         navigationController?.setNavigationBarHidden(false, animated: animated)
         navigationController?.navigationBar.prefersLargeTitles = true
         navigationItem.largeTitleDisplayMode = .always
@@ -250,7 +253,6 @@ class PatientListViewController: UIViewController {
     @objc private func handleNavPlus() {
         let addVC = addPatient()
         addVC.delegate = self
-        // addPatient is now designed native, let's wrap it uniformly
         let nav = UINavigationController(rootViewController: addVC)
         nav.modalPresentationStyle = .formSheet
         present(nav, animated: true)
@@ -266,7 +268,7 @@ extension PatientListViewController: UITableViewDataSource, UITableViewDelegate 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "PatientCell", for: indexPath) as! PatientCell
         cell.configure(with: patients[indexPath.row])
-        // To ensure cell background integrates with insetGrouped beautifully:
+        // Cells will remain solid over the gradient
         cell.backgroundColor = .secondarySystemGroupedBackground
         return cell
     }

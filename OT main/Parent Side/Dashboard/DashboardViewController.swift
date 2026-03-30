@@ -398,6 +398,9 @@ final class DashboardViewController: UIViewController {
     }
     @objc private func openChat() {
         let vc = ParentChatDetailViewController()
+        if let selectedID = UserDefaults.standard.string(forKey: "LastSelectedChildID") {
+            vc.patientID = selectedID
+        }
         vc.hidesBottomBarWhenPushed = true
         self.navigationController?.pushViewController(vc, animated: true)
     }

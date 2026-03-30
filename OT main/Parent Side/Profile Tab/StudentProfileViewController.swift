@@ -161,7 +161,11 @@ class StudentProfileViewController: UIViewController {
         itemsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
         
         // 1. Core Actions
-        let menuItems = ["Update Profile", "Settings", "Add Second Child"]
+        var menuItems = ["Update Profile", "Settings"]
+        if linkedPatients.count < 2 {
+            menuItems.append("Add Second Child")
+        }
+        
         for title in menuItems {
             itemsStackView.addArrangedSubview(createListItemView(title: title, showChevron: true, isDestructive: false))
             itemsStackView.addArrangedSubview(createSeparatorView())

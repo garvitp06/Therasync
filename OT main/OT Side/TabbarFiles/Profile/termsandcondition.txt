@@ -1,0 +1,29 @@
+1. Introduction & Acceptance of Terms
+
+• Purpose: States that by accessing or using the TheraSync apps (Pro, Connect, Kids), the user agrees to these terms.
+
+• Key points:
+  • Defines "User" (OT, Patient) and "App/Services".
+  • Acknowledgment that terms are a legally binding agreement.
+  • Statement that if the user does not agree, they must not use the apps.
+
+2. Eligibility and User Accounts
+
+• Purpose: Defines who can use the apps and the responsibilities of account holders.
+
+• Key points:
+  • OT (TheraSync Pro): Must be a licensed and qualified occupational therapist or similar professional. Account creation, security, confidentiality.
+  • Mentor (TheraSync Connect): Must be a parent, guardian, or authorized caregiver linked by an OT. Consent to monitor a child's progress. Account security.
+  • Child (TheraSync Kids): No account creation; access is granted and managed by a Mentor. Age restrictions (e.g., parental consent required for children under 13 per COPPA), privacy protections, etc.
+
+3. Privacy and Data Handling
+• Purpose: Explain what data is collected and how it is used.
+• Key points: Types of data (health-related, identifiers), storage & encryption, data sharing with third parties only when required, user rights, contact info for privacy concerns.
+
+4. Use Restrictions, Content, and Safety
+• Purpose: Describe allowed and disallowed activities, responsibility for content.
+• Key points: No misuse of apps, clinical disclaimers, no illegal content, reporting channels.
+
+(End of sample terms — replace with your full legal text as required.)
+
+

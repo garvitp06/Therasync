@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="24412" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24405"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="ROOT" customClass="ChatInputAccessoryView" customModule="OT_main" customModuleProvider="target">
+            <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+            <subviews>
+                <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" placeholder="Message" translatesAutoresizingMaskIntoConstraints="NO" id="TEXTFIELD">
+                    <rect key="frame" x="12" y="408" width="289" height="36"/>
+                    <fontDescription key="fontDescription" type="system" pointSize="16"/>
+                    <textInputTraits key="textInputTraits"/>
+                </textField>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="SEND">
+                    <rect key="frame" x="309" y="408" width="72" height="36"/>
+                    <state key="normal" title="Send"/>
+                </button>
+            </subviews>
+            <color key="backgroundColor" systemColor="systemGray6Color"/>
+            <constraints>
+                <constraint firstItem="TEXTFIELD" firstAttribute="leading" secondItem="ROOT" secondAttribute="leading" constant="12" id="c1"/>
+                <constraint firstItem="TEXTFIELD" firstAttribute="centerY" secondItem="ROOT" secondAttribute="centerY" id="c2"/>
+                <constraint firstItem="TEXTFIELD" firstAttribute="trailing" secondItem="SEND" secondAttribute="leading" constant="-8" id="c3"/>
+                <constraint firstItem="TEXTFIELD" firstAttribute="height" constant="36" id="c4"/>
+                <constraint firstItem="SEND" firstAttribute="trailing" secondItem="ROOT" secondAttribute="trailing" constant="-12" id="c5"/>
+                <constraint firstItem="SEND" firstAttribute="centerY" secondItem="ROOT" secondAttribute="centerY" id="c6"/>
+                <constraint firstItem="SEND" firstAttribute="height" constant="36" id="c7"/>
+                <constraint firstItem="SEND" firstAttribute="width" constant="72" id="c8"/>
+            </constraints>
+            <point key="canvasLocation" x="139" y="134"/>
+        </view>
+    </objects>
+    <resources>
+        <systemColor name="systemGray6Color">
+            <color red="0.94901960780000005" green="0.94901960780000005" blue="0.96862745100000003" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </systemColor>
+    </resources>
+</document>

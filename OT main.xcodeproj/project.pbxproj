@@ -84,6 +84,11 @@
 			path = "OT mainUITests";
 			sourceTree = "<group>";
 		};
+		29B7F77C2F7D6B3700B55572 /* apple-devices */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "apple-devices";
+			sourceTree = "<group>";
+		};
 		29F77B572ECB01FC0069775E /* OT main */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -159,6 +164,7 @@
 		29664C382EBC0FBE00FCE105 = {
 			isa = PBXGroup;
 			children = (
+				29B7F77C2F7D6B3700B55572 /* apple-devices */,
 				29F77B572ECB01FC0069775E /* OT main */,
 				29664C5A2EBC0FBF00FCE105 /* OT mainTests */,
 				29664C642EBC0FBF00FCE105 /* OT mainUITests */,
@@ -192,6 +198,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
+				29B7F77C2F7D6B3700B55572 /* apple-devices */,
 				29F77B572ECB01FC0069775E /* OT main */,
 			);
 			name = "OT main";
@@ -398,6 +405,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 9Q2N5ARNGB;
@@ -427,7 +435,7 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
@@ -436,6 +444,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 9Q2N5ARNGB;
@@ -465,7 +474,7 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};

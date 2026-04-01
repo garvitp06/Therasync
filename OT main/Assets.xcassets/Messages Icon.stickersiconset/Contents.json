@@ -1,13 +1,13 @@
 {
   "images" : [
     {
-      "filename" : "icon-iphone-29x29@2x.png",
+      "filename" : "icon-ios-29x29@2x.png",
       "idiom" : "iphone",
       "scale" : "2x",
       "size" : "29x29"
     },
     {
-      "filename" : "icon-iphone-29x29@3x.png",
+      "filename" : "icon-ios-29x29@3x.png",
       "idiom" : "iphone",
       "scale" : "3x",
       "size" : "29x29"

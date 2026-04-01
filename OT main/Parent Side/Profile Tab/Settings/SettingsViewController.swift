@@ -1,5 +1,4 @@
 import UIKit
-
 class SettingsViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
     
     private let tableView = UITableView(frame: .zero, style: .insetGrouped)
@@ -30,8 +29,10 @@ class SettingsViewController: UIViewController, UITableViewDelegate, UITableView
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        // 3. Hide the bar immediately as we leave to keep Dashboard/Profile roots clean
-        navigationController?.setNavigationBarHidden(true, animated: animated)
+        // Only hide the bar when going BACK to Dashboard/Profile, not when pushing child VCs
+        if isMovingFromParent {
+            navigationController?.setNavigationBarHidden(true, animated: animated)
+        }
     }
     
     deinit {
@@ -72,11 +73,9 @@ class SettingsViewController: UIViewController, UITableViewDelegate, UITableView
         backBtn.tintColor = color
         navigationItem.leftBarButtonItem = backBtn
     }
-
     @objc private func handleBack() {
         navigationController?.popViewController(animated: true)
     }
-
     private func setupUI() {
         let bg = ParentGradientView()
         bg.frame = view.bounds
@@ -102,7 +101,6 @@ class SettingsViewController: UIViewController, UITableViewDelegate, UITableView
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
     }
-
     // MARK: - TableView DataSource
     
     func numberOfSections(in tableView: UITableView) -> Int {
@@ -118,7 +116,6 @@ class SettingsViewController: UIViewController, UITableViewDelegate, UITableView
             header.textLabel?.textColor = .dynamicLabel
         }
     }
-
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         switch Section.allCases[section] {
         case .notifications: return 2
@@ -127,7 +124,6 @@ class SettingsViewController: UIViewController, UITableViewDelegate, UITableView
         case .support: return 1
         }
     }
-
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell(style: .default, reuseIdentifier: "settingCell")
         cell.backgroundColor = .dynamicCard
@@ -179,7 +175,6 @@ class SettingsViewController: UIViewController, UITableViewDelegate, UITableView
         cell.accessoryView = switchView
         cell.selectionStyle = .none
     }
-
     private func setupFaceIDCell(_ cell: UITableViewCell) {
         cell.textLabel?.text = "FaceID Lock"
         let switchView = UISwitch()
@@ -189,7 +184,6 @@ class SettingsViewController: UIViewController, UITableViewDelegate, UITableView
         cell.accessoryView = switchView
         cell.selectionStyle = .none
     }
-
     // MARK: - Actions
     
     @objc private func generalToggleChanged(_ sender: UISwitch) {
@@ -197,7 +191,6 @@ class SettingsViewController: UIViewController, UITableViewDelegate, UITableView
             UserDefaults.standard.set(sender.isOn, forKey: key)
         }
     }
-
     @objc private func faceIDToggleChanged(_ sender: UISwitch) {
         if sender.isOn {
             BiometricAuthManager.shared.authenticateUser { success, _ in
@@ -214,7 +207,6 @@ class SettingsViewController: UIViewController, UITableViewDelegate, UITableView
             UserDefaults.standard.set(false, forKey: "isFaceIDEnabled")
         }
     }
-
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         let section = Section.allCases[indexPath.section]

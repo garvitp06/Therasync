@@ -5,7 +5,7 @@ protocol AddReminderDelegate: AnyObject {
     func didAddAppointment()
 }
 
-class AddReminderViewController: UIViewController {
+class AddReminderViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, UITextFieldDelegate {
 
     weak var delegate: AddReminderDelegate?
     
@@ -13,15 +13,38 @@ class AddReminderViewController: UIViewController {
     private var linkedPatientUUID: UUID?
     private var linkedParentUUID: UUID?
     
-    // MARK: - UI Elements: Form
+    // MARK: - Patient Lookup Model
+    struct PatientLookup: Decodable {
+        let id: UUID
+        let first_name: String
+        let last_name: String?
+        let patient_id_number: String
+        let parent_uid: UUID?
+        
+        var fullName: String {
+            if let ln = last_name { return "\(first_name) \(ln)" }
+            return first_name
+        }
+    }
     
-    private let inputContainer: UIView = {
-        let v = UIView()
-        v.backgroundColor = .white
-        v.layer.cornerRadius = 12
-        return v
+    private var allPatients: [PatientLookup] = []
+    private var filteredPatients: [PatientLookup] = []
+    
+    // MARK: - UI Elements
+    private let formTableView: UITableView = {
+        let tv = UITableView(frame: .zero, style: .insetGrouped)
+        tv.keyboardDismissMode = .interactive
+        tv.register(UITableViewCell.self, forCellReuseIdentifier: "container")
+        return tv
     }()
     
+    // Form Cells (Static)
+    private let titleCell = UITableViewCell()
+    private let patientCell = UITableViewCell()
+    private let dateCell = UITableViewCell()
+    private let timeCell = UITableViewCell()
+    
+    // Cell Contents
     private let titleTextField: UITextField = {
         let tf = UITextField()
         tf.placeholder = "Appointment Title"
@@ -29,48 +52,28 @@ class AddReminderViewController: UIViewController {
         return tf
     }()
     
-    private let separator1: UIView = {
-        let v = UIView()
-        v.backgroundColor = .separator
-        return v
-    }()
-    
     private let patientIdField: UITextField = {
         let tf = UITextField()
-        tf.placeholder = "Patient ID (Required)"
+        tf.placeholder = "Patient Name or ID (Required)"
         tf.font = .systemFont(ofSize: 17)
         tf.autocapitalizationType = .none
-        tf.returnKeyType = .search
+        tf.returnKeyType = .done
         return tf
+    }()
+    
+    private let suggestionTableView: UITableView = {
+        let tv = UITableView()
+        tv.rowHeight = 44
+        tv.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
+        return tv
     }()
     
     private let statusLabel: UILabel = {
         let l = UILabel()
-        l.text = "Enter Patient ID to verify"
+        l.text = "Search Patient Name or ID"
         l.font = .systemFont(ofSize: 13)
         l.textColor = .systemGray
         l.numberOfLines = 0
-        return l
-    }()
-    
-    private let dateTimeContainer: UIView = {
-        let v = UIView()
-        v.backgroundColor = .white
-        v.layer.cornerRadius = 12
-        return v
-    }()
-    
-    private let dateLabel: UILabel = {
-        let l = UILabel()
-        l.text = "Date"
-        l.font = .systemFont(ofSize: 17)
-        return l
-    }()
-    
-    private let timeLabel: UILabel = {
-        let l = UILabel()
-        l.text = "Time"
-        l.font = .systemFont(ofSize: 17)
         return l
     }()
     
@@ -86,12 +89,6 @@ class AddReminderViewController: UIViewController {
         p.datePickerMode = .time
         p.preferredDatePickerStyle = .compact
         return p
-    }()
-    
-    private let separator2: UIView = {
-        let v = UIView()
-        v.backgroundColor = .separator
-        return v
     }()
 
     // MARK: - Lifecycle
@@ -109,11 +106,17 @@ class AddReminderViewController: UIViewController {
         setupUI()
         
         // --- PREVENT BACK DATING (UI) ---
-        // This prevents the user from scrolling to past dates
         datePicker.minimumDate = Date()
         
         patientIdField.delegate = self
-        patientIdField.addTarget(self, action: #selector(didEndEditingID), for: .editingDidEnd)
+        patientIdField.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
+        
+        titleTextField.delegate = self
+        
+        suggestionTableView.delegate = self
+        suggestionTableView.dataSource = self
+        
+        fetchAllPatients()
     }
     
     // MARK: - Setup Native Nav Bar
@@ -121,67 +124,132 @@ class AddReminderViewController: UIViewController {
         // Native Cancel Button
         navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(didTapCancel))
         
-        // Native "Tick" (Checkmark) Button
-        let tickButton = UIBarButtonItem(image: UIImage(systemName: "checkmark"), style: .done, target: self, action: #selector(didTapSave))
-        navigationItem.rightBarButtonItem = tickButton
+        // Native "Save" / "Done" Button
+        let saveButton = UIBarButtonItem(title: "Save", style: .done, target: self, action: #selector(didTapSave))
+        navigationItem.rightBarButtonItem = saveButton
+    }
+    
+    // MARK: - UI Layout
+    private func setupUI() {
+        // Configure standard cells
+        titleCell.selectionStyle = .none
+        titleCell.contentView.addSubview(titleTextField)
+        titleTextField.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            titleTextField.leadingAnchor.constraint(equalTo: titleCell.contentView.layoutMarginsGuide.leadingAnchor),
+            titleTextField.trailingAnchor.constraint(equalTo: titleCell.contentView.layoutMarginsGuide.trailingAnchor),
+            titleTextField.topAnchor.constraint(equalTo: titleCell.contentView.topAnchor),
+            titleTextField.bottomAnchor.constraint(equalTo: titleCell.contentView.bottomAnchor),
+            titleTextField.heightAnchor.constraint(greaterThanOrEqualToConstant: 44)
+        ])
+        
+        patientCell.selectionStyle = .none
+        patientCell.contentView.addSubview(patientIdField)
+        patientIdField.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            patientIdField.leadingAnchor.constraint(equalTo: patientCell.contentView.layoutMarginsGuide.leadingAnchor),
+            patientIdField.trailingAnchor.constraint(equalTo: patientCell.contentView.layoutMarginsGuide.trailingAnchor),
+            patientIdField.topAnchor.constraint(equalTo: patientCell.contentView.topAnchor),
+            patientIdField.bottomAnchor.constraint(equalTo: patientCell.contentView.bottomAnchor),
+            patientIdField.heightAnchor.constraint(greaterThanOrEqualToConstant: 44)
+        ])
+        
+        dateCell.textLabel?.text = "Date"
+        dateCell.selectionStyle = .none
+        dateCell.accessoryView = datePicker
+        
+        timeCell.textLabel?.text = "Time"
+        timeCell.selectionStyle = .none
+        timeCell.accessoryView = timePicker
+        
+        // Setup Form Table
+        formTableView.delegate = self
+        formTableView.dataSource = self
+        view.addSubview(formTableView)
+        formTableView.translatesAutoresizingMaskIntoConstraints = false
+        
+        NSLayoutConstraint.activate([
+            formTableView.topAnchor.constraint(equalTo: view.topAnchor),
+            formTableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            formTableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            formTableView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+        ])
     }
     
     // MARK: - Logic
-    @objc func didEndEditingID() {
-        guard let idText = patientIdField.text, !idText.isEmpty else { return }
-        verifyPatient(id: idText)
-    }
-    
-    func verifyPatient(id: String) {
-        statusLabel.text = "Searching..."
-        statusLabel.textColor = .systemBlue
-        
+    private func fetchAllPatients() {
         Task {
             do {
-                struct PatientLookup: Decodable {
-                    let id: UUID
-                    let first_name: String
-                    let parent_uid: UUID?
-                }
+                let therapistID = try await supabase.auth.session.user.id
                 
-                let result: PatientLookup = try await supabase
+                let results: [PatientLookup] = try await supabase
                     .from("patients")
-                    .select("id, first_name, parent_uid")
-                    .eq("patient_id_number", value: id.trimmingCharacters(in: .whitespaces))
-                    .single()
+                    .select("id, first_name, last_name, patient_id_number, parent_uid")
+                    .eq("ot_id", value: therapistID)
                     .execute()
                     .value
                 
-                self.linkedPatientUUID = result.id
-                self.linkedParentUUID = result.parent_uid
-                
                 await MainActor.run {
-                    if result.parent_uid != nil {
-                        self.statusLabel.text = "Linked to: \(result.first_name)"
-                        self.statusLabel.textColor = .systemGreen
-                    } else {
-                        self.statusLabel.text = "Found \(result.first_name), but no Parent is linked yet."
-                        self.statusLabel.textColor = .systemOrange
-                    }
+                    self.allPatients = results
                 }
             } catch {
-                await MainActor.run {
-                    self.linkedPatientUUID = nil
-                    self.linkedParentUUID = nil
-                    self.statusLabel.text = "Patient Not Found"
-                    self.statusLabel.textColor = .systemRed
-                }
+                print("Failed to fetch patients: \(error)")
             }
         }
     }
     
+    @objc private func textFieldDidChange(_ tf: UITextField) {
+        let query = tf.text?.lowercased().trimmingCharacters(in: .whitespaces) ?? ""
+        
+        let wasEmpty = filteredPatients.isEmpty
+        
+        if query.isEmpty {
+            linkedPatientUUID = nil
+            linkedParentUUID = nil
+            statusLabel.text = "Search Patient Name or ID"
+            statusLabel.textColor = .systemGray
+            
+            filteredPatients = []
+            suggestionTableView.reloadData()
+            
+            if !wasEmpty {
+                formTableView.deleteRows(at: [IndexPath(row: 2, section: 0)], with: .fade)
+            }
+            return
+        }
+        
+        // Disable currently linked patient if they type something else
+        linkedPatientUUID = nil
+        linkedParentUUID = nil
+        statusLabel.text = "Select a patient from the list"
+        statusLabel.textColor = .systemOrange
+        
+        filteredPatients = allPatients.filter {
+            $0.fullName.lowercased().contains(query) ||
+            $0.patient_id_number.lowercased().contains(query)
+        }
+        
+        let isEmpty = filteredPatients.isEmpty
+        suggestionTableView.reloadData()
+        
+        if wasEmpty && !isEmpty {
+            formTableView.insertRows(at: [IndexPath(row: 2, section: 0)], with: .fade)
+        } else if !wasEmpty && isEmpty {
+            formTableView.deleteRows(at: [IndexPath(row: 2, section: 0)], with: .fade)
+        }
+        
+        // Force header/footer update to refresh status text layout
+        formTableView.beginUpdates()
+        formTableView.endUpdates()
+    }
+    
     @objc private func didTapSave() {
-        guard let title = titleTextField.text, !title.trimmingCharacters(in: .whitespaces).isEmpty else {
+        guard let title = titleTextField.text?.trimmingCharacters(in: .whitespaces), !title.isEmpty else {
             showAlert(message: "Please enter a title")
             return
         }
         guard let patientID = linkedPatientUUID else {
-            showAlert(message: "Please enter a valid Patient ID first.")
+            showAlert(message: "Please select a valid Patient from the suggestions.")
             return
         }
         
@@ -193,7 +261,6 @@ class AddReminderViewController: UIViewController {
         let finalDate = calendar.date(bySettingHour: timeComp.hour ?? 0, minute: timeComp.minute ?? 0, second: 0, of: date) ?? date
         
         // 2. PREVENT BACK DATING (Logic Check)
-        // Check if the exact time chosen is in the past
         if finalDate < Date() {
             showAlert(message: "Appointments cannot be scheduled in the past.")
             return
@@ -228,97 +295,159 @@ class AddReminderViewController: UIViewController {
         present(alert, animated: true)
     }
     
-    // MARK: - UI Layout
-    private func setupUI() {
-        view.addSubview(inputContainer)
-        view.addSubview(dateTimeContainer)
-        view.addSubview(statusLabel)
-        
-        // Turn off auto-resizing masks
-        [inputContainer, dateTimeContainer, statusLabel].forEach {
-            $0.translatesAutoresizingMaskIntoConstraints = false
+    // MARK: - Form TableView Logic
+    func numberOfSections(in tableView: UITableView) -> Int {
+        if tableView == suggestionTableView { return 1 }
+        return 2
+    }
+    
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        if tableView == suggestionTableView {
+            return filteredPatients.count
         }
         
-        // Input Fields
-        inputContainer.addSubview(titleTextField)
-        inputContainer.addSubview(separator1)
-        inputContainer.addSubview(patientIdField)
-        titleTextField.translatesAutoresizingMaskIntoConstraints = false
-        separator1.translatesAutoresizingMaskIntoConstraints = false
-        patientIdField.translatesAutoresizingMaskIntoConstraints = false
-        
-        // Date Time Fields
-        dateTimeContainer.addSubview(dateLabel)
-        dateTimeContainer.addSubview(datePicker)
-        dateTimeContainer.addSubview(separator2)
-        dateTimeContainer.addSubview(timeLabel)
-        dateTimeContainer.addSubview(timePicker)
-        dateLabel.translatesAutoresizingMaskIntoConstraints = false
-        datePicker.translatesAutoresizingMaskIntoConstraints = false
-        separator2.translatesAutoresizingMaskIntoConstraints = false
-        timeLabel.translatesAutoresizingMaskIntoConstraints = false
-        timePicker.translatesAutoresizingMaskIntoConstraints = false
-        
-        NSLayoutConstraint.activate([
-            // Input Container (Pinned to Safe Area Top)
-            inputContainer.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
-            inputContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            inputContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            inputContainer.heightAnchor.constraint(equalToConstant: 100),
-            
-            titleTextField.topAnchor.constraint(equalTo: inputContainer.topAnchor),
-            titleTextField.leadingAnchor.constraint(equalTo: inputContainer.leadingAnchor, constant: 16),
-            titleTextField.trailingAnchor.constraint(equalTo: inputContainer.trailingAnchor, constant: -16),
-            titleTextField.heightAnchor.constraint(equalToConstant: 50),
-            
-            separator1.centerYAnchor.constraint(equalTo: inputContainer.centerYAnchor),
-            separator1.leadingAnchor.constraint(equalTo: inputContainer.leadingAnchor, constant: 16),
-            separator1.trailingAnchor.constraint(equalTo: inputContainer.trailingAnchor),
-            separator1.heightAnchor.constraint(equalToConstant: 0.5),
-            
-            patientIdField.bottomAnchor.constraint(equalTo: inputContainer.bottomAnchor),
-            patientIdField.leadingAnchor.constraint(equalTo: inputContainer.leadingAnchor, constant: 16),
-            patientIdField.trailingAnchor.constraint(equalTo: inputContainer.trailingAnchor, constant: -16),
-            patientIdField.heightAnchor.constraint(equalToConstant: 50),
-            
-            statusLabel.topAnchor.constraint(equalTo: inputContainer.bottomAnchor, constant: 8),
-            statusLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            statusLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            
-            // Date Container
-            dateTimeContainer.topAnchor.constraint(equalTo: statusLabel.bottomAnchor, constant: 20),
-            dateTimeContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            dateTimeContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            
-            // Date Row
-            dateLabel.topAnchor.constraint(equalTo: dateTimeContainer.topAnchor, constant: 12),
-            dateLabel.leadingAnchor.constraint(equalTo: dateTimeContainer.leadingAnchor, constant: 16),
-            dateLabel.heightAnchor.constraint(equalToConstant: 34),
-            
-            datePicker.centerYAnchor.constraint(equalTo: dateLabel.centerYAnchor),
-            datePicker.trailingAnchor.constraint(equalTo: dateTimeContainer.trailingAnchor, constant: -16),
-            
-            separator2.topAnchor.constraint(equalTo: dateLabel.bottomAnchor, constant: 12),
-            separator2.leadingAnchor.constraint(equalTo: dateTimeContainer.leadingAnchor, constant: 16),
-            separator2.trailingAnchor.constraint(equalTo: dateTimeContainer.trailingAnchor),
-            separator2.heightAnchor.constraint(equalToConstant: 0.5),
-            
-            // Time Row
-            timeLabel.topAnchor.constraint(equalTo: separator2.bottomAnchor, constant: 12),
-            timeLabel.leadingAnchor.constraint(equalTo: dateTimeContainer.leadingAnchor, constant: 16),
-            timeLabel.heightAnchor.constraint(equalToConstant: 34),
-            timeLabel.bottomAnchor.constraint(equalTo: dateTimeContainer.bottomAnchor, constant: -12),
-            
-            timePicker.centerYAnchor.constraint(equalTo: timeLabel.centerYAnchor),
-            timePicker.trailingAnchor.constraint(equalTo: dateTimeContainer.trailingAnchor, constant: -16)
-        ])
+        if section == 0 {
+            return filteredPatients.isEmpty ? 2 : 3
+        }
+        return 2 // Date & Time rows
     }
-}
-
-extension AddReminderViewController: UITextFieldDelegate {
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        if tableView == suggestionTableView {
+            let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
+            let patient = filteredPatients[indexPath.row]
+            cell.textLabel?.text = "\(patient.fullName) (\(patient.patient_id_number))"
+            cell.textLabel?.font = .systemFont(ofSize: 15)
+            return cell
+        }
+        
+        if indexPath.section == 0 {
+            if indexPath.row == 0 { return titleCell }
+            if indexPath.row == 1 { return patientCell }
+            
+            // Row 2 is the suggestion container
+            let cell = tableView.dequeueReusableCell(withIdentifier: "container", for: indexPath)
+            cell.selectionStyle = .none
+            if suggestionTableView.superview != cell.contentView {
+                cell.contentView.addSubview(suggestionTableView)
+                suggestionTableView.translatesAutoresizingMaskIntoConstraints = false
+                NSLayoutConstraint.activate([
+                    suggestionTableView.topAnchor.constraint(equalTo: cell.contentView.topAnchor),
+                    suggestionTableView.bottomAnchor.constraint(equalTo: cell.contentView.bottomAnchor),
+                    suggestionTableView.leadingAnchor.constraint(equalTo: cell.contentView.leadingAnchor),
+                    suggestionTableView.trailingAnchor.constraint(equalTo: cell.contentView.trailingAnchor)
+                ])
+            }
+            return cell
+        } else {
+            if indexPath.row == 0 { return dateCell }
+            if indexPath.row == 1 { return timeCell }
+        }
+        return UITableViewCell()
+    }
+    
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        if tableView == formTableView && indexPath.section == 0 && indexPath.row == 2 {
+            return 150
+        }
+        return UITableView.automaticDimension
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        if tableView == suggestionTableView {
+            tableView.deselectRow(at: indexPath, animated: true)
+            let selected = filteredPatients[indexPath.row]
+            
+            patientIdField.text = "\(selected.fullName) (\(selected.patient_id_number))"
+            linkedPatientUUID = selected.id
+            linkedParentUUID = selected.parent_uid
+            view.endEditing(true)
+            
+            if selected.parent_uid != nil {
+                statusLabel.text = "Linked to: \(selected.fullName)"
+                statusLabel.textColor = .systemGreen
+            } else {
+                statusLabel.text = "Selected \(selected.fullName), but no Parent is linked yet."
+                statusLabel.textColor = .systemOrange
+            }
+            
+            // clear filtered patients to hide TV
+            let wasEmpty = filteredPatients.isEmpty
+            filteredPatients.removeAll()
+            suggestionTableView.reloadData()
+            if !wasEmpty {
+                formTableView.deleteRows(at: [IndexPath(row: 2, section: 0)], with: .fade)
+            }
+            
+            // Reload footer texts
+            formTableView.beginUpdates()
+            formTableView.endUpdates()
+        } else {
+            tableView.deselectRow(at: indexPath, animated: true)
+        }
+    }
+    
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        if tableView == formTableView {
+            return section == 0 ? "Details" : "Date & Time"
+        }
+        return nil
+    }
+    
+    func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
+        if tableView == formTableView && section == 0 {
+            let container = UIView()
+            container.addSubview(statusLabel)
+            statusLabel.translatesAutoresizingMaskIntoConstraints = false
+            NSLayoutConstraint.activate([
+                statusLabel.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 16),
+                statusLabel.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -16),
+                statusLabel.topAnchor.constraint(equalTo: container.topAnchor, constant: 8),
+                statusLabel.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -8)
+            ])
+            return container
+        }
+        return nil
+    }
+    
+    // Auto-resizing for footer
+    func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
+        if tableView == formTableView && section == 0 {
+            return UITableView.automaticDimension
+        }
+        return 0
+    }
+    
+    // MARK: - Text Field Delegate
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
-        if textField == patientIdField { verifyPatient(id: textField.text ?? "") }
+        
+        if textField == patientIdField {
+            if !filteredPatients.isEmpty {
+                let selected = filteredPatients[0]
+                patientIdField.text = "\(selected.fullName) (\(selected.patient_id_number))"
+                linkedPatientUUID = selected.id
+                linkedParentUUID = selected.parent_uid
+                
+                if selected.parent_uid != nil {
+                    statusLabel.text = "Linked to: \(selected.fullName)"
+                    statusLabel.textColor = .systemGreen
+                } else {
+                    statusLabel.text = "Selected \(selected.fullName), but no Parent is linked yet."
+                    statusLabel.textColor = .systemOrange
+                }
+                
+                let wasEmpty = filteredPatients.isEmpty
+                filteredPatients.removeAll()
+                suggestionTableView.reloadData()
+                if !wasEmpty {
+                    formTableView.deleteRows(at: [IndexPath(row: 2, section: 0)], with: .fade)
+                }
+                
+                formTableView.beginUpdates()
+                formTableView.endUpdates()
+            }
+        }
         return true
     }
 }

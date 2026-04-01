@@ -123,15 +123,9 @@ class ChatCell: UITableViewCell {
         avatarImageView.image = UIImage(systemName: "person.circle.fill")
         avatarImageView.tintColor = .systemGray3
         
-        // 2. Load Remote Image from URL (Assuming avatarURL exists in ChatSummary)
-        if let urlString = chat.avatarURL, let url = URL(string: urlString) {
-            URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
-                if let data = data, let image = UIImage(data: data) {
-                    DispatchQueue.main.async {
-                        self?.avatarImageView.image = image
-                    }
-                }
-            }.resume()
+        // 2. Load Remote Image from URL
+        if let urlString = chat.avatarURL {
+            avatarImageView.loadImage(from: urlString, placeholder: UIImage(systemName: "person.circle.fill"))
         } else if let localImage = chat.avatar {
             // Fallback to local UIImage if URL is missing
             avatarImageView.image = localImage

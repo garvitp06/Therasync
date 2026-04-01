@@ -173,9 +173,14 @@ class UpdateProfileViewController: UIViewController, UIImagePickerControllerDele
                    let img = profileImageView.image,
                    let data = img.jpegData(compressionQuality: 0.5) {
                     let filePath = "ot_profiles/\(user.id.uuidString)_profile.jpg"
+                    
+                    // Supabase correctly requires contentType or it throws "schema validation error" popup
+                    let fileOptions = FileOptions(cacheControl: "3600", contentType: "image/jpeg", upsert: true)
+                    
                     _ = try await supabase.storage
                         .from("patient-photos")
-                        .upload(path: filePath, file: data, options: .init(upsert: true))
+                        .upload(path: filePath, file: data, options: fileOptions)
+                        
                     finalImageURL = try supabase.storage
                         .from("patient-photos")
                         .getPublicURL(path: filePath).absoluteString

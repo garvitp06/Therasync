@@ -162,8 +162,10 @@ class ProfileViewController: UIViewController, PHPickerViewControllerDelegate {
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        // Restore tab bar when leaving the profile
-        self.tabBarController?.tabBar.isHidden = false
+        // Only restore tab bar if leaving this profile back to the list
+        if self.isMovingFromParent {
+            self.tabBarController?.tabBar.isHidden = false
+        }
     }
     // MARK: - Edit Mode Logic (UPDATED)
     
@@ -341,13 +343,11 @@ class ProfileViewController: UIViewController, PHPickerViewControllerDelegate {
             nameLabel.text = patient.fullName
             
             // 1. Handle Profile Image Loading
-            if let urlString = patient.imageURL, let url = URL(string: urlString) {
-                // Native URLSession Loading
-                URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
-                    if let data = data, let image = UIImage(data: data) {
-                        DispatchQueue.main.async { self?.profileImageView.image = image }
-                    }
-                }.resume()
+            let config = UIImage.SymbolConfiguration(pointSize: 50, weight: .light)
+            let defaultPlaceholder = UIImage(systemName: "person.circle.fill", withConfiguration: config)
+            
+            if let urlString = patient.imageURL {
+                profileImageView.loadImage(from: urlString, placeholder: defaultPlaceholder)
                 
                 /* If using SDWebImage:
                 profileImageView.sd_setImage(with: url, placeholderImage: UIImage(systemName: "person.circle.fill"))

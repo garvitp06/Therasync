@@ -96,15 +96,8 @@ final class PatientCell: UITableViewCell {
         // --------------------------------------------
 
         // 2. Load Remote Image from URL
-        if let urlString = patient.imageURL, let url = URL(string: urlString) {
-            URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
-                if let data = data, let image = UIImage(data: data) {
-                    DispatchQueue.main.async {
-                        // Only update if the cell hasn't been reused for another patient yet
-                        self?.avatarImageView.image = image
-                    }
-                }
-            }.resume()
+        if let urlString = patient.imageURL {
+            avatarImageView.loadImage(from: urlString, placeholder: UIImage(systemName: "person.crop.circle.fill"))
         } else if let localImg = patient.profileImage {
             avatarImageView.image = localImg
         }

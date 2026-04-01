@@ -2,92 +2,65 @@ import UIKit
 
 final class AboutUsViewController: UIViewController {
 
-    // MARK: - Tab Bar Hiding Fix
     override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
         self.hidesBottomBarWhenPushed = true
     }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
+    required init?(coder: NSCoder) { fatalError() }
 
     // MARK: - UI Components
-    
     private let cardView: UIView = {
-        let view = UIView()
-        view.backgroundColor = .white
-        view.layer.cornerRadius = 24
-        view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOpacity = 0.12
-        view.layer.shadowOffset = CGSize(width: 0, height: 8)
-        view.layer.shadowRadius = 15
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
+        let v = UIView()
+        v.backgroundColor = .white
+        v.layer.cornerRadius = 24
+        v.layer.shadowColor = UIColor.black.cgColor
+        v.layer.shadowOpacity = 0.1
+        v.layer.shadowOffset = CGSize(width: 0, height: 10)
+        v.layer.shadowRadius = 20
+        v.translatesAutoresizingMaskIntoConstraints = false
+        return v
     }()
 
     private let textView: UITextView = {
         let tv = UITextView()
         tv.isEditable = false
+        tv.isSelectable = false // Prevents automatic scroll to cursor selection
         tv.alwaysBounceVertical = true
         tv.font = .systemFont(ofSize: 17, weight: .regular)
         tv.backgroundColor = .clear
         tv.textColor = .darkGray
-        
-        // 1. Set Justified Alignment
         tv.textAlignment = .justified
-        
-        // 2. Enable Hyphenation via the Layout Manager
-        // This prevents large gaps between words in justified text
         tv.layoutManager.hyphenationFactor = 1.0
-        
         tv.showsVerticalScrollIndicator = true
-        tv.textContainerInset = UIEdgeInsets(top: 20, left: 15, bottom: 20, right: 15)
+        tv.textContainerInset = UIEdgeInsets(top: 24, left: 20, bottom: 24, right: 20)
         tv.translatesAutoresizingMaskIntoConstraints = false
-        tv.isScrollEnabled = false
         return tv
     }()
 
     // MARK: - Lifecycle
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        textView.isScrollEnabled = true
-        textView.setContentOffset(.zero, animated: false) // Force jump to top
+    override func loadView() {
+        self.view = GradientView()
     }
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        setupGradientBackground()
         setupNavBar()
         setupLayout()
         
         textView.text = loadTextFile(named: "aboutus")
-        
     }
-
+    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        navigationController?.setNavigationBarHidden(false, animated: animated)
+        // Set offset before the view becomes visible to prevent layout jumping
+        textView.layoutManager.ensureLayout(for: textView.textContainer)
+        textView.setContentOffset(.zero, animated: false)
     }
 
     // MARK: - Setup
-    
-    private func setupGradientBackground() {
-        let gradientView = GradientView(frame: view.bounds)
-        gradientView.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(gradientView)
-        view.sendSubviewToBack(gradientView)
-        
-        NSLayoutConstraint.activate([
-            gradientView.topAnchor.constraint(equalTo: view.topAnchor),
-            gradientView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            gradientView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            gradientView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-        ])
-    }
-
     private func setupNavBar() {
         title = "About Us"
+        navigationItem.largeTitleDisplayMode = .never
         
         let appearance = UINavigationBarAppearance()
         appearance.configureWithTransparentBackground()
@@ -95,12 +68,13 @@ final class AboutUsViewController: UIViewController {
         
         navigationController?.navigationBar.standardAppearance = appearance
         navigationController?.navigationBar.scrollEdgeAppearance = appearance
+        navigationController?.navigationBar.compactAppearance = appearance
+        navigationController?.navigationBar.tintColor = .white
         
         let back = UIBarButtonItem(image: UIImage(systemName: "chevron.left"),
                                  style: .plain,
                                  target: self,
                                  action: #selector(backTapped))
-        back.tintColor = .black
         navigationItem.leftBarButtonItem = back
     }
 
@@ -109,17 +83,17 @@ final class AboutUsViewController: UIViewController {
         cardView.addSubview(textView)
         
         let guide = view.safeAreaLayoutGuide
-
+        
         NSLayoutConstraint.activate([
-            cardView.topAnchor.constraint(equalTo: guide.topAnchor, constant: 20),
-            cardView.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 20),
-            cardView.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -20),
-            cardView.bottomAnchor.constraint(equalTo: guide.bottomAnchor, constant: -30),
-
-            textView.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 5),
-            textView.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 5),
-            textView.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -5),
-            textView.bottomAnchor.constraint(equalTo: cardView.bottomAnchor, constant: -5)
+            cardView.topAnchor.constraint(equalTo: guide.topAnchor, constant: 16),
+            cardView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            cardView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            cardView.bottomAnchor.constraint(equalTo: guide.bottomAnchor, constant: -20),
+            
+            textView.topAnchor.constraint(equalTo: cardView.topAnchor),
+            textView.leadingAnchor.constraint(equalTo: cardView.leadingAnchor),
+            textView.trailingAnchor.constraint(equalTo: cardView.trailingAnchor),
+            textView.bottomAnchor.constraint(equalTo: cardView.bottomAnchor)
         ])
     }
 

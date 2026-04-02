@@ -169,8 +169,16 @@ class EditAppointmentViewController: UIViewController {
         // Set the patient ID field display
         if let patient = appointment.patient {
             patientIdField.text = patient.patientID
-            statusLabel.text = "Linked to: \(patient.firstName)"
-            statusLabel.textColor = .systemGreen
+            
+            // Only show warning if no parent is linked
+            if linkedParentUUID == nil {
+                statusLabel.text = "Patient \(patient.firstName) has no Parent linked yet."
+                statusLabel.textColor = .systemOrange
+            } else {
+                // Parent is linked - no message needed
+                statusLabel.text = ""
+                statusLabel.textColor = .systemGray
+            }
         }
     }
     
@@ -213,9 +221,11 @@ class EditAppointmentViewController: UIViewController {
                 
                 await MainActor.run {
                     if result.parent_uid != nil {
-                        self.statusLabel.text = "Linked to: \(result.first_name)"
-                        self.statusLabel.textColor = .systemGreen
+                        // Parent is linked - no message needed
+                        self.statusLabel.text = ""
+                        self.statusLabel.textColor = .systemGray
                     } else {
+                        // No parent linked - show warning
                         self.statusLabel.text = "Found \(result.first_name), but no Parent is linked yet."
                         self.statusLabel.textColor = .systemOrange
                     }

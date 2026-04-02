@@ -363,7 +363,7 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate,UITextFi
         let card = UIView()
         card.backgroundColor = .white
         card.layer.cornerRadius = 15
-        card.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        card.heightAnchor.constraint(greaterThanOrEqualToConstant: 56).isActive = true  // Increased for 2-line support
         
         let icon = UIImageView(image: UIImage(systemName: iconName))
         icon.tintColor = .systemGreen
@@ -372,6 +372,8 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate,UITextFi
         let label = UILabel()
         label.text = name
         label.font = .systemFont(ofSize: 14)
+        label.numberOfLines = 2  // Allow up to 2 lines for better readability
+        label.lineBreakMode = .byTruncatingMiddle  // iOS-native: truncates middle, preserves extension
         label.translatesAutoresizingMaskIntoConstraints = false
         
         card.addSubview(icon)
@@ -385,9 +387,12 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate,UITextFi
             icon.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 12),
             icon.centerYAnchor.constraint(equalTo: card.centerYAnchor),
             icon.widthAnchor.constraint(equalToConstant: 24),
+            icon.heightAnchor.constraint(equalToConstant: 24),
+            
             label.leadingAnchor.constraint(equalTo: icon.trailingAnchor, constant: 10),
-            label.centerYAnchor.constraint(equalTo: card.centerYAnchor),
-            label.trailingAnchor.constraint(lessThanOrEqualTo: card.trailingAnchor, constant: -10)
+            label.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -12),
+            label.topAnchor.constraint(equalTo: card.topAnchor, constant: 8),
+            label.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -8)
         ])
         
         container.addArrangedSubview(card)

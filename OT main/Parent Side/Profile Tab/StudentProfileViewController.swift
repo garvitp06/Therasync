@@ -2,32 +2,40 @@ import UIKit
 import Supabase
 
 class StudentProfileViewController: UIViewController {
-    
+
+    // MARK: - Data
+    private var linkedPatients: [Patient] = []
+    private var currentPatient: Patient?
+    private let lastSelectedChildIDKey = "LastSelectedChildID"
+
+    // Rebuilt after every fetch
+    private var mainItems: [String] = []      // chevron rows
+    private var switchItems: [String] = []    // switch child rows (also chevron)
+    private var unlinkItems: [String] = []    // red, no chevron
+    private let logoutItem = "Log out"
+
     // MARK: - UI Components
-    private let gradientView = ParentGradientView()
-    
-    private let titleLabel: UILabel = {
-        let label = UILabel()
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.text = "Profile"
-        label.font = .systemFont(ofSize: 34, weight: .bold)
-        label.textColor = .black
-        return label
+    private let tableView: UITableView = {
+        let tv = UITableView(frame: .zero, style: .insetGrouped)
+        tv.translatesAutoresizingMaskIntoConstraints = false
+        tv.backgroundColor = .clear
+        tv.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
+        return tv
     }()
-    
+
     private let profileImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        imageView.image = UIImage(systemName: "person.circle.fill")
-        imageView.tintColor = .systemGray4
-        imageView.contentMode = .scaleAspectFill
-        imageView.clipsToBounds = true
-        imageView.layer.borderWidth = 3
-        imageView.layer.borderColor = UIColor.white.cgColor
-        imageView.backgroundColor = .white
-        return imageView
+        let iv = UIImageView()
+        iv.translatesAutoresizingMaskIntoConstraints = false
+        let config = UIImage.SymbolConfiguration(pointSize: 50, weight: .light)
+        iv.image = UIImage(systemName: "person.circle.fill", withConfiguration: config)
+        iv.tintColor = .systemGray
+        iv.contentMode = .scaleAspectFill
+        iv.clipsToBounds = true
+        iv.layer.borderWidth = 3
+        iv.layer.borderColor = UIColor.white.cgColor
+        return iv
     }()
-    
+
     private let nameLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -37,359 +45,233 @@ class StudentProfileViewController: UIViewController {
         label.textAlignment = .center
         return label
     }()
-    
-    private let listCardView: UIView = {
-        let view = UIView()
-        view.backgroundColor = .white
-        view.layer.cornerRadius = 25
-        view.layer.masksToBounds = true
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
+
+    private let activityIndicator: UIActivityIndicatorView = {
+        let spinner = UIActivityIndicatorView(style: .medium)
+        spinner.color = .black
+        spinner.hidesWhenStopped = true
+        spinner.translatesAutoresizingMaskIntoConstraints = false
+        return spinner
     }()
-    
-    private let itemsStackView: UIStackView = {
-        let stackView = UIStackView()
-        stackView.axis = .vertical
-        stackView.spacing = 0
-        stackView.translatesAutoresizingMaskIntoConstraints = false
-        return stackView
-    }()
-    
-    // MARK: - Data Properties
-    private var linkedPatients: [Patient] = []
-    private var currentPatient: Patient?
-    private let lastSelectedChildIDKey = "LastSelectedChildID"
-    
+
     // MARK: - Lifecycle
+    override func loadView() {
+        self.view = ParentGradientView()
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupUI()
+        title = "Profile"
+        navigationController?.navigationBar.prefersLargeTitles = true
+        navigationItem.largeTitleDisplayMode = .always
+        setupTableView()
+        setupHeaderView()
     }
-    
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        navigationController?.setNavigationBarHidden(true, animated: animated)
+        applyNavBarAppearance()
+        navigationController?.setNavigationBarHidden(false, animated: animated)
         fetchAllLinkedPatients()
     }
-    
+
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        gradientView.frame = view.bounds
         profileImageView.layer.cornerRadius = profileImageView.bounds.width / 2
     }
-    
+
+    // MARK: - Nav Bar
+    private func applyNavBarAppearance() {
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithTransparentBackground()
+        appearance.titleTextAttributes = [.foregroundColor: UIColor.black]
+        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.black]
+        navigationController?.navigationBar.standardAppearance = appearance
+        navigationController?.navigationBar.scrollEdgeAppearance = appearance
+        navigationController?.navigationBar.compactAppearance = appearance
+        navigationController?.navigationBar.tintColor = .black
+    }
+
+    // MARK: - Table Setup
+    private func setupTableView() {
+        view.addSubview(tableView)
+        tableView.delegate = self
+        tableView.dataSource = self
+        NSLayoutConstraint.activate([
+            tableView.topAnchor.constraint(equalTo: view.topAnchor),
+            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+    }
+
+    private func setupHeaderView() {
+        let header = UIView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 180))
+        header.addSubview(profileImageView)
+        header.addSubview(nameLabel)
+        header.addSubview(activityIndicator)
+        NSLayoutConstraint.activate([
+            profileImageView.topAnchor.constraint(equalTo: header.topAnchor, constant: 10),
+            profileImageView.centerXAnchor.constraint(equalTo: header.centerXAnchor),
+            profileImageView.widthAnchor.constraint(equalToConstant: 100),
+            profileImageView.heightAnchor.constraint(equalToConstant: 100),
+            nameLabel.topAnchor.constraint(equalTo: profileImageView.bottomAnchor, constant: 12),
+            nameLabel.leadingAnchor.constraint(equalTo: header.leadingAnchor, constant: 16),
+            nameLabel.trailingAnchor.constraint(equalTo: header.trailingAnchor, constant: -16),
+            activityIndicator.centerXAnchor.constraint(equalTo: nameLabel.centerXAnchor),
+            activityIndicator.centerYAnchor.constraint(equalTo: nameLabel.centerYAnchor)
+        ])
+        tableView.tableHeaderView = header
+    }
+
     // MARK: - Data Fetching
     private func fetchAllLinkedPatients() {
+        activityIndicator.startAnimating()
+        nameLabel.text = ""
         Task {
             do {
                 let user = try await supabase.auth.session.user
-                
-                // Fetch using custom date decoder to prevent DOB crash
                 let decoder = JSONDecoder()
                 let formatter = DateFormatter()
                 formatter.dateFormat = "yyyy-MM-dd"
                 decoder.dateDecodingStrategy = .formatted(formatter)
-                
                 let response = try await supabase
-                    .from("patients")
-                    .select()
-                    .eq("parent_uid", value: user.id.uuidString)
-                    .execute()
-                
-                let fetchedPatients = try decoder.decode([Patient].self, from: response.data)
-                
-                DispatchQueue.main.async {
-                    self.linkedPatients = fetchedPatients
-                    
-                    // Logic: Persistence check
+                    .from("patients").select()
+                    .eq("parent_uid", value: user.id.uuidString).execute()
+                let fetched = try decoder.decode([Patient].self, from: response.data)
+                await MainActor.run {
+                    self.activityIndicator.stopAnimating()
+                    self.linkedPatients = fetched
                     if let lastID = UserDefaults.standard.string(forKey: self.lastSelectedChildIDKey),
-                       let savedPatient = fetchedPatients.first(where: { $0.patientID == lastID }) {
-                        self.currentPatient = savedPatient
+                       let saved = fetched.first(where: { $0.patientID == lastID }) {
+                        self.currentPatient = saved
                     } else {
-                        self.currentPatient = fetchedPatients.first
+                        self.currentPatient = fetched.first
                     }
-                    
                     self.updateHeaderUI()
-                    self.addListItems()
+                    self.rebuildMenu()
+                    self.tableView.reloadData()
                 }
             } catch {
-                print("Error: \(error)")
+                await MainActor.run {
+                    self.activityIndicator.stopAnimating()
+                    self.nameLabel.text = "Error loading"
+                }
             }
         }
     }
-    
+
     private func updateHeaderUI() {
-        guard let patient = currentPatient else { return }
+        guard let patient = currentPatient else { nameLabel.text = "No child linked"; return }
         nameLabel.text = patient.fullName
-        // Set profile image if imageURL exists...
+        if let url = patient.imageURL {
+            let config = UIImage.SymbolConfiguration(pointSize: 50, weight: .light)
+            let placeholder = UIImage(systemName: "person.circle.fill", withConfiguration: config)
+            profileImageView.loadImage(from: url, placeholder: placeholder)
+        }
     }
-    
-    // MARK: - UI Setup
-    private func setupUI() {
-        view.addSubview(gradientView)
-        view.addSubview(titleLabel)
-        view.addSubview(profileImageView)
-        view.addSubview(nameLabel)
-        view.addSubview(listCardView)
-        listCardView.addSubview(itemsStackView)
-        
-        setupConstraints()
+
+    private func rebuildMenu() {
+        mainItems = ["Update Profile", "Settings"]
+        if linkedPatients.count < 2 { mainItems.append("Add Second Child") }
+
+        let others = linkedPatients.filter { $0.patientID != currentPatient?.patientID }
+        switchItems = others.map { "Switch to \($0.firstName)'s Profile" }
+
+        unlinkItems = []
+        if let name = currentPatient?.firstName { unlinkItems.append("Unlink \(name)") }
     }
-    
-    private func setupConstraints() {
-        let safeArea = view.safeAreaLayoutGuide
-        NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: safeArea.topAnchor, constant: 40),
-            titleLabel.leadingAnchor.constraint(equalTo: safeArea.leadingAnchor, constant: 20),
-            profileImageView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 6),
-            profileImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            profileImageView.widthAnchor.constraint(equalToConstant: 100),
-            profileImageView.heightAnchor.constraint(equalToConstant: 100),
-            nameLabel.topAnchor.constraint(equalTo: profileImageView.bottomAnchor, constant: 12),
-            nameLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            listCardView.topAnchor.constraint(equalTo: nameLabel.bottomAnchor, constant: 24),
-            listCardView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            listCardView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            itemsStackView.topAnchor.constraint(equalTo: listCardView.topAnchor, constant: 8),
-            itemsStackView.bottomAnchor.constraint(equalTo: listCardView.bottomAnchor, constant: -8),
-            itemsStackView.leadingAnchor.constraint(equalTo: listCardView.leadingAnchor, constant: 16),
-            itemsStackView.trailingAnchor.constraint(equalTo: listCardView.trailingAnchor, constant: -16)
-        ])
-    }
-    
-    private func addListItems() {
-        itemsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
-        
-        // 1. Core Actions
-        var menuItems = ["Update Profile", "Settings"]
-        if linkedPatients.count < 2 {
-            menuItems.append("Add Second Child")
-        }
-        
-        for title in menuItems {
-            itemsStackView.addArrangedSubview(createListItemView(title: title, showChevron: true, isDestructive: false))
-            itemsStackView.addArrangedSubview(createSeparatorView())
-        }
-        
-        // 2. Profile Switcher
-        let otherKids = linkedPatients.filter { $0.patientID != currentPatient?.patientID }
-        for kid in otherKids {
-            let item = createListItemView(title: "Switch to \(kid.firstName)'s Profile", showChevron: false, isDestructive: false)
-            item.accessibilityIdentifier = "switch_\(kid.patientID)"
-            itemsStackView.addArrangedSubview(item)
-            itemsStackView.addArrangedSubview(createSeparatorView())
-        }
-        
-        // 3. Unlink
-        if let name = currentPatient?.firstName {
-            let unlinkItem = createListItemView(title: "Unlink \(name)", showChevron: false, isDestructive: true)
-            unlinkItem.accessibilityIdentifier = "unlink_action"
-            itemsStackView.addArrangedSubview(unlinkItem)
-            itemsStackView.addArrangedSubview(createSeparatorView())
-        }
-        
-        itemsStackView.addArrangedSubview(createListItemView(title: "Log out", showChevron: false, isDestructive: true))
-    }
-    
-    private func createListItemView(title: String, showChevron: Bool, isDestructive: Bool) -> UIButton {
-        let itemView = UIButton(type: .system)
-        itemView.translatesAutoresizingMaskIntoConstraints = false
-        itemView.contentHorizontalAlignment = .leading
-        if itemView.accessibilityIdentifier == nil { itemView.accessibilityIdentifier = title }
-        itemView.addTarget(self, action: #selector(listItemTapped(_:)), for: .touchUpInside)
-        
-        let label = UILabel()
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.text = title
-        label.font = .systemFont(ofSize: 17)
-        label.textColor = isDestructive ? .systemRed : .black
-        itemView.addSubview(label)
-        
-        NSLayoutConstraint.activate([
-            itemView.heightAnchor.constraint(greaterThanOrEqualToConstant: 50),
-            label.leadingAnchor.constraint(equalTo: itemView.leadingAnchor),
-            label.centerYAnchor.constraint(equalTo: itemView.centerYAnchor)
-        ])
-        
-        if showChevron {
-            let chevron = UIImageView(image: UIImage(systemName: "chevron.right"))
-            chevron.translatesAutoresizingMaskIntoConstraints = false
-            chevron.tintColor = .systemGray
-            itemView.addSubview(chevron)
-            NSLayoutConstraint.activate([
-                chevron.trailingAnchor.constraint(equalTo: itemView.trailingAnchor),
-                chevron.centerYAnchor.constraint(equalTo: itemView.centerYAnchor),
-                chevron.widthAnchor.constraint(equalToConstant: 8),
-                chevron.heightAnchor.constraint(equalToConstant: 14)
-            ])
-        }
-        return itemView
-    }
-    
-    private func createSeparatorView() -> UIView {
-        let view = UIView(); view.backgroundColor = .systemGray5; view.translatesAutoresizingMaskIntoConstraints = false
-        view.heightAnchor.constraint(equalToConstant: 1).isActive = true
-        return view
-    }
-    
-    // MARK: - Actions
-    @objc private func listItemTapped(_ sender: UIButton) {
-        guard let id = sender.accessibilityIdentifier else { return }
-        
-        if id == "Log out" {
-            handleLogoutConfirmation() // Updated to show alert
-        }
-        else if id == "Settings" {
-            let settingsVC = SettingsViewController() // Connected Settings
-            settingsVC.hidesBottomBarWhenPushed = true
-            navigationController?.pushViewController(settingsVC, animated: true)
-        }
-        else if id == "Add Second Child" {
+
+    // MARK: - Number of sections
+    // Section 0 = main (Update Profile, Settings, Add Second Child)
+    // Section 1 = switch children (optional)
+    // Section 2 = unlink + logout
+    private var hasSwitchSection: Bool { !switchItems.isEmpty }
+
+    private func destructiveSection() -> Int { hasSwitchSection ? 2 : 1 }
+
+    // MARK: - Action Routing
+    private func handleTap(title: String) {
+        switch title {
+        case "Update Profile":
+            let vc = ParentUpdateProfileViewController()
+            vc.patient = self.currentPatient
+            vc.hidesBottomBarWhenPushed = true
+            navigationController?.pushViewController(vc, animated: true)
+        case "Settings":
+            let vc = SettingsViewController()
+            vc.hidesBottomBarWhenPushed = true
+            navigationController?.pushViewController(vc, animated: true)
+        case "Add Second Child":
             showAddChildPopup()
-        }
-        else if id == "unlink_action" {
-            handleUnlink()
-        }
-        else if id == "Update Profile" {
-            let updateVC = ParentUpdateProfileViewController()
-            updateVC.patient = self.currentPatient
-            navigationController?.pushViewController(updateVC, animated: true)
-        }
-        else if id.contains("switch_") {
-            let patientID = id.replacingOccurrences(of: "switch_", with: "")
-            switchToPatient(withID: patientID)
+        case "Log out":
+            handleLogoutConfirmation()
+        default:
+            if title.hasPrefix("Switch to ") {
+                // derive patientID from the matching switchItem index
+                let others = linkedPatients.filter { $0.patientID != currentPatient?.patientID }
+                if let match = others.first(where: { "Switch to \($0.firstName)'s Profile" == title }) {
+                    switchToPatient(withID: match.patientID)
+                }
+            } else if title.hasPrefix("Unlink ") {
+                handleUnlink()
+            }
         }
     }
-    
+
+    // MARK: - Business Logic
     private func switchToPatient(withID id: String) {
         guard let target = linkedPatients.first(where: { $0.patientID == id }) else { return }
-        
         Task {
             do {
                 let user = try await supabase.auth.session.user
-                // Update the profile so the database knows this is now the 'Active' child
-                try await supabase
-                    .from("profiles")
+                try await supabase.from("profiles")
                     .update(["linked_patient_id": id])
-                    .eq("id", value: user.id)
-                    .execute()
-                
+                    .eq("id", value: user.id).execute()
                 await MainActor.run {
                     UserDefaults.standard.set(id, forKey: self.lastSelectedChildIDKey)
-                    UIView.transition(with: self.view, duration: 0.4, options: .transitionCrossDissolve, animations: {
+                    UIView.transition(with: self.view, duration: 0.35, options: .transitionCrossDissolve) {
                         self.currentPatient = target
                         self.updateHeaderUI()
-                        self.addListItems()
-                    })
+                        self.rebuildMenu()
+                        self.tableView.reloadData()
+                    }
                 }
-            } catch {
-                print("Switch Error: \(error)")
-            }
+            } catch { print("Switch error: \(error)") }
         }
     }
-    private func showToast(message: String) {
-        let toastContainer = UIView()
-        toastContainer.backgroundColor = UIColor.black.withAlphaComponent(0.8)
-        toastContainer.layer.cornerRadius = 20
-        toastContainer.translatesAutoresizingMaskIntoConstraints = false
-        
-        let label = UILabel()
-        label.textColor = .white
-        label.text = message
-        label.font = .systemFont(ofSize: 14, weight: .medium)
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        
-        toastContainer.addSubview(label)
-        view.addSubview(toastContainer)
-        
-        NSLayoutConstraint.activate([
-            toastContainer.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
-            toastContainer.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            toastContainer.heightAnchor.constraint(equalToConstant: 40),
-            label.leadingAnchor.constraint(equalTo: toastContainer.leadingAnchor, constant: 20),
-            label.trailingAnchor.constraint(equalTo: toastContainer.trailingAnchor, constant: -20),
-            label.centerYAnchor.constraint(equalTo: toastContainer.centerYAnchor)
-        ])
-        
-        // Animation: Fade in and slide down
-        toastContainer.transform = CGAffineTransform(translationX: 0, y: -20)
-        toastContainer.alpha = 0
-        
-        UIView.animate(withDuration: 0.5, delay: 0, usingSpringWithDamping: 0.7, initialSpringVelocity: 0.5, options: .curveEaseOut, animations: {
-            toastContainer.alpha = 1
-            toastContainer.transform = .identity
-        }) { _ in
-            UIView.animate(withDuration: 0.5, delay: 2.0, options: .curveEaseIn, animations: {
-                toastContainer.alpha = 0
-                toastContainer.transform = CGAffineTransform(translationX: 0, y: -20)
-            }) { _ in
-                toastContainer.removeFromSuperview()
-            }
-        }
-    }
+
     private func handleUnlink() {
         guard let patient = currentPatient else { return }
-        
         Task {
             do {
                 let user = try await supabase.auth.session.user
-                
-                // 1. Remove parent_uid from patients table
                 try await supabase.from("patients")
                     .update(["parent_uid": String?.none])
                     .eq("patient_id_number", value: patient.patientID).execute()
-
-                // 2. Determine which profile slot to clear
-                let profileResponse = try await supabase.from("profiles")
+                let resp = try await supabase.from("profiles")
                     .select("linked_patient_id, linked_patient_id_2")
                     .eq("id", value: user.id).single().execute()
-                
-                let data = try JSONSerialization.jsonObject(with: profileResponse.data) as? [String: Any]
+                let data = try JSONSerialization.jsonObject(with: resp.data) as? [String: Any]
                 let slot1 = data?["linked_patient_id"] as? String
-                
                 let isSlot1 = (slot1 == patient.patientID)
                 let fieldToClear = isSlot1 ? "linked_patient_id" : "linked_patient_id_2"
-                
-                // 3. Clear that specific slot
                 try await supabase.from("profiles")
                     .update([fieldToClear: String?.none])
                     .eq("id", value: user.id).execute()
-
-                // 4. Check if the OTHER slot still has a child
-                let remainingChildCode = isSlot1 ? (data?["linked_patient_id_2"] as? String) : slot1
-
+                let remaining = isSlot1 ? (data?["linked_patient_id_2"] as? String) : slot1
                 await MainActor.run {
-                    if let nextCode = remainingChildCode, !nextCode.isEmpty {
-                        // Patient A still exists! Refresh the dashboard for them.
+                    if let next = remaining, !next.isEmpty {
                         self.showToast(message: "Unlinked. Returning to other profile.")
-                        self.fetchAllLinkedPatients() // This will find the remaining child
+                        self.fetchAllLinkedPatients()
                     } else {
-                        // No children left in either slot
                         self.navigateToEmptyState()
                     }
                 }
-            } catch {
-                print("Unlink error: \(error)")
-            }
+            } catch { print("Unlink error: \(error)") }
         }
     }
-    private func navigateToEmptyState() {
-        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let window = windowScene.windows.first else { return }
-        
-        let emptyVC = ParentEmptyStateViewController()
-        window.rootViewController = UINavigationController(rootViewController: emptyVC)
-        UIView.transition(with: window, duration: 0.4, options: .transitionCrossDissolve, animations: nil)
-    }
-    private func updateProfileLink(to code: String?, for userID: UUID) {
-        Task {
-            try? await supabase.from("profiles")
-                .update(["linked_patient_id": code])
-                .eq("id", value: userID)
-                .execute()
-        }
-    }
+
     private func showAddChildPopup() {
         let alert = UIAlertController(title: "Link Child", message: "Enter 5-digit code", preferredStyle: .alert)
         alert.addTextField { $0.placeholder = "00000"; $0.keyboardType = .numberPad }
@@ -400,98 +282,161 @@ class StudentProfileViewController: UIViewController {
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         present(alert, animated: true)
     }
-    
+
     private func performLink(code: String) {
         Task {
             do {
                 let user = try await supabase.auth.session.user
-                let currentUID = user.id.uuidString
-
-                // Step 1: Attempt to claim the patient.
-                // We use .select() to verify if the row was actually updated.
-                let patientUpdate = try await supabase
-                    .from("patients")
-                    .update(["parent_uid": currentUID])
-                    .eq("patient_id_number", value: code)
-                    .select()
-                    .execute()
-
-                // CHECK: If response data is empty, the RLS policy blocked the update
-                // because the patient is already linked to another account (ID 1).
-                if patientUpdate.data.isEmpty {
-                    await MainActor.run {
-                        self.showToast(message: "Patient already linked to another profile.")
-                    }
-                    return // Exit immediately; DO NOT update the profile slots.
+                let update = try await supabase.from("patients")
+                    .update(["parent_uid": user.id.uuidString])
+                    .eq("patient_id_number", value: code).select().execute()
+                if update.data.isEmpty {
+                    await MainActor.run { self.showToast(message: "Patient already linked to another profile.") }
+                    return
                 }
-
-                // Step 2: Only if Step 1 succeeded, find an empty slot in the profile
-                let profileResponse = try await supabase.from("profiles")
+                let resp = try await supabase.from("profiles")
                     .select("linked_patient_id, linked_patient_id_2")
                     .eq("id", value: user.id).single().execute()
-                
-                let data = try JSONSerialization.jsonObject(with: profileResponse.data) as? [String: Any]
+                let data = try JSONSerialization.jsonObject(with: resp.data) as? [String: Any]
                 let slot1 = data?["linked_patient_id"] as? String
                 let slot2 = data?["linked_patient_id_2"] as? String
-                
-                var updateField = ""
-                if slot1 == nil || slot1?.isEmpty == true {
-                    updateField = "linked_patient_id"
-                } else if slot2 == nil || slot2?.isEmpty == true {
-                    updateField = "linked_patient_id_2"
-                } else {
-                    await MainActor.run { self.showToast(message: "Maximum 2 children reached.") }
-                    return
-                }
-
-                // Step 3: Update the identified profile slot
-                try await supabase.from("profiles")
-                    .update([updateField: code])
-                    .eq("id", value: user.id).execute()
-
-                await MainActor.run {
-                    self.showToast(message: "Child added successfully!")
-                    self.fetchAllLinkedPatients()
-                }
+                var field = ""
+                if slot1 == nil || slot1?.isEmpty == true { field = "linked_patient_id" }
+                else if slot2 == nil || slot2?.isEmpty == true { field = "linked_patient_id_2" }
+                else { await MainActor.run { self.showToast(message: "Maximum 2 children reached.") }; return }
+                try await supabase.from("profiles").update([field: code]).eq("id", value: user.id).execute()
+                await MainActor.run { self.showToast(message: "Child added!"); self.fetchAllLinkedPatients() }
             } catch {
-                print("Link Error: \(error)")
-                await MainActor.run {
-                    self.showToast(message: "Error linking patient. Please try again.")
-                }
+                await MainActor.run { self.showToast(message: "Error linking. Try again.") }
             }
         }
     }
+
     private func handleLogoutConfirmation() {
-        let alert = UIAlertController(title: "Logout", message: "Are you sure you want to sign out?", preferredStyle: .alert)
+        let alert = UIAlertController(title: "Log Out", message: "Are you sure you want to sign out?", preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        alert.addAction(UIAlertAction(title: "Logout", style: .destructive) { _ in
-            self.performLogout()
-        })
+        alert.addAction(UIAlertAction(title: "Log Out", style: .destructive) { _ in self.performLogout() })
         present(alert, animated: true)
     }
-    
+
     private func performLogout() {
         Task {
-            // 1. Sign out from Supabase
             try? await supabase.auth.signOut()
-            
             await MainActor.run {
-                // 2. Safely find the window through the connected scenes
                 guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                      let window = windowScene.windows.first else {
-                    return
-                }
-                
-                // 3. Setup the Login Flow
-                let loginVC = NewLoginViewController()
-                let nav = UINavigationController(rootViewController: loginVC)
-                
-                // 4. Update the Root View Controller
+                      let window = windowScene.windows.first else { return }
+                let nav = UINavigationController(rootViewController: NewLoginViewController())
+                nav.setNavigationBarHidden(true, animated: false)
                 window.rootViewController = nav
-                
-                // 5. Use safe transition
-                UIView.transition(with: window, duration: 0.5, options: .transitionFlipFromLeft, animations: nil)
             }
         }
+    }
+
+    private func navigateToEmptyState() {
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first else { return }
+        window.rootViewController = UINavigationController(rootViewController: ParentEmptyStateViewController())
+        UIView.transition(with: window, duration: 0.4, options: .transitionCrossDissolve, animations: nil)
+    }
+
+    private func showToast(message: String) {
+        let toast = UIView()
+        toast.backgroundColor = UIColor.black.withAlphaComponent(0.8)
+        toast.layer.cornerRadius = 20
+        toast.translatesAutoresizingMaskIntoConstraints = false
+        let label = UILabel()
+        label.textColor = .white; label.text = message
+        label.font = .systemFont(ofSize: 14, weight: .medium)
+        label.textAlignment = .center; label.translatesAutoresizingMaskIntoConstraints = false
+        toast.addSubview(label); view.addSubview(toast)
+        NSLayoutConstraint.activate([
+            toast.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
+            toast.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            toast.heightAnchor.constraint(equalToConstant: 40),
+            label.leadingAnchor.constraint(equalTo: toast.leadingAnchor, constant: 20),
+            label.trailingAnchor.constraint(equalTo: toast.trailingAnchor, constant: -20),
+            label.centerYAnchor.constraint(equalTo: toast.centerYAnchor)
+        ])
+        toast.transform = CGAffineTransform(translationX: 0, y: -20); toast.alpha = 0
+        UIView.animate(withDuration: 0.5, delay: 0, usingSpringWithDamping: 0.7, initialSpringVelocity: 0.5) {
+            toast.alpha = 1; toast.transform = .identity
+        } completion: { _ in
+            UIView.animate(withDuration: 0.5, delay: 2.0, options: .curveEaseIn) {
+                toast.alpha = 0; toast.transform = CGAffineTransform(translationX: 0, y: -20)
+            } completion: { _ in toast.removeFromSuperview() }
+        }
+    }
+}
+
+// MARK: - UITableView DataSource & Delegate
+extension StudentProfileViewController: UITableViewDataSource, UITableViewDelegate {
+
+    func numberOfSections(in tableView: UITableView) -> Int {
+        hasSwitchSection ? 3 : 2
+    }
+
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        switch section {
+        case 0: return mainItems.count
+        case 1: return hasSwitchSection ? switchItems.count : (unlinkItems.count + 1) // unlink + logout
+        case 2: return unlinkItems.count + 1
+        default: return 0
+        }
+    }
+
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = UITableViewCell(style: .default, reuseIdentifier: "cell")
+        cell.backgroundColor = .white
+
+        let title: String
+        let isDestructive: Bool
+        let showChevron: Bool
+
+        switch indexPath.section {
+        case 0:
+            title = mainItems[indexPath.row]
+            isDestructive = false
+            showChevron = true
+        case 1 where hasSwitchSection:
+            title = switchItems[indexPath.row]
+            isDestructive = false
+            showChevron = true
+        default:
+            // destructive section: unlink rows first, then logout
+            let allDestructive = unlinkItems + [logoutItem]
+            title = allDestructive[indexPath.row]
+            isDestructive = true
+            showChevron = false
+        }
+
+        cell.textLabel?.text = title
+        cell.textLabel?.font = .systemFont(ofSize: 17)
+        cell.textLabel?.textColor = isDestructive ? .systemRed : .black
+        cell.textLabel?.textAlignment = isDestructive ? .center : .natural
+        cell.accessoryType = showChevron ? .disclosureIndicator : .none
+        cell.selectionStyle = .default
+        return cell
+    }
+
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        if hasSwitchSection && section == 1 { return "Switch Profile" }
+        return nil
+    }
+
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+
+        let title: String
+        switch indexPath.section {
+        case 0:
+            title = mainItems[indexPath.row]
+        case 1 where hasSwitchSection:
+            title = switchItems[indexPath.row]
+        default:
+            let allDestructive = unlinkItems + [logoutItem]
+            title = allDestructive[indexPath.row]
+        }
+
+        handleTap(title: title)
     }
 }

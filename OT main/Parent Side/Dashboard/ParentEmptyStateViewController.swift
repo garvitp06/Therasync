@@ -124,34 +124,18 @@ class ParentEmptyStateViewController: UIViewController {
 
     // MARK: - Actions
     @objc private func handleLogout() {
+        let alert = UIAlertController(title: "Log Out", message: "Are you sure you want to sign out?", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Log Out", style: .destructive) { _ in
+            self.performLogout()
+        })
+        present(alert, animated: true)
+    }
+
+    private func performLogout() {
         Task {
-            do {
-                // 1. Sign out from Supabase
-                try await supabase.auth.signOut()
-                
-                await MainActor.run {
-                    // 2. Safely find the active window
-                    guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                          let window = windowScene.windows.first else {
-                        return
-                    }
-                    
-                    // 3. Prepare the login flow
-                    let loginVC = NewLoginViewController()
-                    let nav = UINavigationController(rootViewController: loginVC)
-                    
-                    // 4. Reset Root safely
-                    window.rootViewController = nav
-                    
-                    // 5. Use the window we just found for the transition
-                    UIView.transition(with: window,
-                                     duration: 0.5,
-                                     options: .transitionCrossDissolve,
-                                     animations: nil)
-                }
-            } catch {
-                print("Logout failed: \(error)")
-                // Fallback: Even if sign out fails locally, force the user to login screen
+            try? await supabase.auth.signOut()
+            await MainActor.run {
                 self.forceToLogin()
             }
         }
@@ -161,7 +145,9 @@ class ParentEmptyStateViewController: UIViewController {
     private func forceToLogin() {
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let window = windowScene.windows.first else { return }
-        window.rootViewController = UINavigationController(rootViewController: NewLoginViewController())
+        let nav = UINavigationController(rootViewController: NewLoginViewController())
+        nav.setNavigationBarHidden(true, animated: false)
+        window.rootViewController = nav
     }
 
     @objc private func handleLinkTap() {
@@ -255,24 +241,10 @@ class ParentEmptyStateViewController: UIViewController {
     }
 
     private func proceedToDashboard() {
-            // SUCCESS: The 5-digit code worked.
-            // We find the window robustly through the connected scenes to avoid nil crashes
-            guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                  let window = windowScene.windows.first else {
-                return
-            }
-
-            let mainAppTabBar = ParentTabBarViewController()
-            
-            // Update Root View Controller to the full dashboard
-            window.rootViewController = mainAppTabBar
-            
-            // Smooth transition to signify the app is "unlocking"
-            UIView.transition(with: window,
-                              duration: 0.5,
-                              options: .transitionFlipFromRight,
-                              animations: nil)
-        }
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first else { return }
+        window.rootViewController = ParentTabBarViewController()
+    }
 
     @objc private func dismissKeyboard() { view.endEditing(true) }
     

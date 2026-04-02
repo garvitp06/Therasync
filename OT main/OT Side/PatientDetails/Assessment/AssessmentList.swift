@@ -66,10 +66,14 @@ final class AssessmentList: UIViewController, UITableViewDataSource, UITableView
         }
         
         tableView.addObserver(self, forKeyPath: "contentSize", options: .new, context: nil)
+        
+        // Listen for assessment completion notifications
+        NotificationCenter.default.addObserver(self, selector: #selector(assessmentDidComplete(_:)), name: NSNotification.Name("AssessmentDidComplete"), object: nil)
     }
     
     deinit {
         tableView.removeObserver(self, forKeyPath: "contentSize")
+        NotificationCenter.default.removeObserver(self)
     }
     
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
@@ -154,52 +158,75 @@ final class AssessmentList: UIViewController, UITableViewDataSource, UITableView
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let name = assessmentsToDisplay[indexPath.row]
-        
-        // 2. MARK VISITED IN MANAGER
-        if let pid = patientID {
-            AssessmentSessionManager.shared.markAssessmentVisited(for: pid, assessmentName: name)
-            // Update local set to reflect change immediately
-            visitedAssessments.insert(name)
-        }
 
-        // Navigation (Same as before)
+        // Navigation
+        var vc: UIViewController?
+        
         switch name {
         case "ADOS":
-            let vc = ADOSAssessmentViewController()
-            vc.patientID = self.patientID
-            navigationController?.pushViewController(vc, animated: true)
+            let a = ADOSAssessmentViewController()
+            a.patientID = self.patientID
+            vc = a
         case "Birth History":
-            let vc = BirthHistoryViewController()
-            vc.patientID = self.patientID
-            navigationController?.pushViewController(vc, animated: true)
-        case "Patient Difficulties":
-            let vc = PatientDifficultiesViewController()
-            vc.patientID = self.patientID
-            navigationController?.pushViewController(vc, animated: true)
+            let a = BirthHistoryViewController()
+            a.patientID = self.patientID
+            vc = a
+        case "Sensory Profile":
+            let a = SensoryProfileViewController()
+            a.patientID = self.patientID
+            vc = a
         case "School Complaints":
-            let vc = SchoolComplaintsViewController()
-            vc.patientID = self.patientID
-            navigationController?.pushViewController(vc, animated: true)
+            let a = SchoolComplaintsViewController()
+            a.patientID = self.patientID
+            vc = a
         case "Medical History":
-            let vc = MedicalHistoryViewController()
-            vc.patientID = self.patientID
-            navigationController?.pushViewController(vc, animated: true)
+            let a = MedicalHistoryViewController()
+            a.patientID = self.patientID
+            vc = a
         case "Cognitive Skills":
-            let vc = CognitiveSkillsViewController()
-            vc.patientID = self.patientID
-            navigationController?.pushViewController(vc, animated: true)
+            let a = CognitiveSkillsViewController()
+            a.patientID = self.patientID
+            vc = a
         case "Gross Motor Skills":
-            let vc = GrossMotorSkillsViewController()
-            vc.patientID = self.patientID
-            navigationController?.pushViewController(vc, animated: true)
+            let a = GrossMotorSkillsViewController()
+            a.patientID = self.patientID
+            vc = a
         case "Fine Motor Skills":
-            let vc = FineMotorSkillsViewController()
-            vc.patientID = self.patientID
-            navigationController?.pushViewController(vc, animated: true)
+            let a = FineMotorSkillsViewController()
+            a.patientID = self.patientID
+            vc = a
+        case "Language & Communication", "Social Milestones", "Self-Care Milestones":
+            let a = DevelopmentalHistoryViewController()
+            a.patientID = self.patientID
+            a.subSection = name
+            vc = a
+        case "Feeding", "Dressing", "Bathing & Hygiene", "Toileting", "Sleep":
+            let a = DailyLivingViewController()
+            a.patientID = self.patientID
+            a.subSection = name
+            vc = a
+        case "Family History", "Social & Environmental":
+            let a = FamilyEnvironmentViewController()
+            a.patientID = self.patientID
+            a.subSection = name
+            vc = a
         default:
             break
         }
         
+        if let vc = vc {
+            navigationController?.pushViewController(vc, animated: true)
+        }
+    }
+    
+    // Called when any assessment VC posts its completion notification
+    @objc private func assessmentDidComplete(_ notification: Notification) {
+        guard let completedName = notification.userInfo?["assessmentName"] as? String else { return }
+        
+        if let pid = patientID {
+            AssessmentSessionManager.shared.markAssessmentVisited(for: pid, assessmentName: completedName)
+        }
+        visitedAssessments.insert(completedName)
         tableView.reloadData()
         
         // Check if all done

@@ -6,16 +6,18 @@ class PatientDifficultiesViewController: UIViewController {
     var patientID: String?
     
     var questions: [Question] = [
-        Question(id: 1, text: "I have problems with daily tasks like brushing/clothes.", options: ["Yes", "No", "Sometimes"], selectedOptionIndex: nil),
-        Question(id: 2, text: "I have trouble falling asleep.", options: ["Nightly", "Few times a week", "Rarely"], selectedOptionIndex: nil),
-        Question(id: 3, text: "I forget things/lose belongings.", options: ["Often", "Occasionally", "Unsure"], selectedOptionIndex: nil),
-        Question(id: 4, text: "Hard to focus for >10 mins.", options: ["Yes", "No", "Sometimes"], selectedOptionIndex: nil),
-        Question(id: 5, text: "Sensitive to textures.", options: ["Very", "Somewhat", "Not at all"], selectedOptionIndex: nil),
-        Question(id: 6, text: "Difficulty making friends.", options: ["Yes", "No", "Sometimes"], selectedOptionIndex: nil),
-        Question(id: 7, text: "Frustrated/angry easily.", options: ["Often", "Sometimes", "Rarely"], selectedOptionIndex: nil),
-        Question(id: 8, text: "Struggle with organization.", options: ["Yes", "No", "Sometimes"], selectedOptionIndex: nil),
-        Question(id: 9, text: "Diff. expressing needs.", options: ["Yes", "No", "Sometimes"], selectedOptionIndex: nil),
-        Question(id: 10, text: "Repetitive behaviors.", options: ["Frequently", "Occasionally", "Never"], selectedOptionIndex: nil)
+        // Phase 7: Behavioral Observations
+        Question(id: 1, text: "Does the child engage in self-stimulatory behaviors (stimming)?", options: ["Frequently", "Sometimes", "Rarely"], selectedOptionIndex: nil),
+        Question(id: 2, text: "Does the child have rigid routines?", options: ["Yes", "Sometimes", "No"], selectedOptionIndex: nil),
+        Question(id: 3, text: "Does the child have intense, narrow interests?", options: ["Yes", "Somewhat", "No"], selectedOptionIndex: nil),
+        Question(id: 4, text: "Does the child have aggressive behaviors (hitting, biting, kicking)?", options: ["Frequently", "Sometimes", "Rarely"], selectedOptionIndex: nil),
+        Question(id: 5, text: "Does the child engage in self-injurious behavior?", options: ["Frequently", "Sometimes", "Never"], selectedOptionIndex: nil),
+        Question(id: 6, text: "Does the child have difficulty with transitions between activities?", options: ["Yes", "Sometimes", "No"], selectedOptionIndex: nil),
+        Question(id: 7, text: "Does the child demonstrate frustration tolerance?", options: ["Good", "Limited", "Very limited"], selectedOptionIndex: nil),
+        Question(id: 8, text: "Does the child have meltdowns vs. shutdowns?", options: ["Meltdowns", "Shutdowns", "Both"], selectedOptionIndex: nil),
+        // Phase 7: Attention & Executive Function
+        Question(id: 9, text: "How long can the child attend to a preferred activity?", options: ["10+ minutes", "5-10 minutes", "Under 5 minutes"], selectedOptionIndex: nil),
+        Question(id: 10, text: "Can the child follow multi-step instructions?", options: ["Yes", "Sometimes", "No"], selectedOptionIndex: nil)
     ]
     
     var currentQuestionIndex = 0
@@ -234,7 +236,10 @@ class PatientDifficultiesViewController: UIViewController {
             Task {
                 do {
                     try await supabase.from("assessments").insert(log).execute()
-                    await MainActor.run { self.navigationController?.popViewController(animated: true) }
+                    await MainActor.run {
+                        NotificationCenter.default.post(name: NSNotification.Name("AssessmentDidComplete"), object: nil, userInfo: ["assessmentName": "Patient Difficulties"])
+                        self.navigationController?.popViewController(animated: true)
+                    }
                 } catch {
                     await MainActor.run { self.nextButton.isEnabled = true }
                 }

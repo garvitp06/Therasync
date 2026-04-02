@@ -412,6 +412,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "OT main/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = TheraSync;
+				INFOPLIST_KEY_NSCameraUsageDescription = "using camera to record or upload assesment or profile image";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app uses speech recognition to convert your voice notes into text";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "This app uses speech recognition to convert your voice notes into text";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -451,6 +454,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "OT main/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = TheraSync;
+				INFOPLIST_KEY_NSCameraUsageDescription = "using camera to record or upload assesment or profile image";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app uses speech recognition to convert your voice notes into text";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "This app uses speech recognition to convert your voice notes into text";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;

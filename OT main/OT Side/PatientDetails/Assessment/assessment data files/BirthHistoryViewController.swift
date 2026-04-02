@@ -1,34 +1,74 @@
 import UIKit
 import Supabase
+import Speech
 
-final class BirthHistoryViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+final class BirthHistoryViewController: UIViewController {
     
     // MARK: - Variables
     var patientID: String?
-    private var existingRecordID: Int? // Fixed: Variable restored
+    private var existingRecordID: Int?
     
-    private var values: [String] = ["", "", "", "", ""]
-    private let fields = ["Gestational Age", "Delivery", "Birth Weight", "Birth Order", "Complications"]
+    // MARK: - Section Data from Phase 2
+    private struct HistorySection {
+        let title: String
+        let fields: [String]
+    }
+    
+    private let sections: [HistorySection] = [
+        HistorySection(title: "Prenatal History", fields: [
+            "Was the pregnancy planned?",
+            "Any infections during pregnancy (TORCH)?",
+            "Medications taken during pregnancy",
+            "Alcohol, smoking, or drug exposure during pregnancy",
+            "Gestational diabetes or hypertension",
+            "Any fetal distress noted during scans?",
+            "Number of prenatal check-ups",
+            "Any abnormalities on ultrasound?",
+            "Single or multiple pregnancy (twins, triplets)?",
+            "Maternal age at delivery",
+            "Paternal age at conception"
+        ]),
+        HistorySection(title: "Birth History", fields: [
+            "Type of delivery (NVD / C-section / Assisted)",
+            "If C-section — elective or emergency, reason?",
+            "Gestation at birth (term 37–42 weeks / preterm / post-term)",
+            "Birth weight (low birth weight < 2.5 kg?)",
+            "APGAR score at 1 minute and 5 minutes",
+            "Did the baby cry immediately at birth?",
+            "Was resuscitation needed?",
+            "Any jaundice (neonatal hyperbilirubinemia)?",
+            "NICU admission — duration and reason?",
+            "Any birth injuries?",
+            "Was meconium present in the amniotic fluid?",
+            "Cord complications (nuchal cord, cord prolapse)?",
+            "Blood group incompatibility (ABO/Rh)?"
+        ]),
+        HistorySection(title: "Neonatal Period", fields: [
+            "Was the baby able to feed (breast/bottle) soon after birth?",
+            "Rooting reflex, sucking reflex present?",
+            "Any seizures in the neonatal period?",
+            "Temperature regulation problems?",
+            "Hypoglycemia in the newborn?"
+        ])
+    ]
+    
+    // Flat values array indexed by (section, row) mapped to sequential index
+    private lazy var values: [String] = {
+        let total = sections.reduce(0) { $0 + $1.fields.count }
+        return Array(repeating: "", count: total)
+    }()
+    
+    private func flatIndex(section: Int, row: Int) -> Int {
+        var idx = 0
+        for s in 0..<section { idx += sections[s].fields.count }
+        return idx + row
+    }
 
     // MARK: - UI Components
-    private let cardView: UIView = {
-        let v = UIView()
-        v.translatesAutoresizingMaskIntoConstraints = false
-        v.backgroundColor = .white
-        v.layer.cornerRadius = 24
-        v.layer.shadowColor = UIColor.black.cgColor
-        v.layer.shadowOpacity = 0.1
-        v.layer.shadowOffset = CGSize(width: 0, height: 5)
-        v.layer.shadowRadius = 10
-        return v
-    }()
-
     private let tableView: UITableView = {
-        let tv = UITableView(frame: .zero, style: .plain)
+        let tv = UITableView(frame: .zero, style: .insetGrouped)
         tv.translatesAutoresizingMaskIntoConstraints = false
-        tv.separatorStyle = .none
         tv.backgroundColor = .clear
-        tv.isScrollEnabled = false
         return tv
     }()
     
@@ -37,14 +77,16 @@ final class BirthHistoryViewController: UIViewController, UITableViewDataSource,
         b.translatesAutoresizingMaskIntoConstraints = false
         b.setTitle("Done", for: .normal)
         b.titleLabel?.font = .systemFont(ofSize: 18, weight: .bold)
-        b.backgroundColor = UIColor(red: 0.0, green: 0.48, blue: 1.0, alpha: 1.0)
+        b.backgroundColor = .systemBlue
         b.setTitleColor(.white, for: .normal)
         b.layer.cornerRadius = 25
-        b.layer.shadowColor = UIColor.blue.withAlphaComponent(0.3).cgColor
-        b.layer.shadowOffset = CGSize(width: 0, height: 4)
-        b.layer.shadowOpacity = 0.3
-        b.layer.shadowRadius = 5
         return b
+    }()
+
+    private let buttonSpinner: UIActivityIndicatorView = {
+        let s = UIActivityIndicatorView(style: .medium)
+        s.color = .white; s.hidesWhenStopped = true; s.translatesAutoresizingMaskIntoConstraints = false
+        return s
     }()
 
     // MARK: - Lifecycle
@@ -57,12 +99,11 @@ final class BirthHistoryViewController: UIViewController, UITableViewDataSource,
         title = "Birth History"
         setupNavBar()
         setupUI()
+        loadData()
         
         let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
         tap.cancelsTouchesInView = false
         view.addGestureRecognizer(tap)
-        
-        loadData()
     }
     
     @objc func dismissKeyboard() { view.endEditing(true) }
@@ -71,11 +112,9 @@ final class BirthHistoryViewController: UIViewController, UITableViewDataSource,
     private func loadData() {
         guard let pid = patientID else { return }
         
-        // FIX: Using Session Manager getter
         let session = AssessmentSessionManager.shared.getBirthHistory(for: pid)
-        
         if session.didFetch {
-            applyDictionaryToValues(session.data)
+            applyDictionary(session.data)
             tableView.reloadData()
         } else {
             fetchFromSupabase()
@@ -86,6 +125,10 @@ final class BirthHistoryViewController: UIViewController, UITableViewDataSource,
         guard let pid = patientID else { return }
         Task {
             do {
+                struct HistoryData: Decodable {
+                    let id: Int
+                    let assessment_data: [String: String]
+                }
                 let response = try await supabase
                     .from("assessments")
                     .select("id, assessment_data")
@@ -96,24 +139,16 @@ final class BirthHistoryViewController: UIViewController, UITableViewDataSource,
                     .single()
                     .execute()
                 
-                // Helper to decode just what we need
-                struct HistoryData: Decodable {
-                    let id: Int
-                    let assessment_data: [String: String]
-                }
-                
                 let decoded = try JSONDecoder().decode(HistoryData.self, from: response.data)
-                self.existingRecordID = decoded.id // Fixed: Save ID for update
-                let fetchedMap = decoded.assessment_data
+                self.existingRecordID = decoded.id
                 
                 await MainActor.run {
-                    self.applyDictionaryToValues(fetchedMap)
+                    self.applyDictionary(decoded.assessment_data)
                     self.tableView.reloadData()
-                    // FIX: Using Session Manager setter
-                    AssessmentSessionManager.shared.updateBirthHistory(for: pid, data: fetchedMap, didFetch: true)
+                    AssessmentSessionManager.shared.updateBirthHistory(for: pid, data: decoded.assessment_data, didFetch: true)
                 }
             } catch {
-                print("Fetch error: \(error)")
+                print("Birth History fetch: \(error)")
                 await MainActor.run {
                     AssessmentSessionManager.shared.updateBirthHistory(for: pid, data: [:], didFetch: true)
                 }
@@ -121,16 +156,20 @@ final class BirthHistoryViewController: UIViewController, UITableViewDataSource,
         }
     }
     
-    private func applyDictionaryToValues(_ data: [String: String]) {
-        for (index, field) in fields.enumerated() {
-            if let val = data[field] { values[index] = val }
+    private func applyDictionary(_ data: [String: String]) {
+        for (sIdx, section) in sections.enumerated() {
+            for (rIdx, field) in section.fields.enumerated() {
+                if let val = data[field] { values[flatIndex(section: sIdx, row: rIdx)] = val }
+            }
         }
     }
     
     private func getCurrentDictionary() -> [String: String] {
         var dict: [String: String] = [:]
-        for (index, field) in fields.enumerated() {
-            dict[field] = values[index]
+        for (sIdx, section) in sections.enumerated() {
+            for (rIdx, field) in section.fields.enumerated() {
+                dict[field] = values[flatIndex(section: sIdx, row: rIdx)]
+            }
         }
         return dict
     }
@@ -138,12 +177,11 @@ final class BirthHistoryViewController: UIViewController, UITableViewDataSource,
     // MARK: - Actions
     @objc func save() {
         guard let pid = patientID else { return }
-        doneButton.isEnabled = false; doneButton.setTitle("Saving...", for: .normal)
+        doneButton.isEnabled = false; doneButton.setTitle("", for: .normal); buttonSpinner.startAnimating()
         
         let finalData = getCurrentDictionary()
         AssessmentSessionManager.shared.updateBirthHistory(for: pid, data: finalData, didFetch: true)
         
-        // FIX: Use AnyCodable
         var dbData: [String: AnyCodable] = [:]
         for (key, val) in finalData { dbData[key] = AnyCodable(value: val) }
         
@@ -156,80 +194,83 @@ final class BirthHistoryViewController: UIViewController, UITableViewDataSource,
                 } else {
                     try await supabase.from("assessments").insert(log).execute()
                 }
-                await MainActor.run { navigationController?.popViewController(animated: true) }
+                await MainActor.run {
+                    NotificationCenter.default.post(name: NSNotification.Name("AssessmentDidComplete"), object: nil, userInfo: ["assessmentName": "Birth History"])
+                    self.navigationController?.popViewController(animated: true)
+                }
             } catch {
                 print(error)
-                await MainActor.run { doneButton.isEnabled = true; doneButton.setTitle("Done", for: .normal) }
+                await MainActor.run {
+                    doneButton.isEnabled = true; doneButton.setTitle("Done", for: .normal); buttonSpinner.stopAnimating()
+                }
             }
         }
     }
     
-    @objc func backTapped() { navigationController?.popViewController(animated: true) }
-    
-    // MARK: - UI Setup & Table (Standard)
+    // MARK: - UI Setup
     private func setupNavBar() {
-        let appearance = UINavigationBarAppearance(); appearance.configureWithTransparentBackground(); appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
-        navigationController?.navigationBar.standardAppearance = appearance; navigationController?.navigationBar.tintColor = .white
-        navigationItem.leftBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "chevron.left"), style: .plain, target: self, action: #selector(backTapped))
+        navigationItem.largeTitleDisplayMode = .never
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithTransparentBackground()
+        appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
+        navigationController?.navigationBar.standardAppearance = appearance
+        navigationController?.navigationBar.scrollEdgeAppearance = appearance
+        navigationController?.navigationBar.tintColor = .white
     }
     
     private func setupUI() {
-        view.addSubview(cardView); cardView.addSubview(tableView); view.addSubview(doneButton)
-        tableView.dataSource = self; tableView.delegate = self
-        tableView.register(BirthHistoryCell.self, forCellReuseIdentifier: "BirthHistoryCell")
+        view.addSubview(tableView)
+        view.addSubview(doneButton)
+        doneButton.addSubview(buttonSpinner)
+        tableView.dataSource = self
+        tableView.delegate = self
+        tableView.register(VoiceTextInputCell.self, forCellReuseIdentifier: VoiceTextInputCell.reuseID)
         doneButton.addTarget(self, action: #selector(save), for: .touchUpInside)
+        
         let safe = view.safeAreaLayoutGuide
-        let tableHeight = CGFloat(fields.count * 85) + 20
         NSLayoutConstraint.activate([
-            cardView.topAnchor.constraint(equalTo: safe.topAnchor, constant: 20),
-            cardView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            cardView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            cardView.heightAnchor.constraint(equalToConstant: tableHeight),
-            tableView.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 10),
-            tableView.leadingAnchor.constraint(equalTo: cardView.leadingAnchor),
-            tableView.trailingAnchor.constraint(equalTo: cardView.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: cardView.bottomAnchor, constant: -10),
+            tableView.topAnchor.constraint(equalTo: safe.topAnchor),
+            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            tableView.bottomAnchor.constraint(equalTo: doneButton.topAnchor, constant: -10),
             doneButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
             doneButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
             doneButton.bottomAnchor.constraint(equalTo: safe.bottomAnchor, constant: -20),
-            doneButton.heightAnchor.constraint(equalToConstant: 55)
+            doneButton.heightAnchor.constraint(equalToConstant: 55),
+            buttonSpinner.centerXAnchor.constraint(equalTo: doneButton.centerXAnchor),
+            buttonSpinner.centerYAnchor.constraint(equalTo: doneButton.centerYAnchor)
         ])
     }
+}
+
+// MARK: - Table
+extension BirthHistoryViewController: UITableViewDataSource, UITableViewDelegate {
+    func numberOfSections(in tableView: UITableView) -> Int { sections.count }
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int { sections[section].fields.count }
     
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int { fields.count }
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? { sections[section].title }
+    
+    func tableView(_ tableView: UITableView, willDisplayHeaderView view: UIView, forSection section: Int) {
+        if let header = view as? UITableViewHeaderFooterView {
+            header.textLabel?.textColor = .white
+        }
+    }
+    
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "BirthHistoryCell", for: indexPath) as! BirthHistoryCell
-        cell.configure(title: fields[indexPath.row], value: values[indexPath.row])
+        let cell = tableView.dequeueReusableCell(withIdentifier: VoiceTextInputCell.reuseID, for: indexPath) as! VoiceTextInputCell
+        let field = sections[indexPath.section].fields[indexPath.row]
+        let idx = flatIndex(section: indexPath.section, row: indexPath.row)
+        cell.configure(title: field, value: values[idx])
         cell.onTextChange = { [weak self] txt in
             guard let self = self else { return }
-            self.values[indexPath.row] = txt
+            self.values[idx] = txt
             if let pid = self.patientID {
                 AssessmentSessionManager.shared.updateBirthHistory(for: pid, data: self.getCurrentDictionary(), didFetch: true)
             }
         }
         return cell
     }
-    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat { return 85 }
-}
-
-// MARK: - Cell
-class BirthHistoryCell: UITableViewCell {
-    var onTextChange: ((String) -> Void)?
-    private let titleLabel: UILabel = { let l = UILabel(); l.translatesAutoresizingMaskIntoConstraints = false; l.font = .systemFont(ofSize: 14); l.textColor = .gray; return l }()
-    private let fieldContainer: UIView = { let v = UIView(); v.translatesAutoresizingMaskIntoConstraints = false; v.backgroundColor = .secondarySystemBackground; v.layer.cornerRadius = 8; return v }()
-    private let textField: UITextField = { let tf = UITextField(); tf.translatesAutoresizingMaskIntoConstraints = false; tf.font = .systemFont(ofSize: 16); tf.textColor = .black; return tf }()
     
-    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
-        super.init(style: style, reuseIdentifier: reuseIdentifier); selectionStyle = .none; backgroundColor = .clear
-        contentView.addSubview(titleLabel); contentView.addSubview(fieldContainer); fieldContainer.addSubview(textField)
-        textField.addTarget(self, action: #selector(textChanged), for: .editingChanged)
-        NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 5), titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20), titleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
-            fieldContainer.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 5), fieldContainer.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20), fieldContainer.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20), fieldContainer.heightAnchor.constraint(equalToConstant: 45),
-            textField.leadingAnchor.constraint(equalTo: fieldContainer.leadingAnchor, constant: 10), textField.trailingAnchor.constraint(equalTo: fieldContainer.trailingAnchor, constant: -10), textField.centerYAnchor.constraint(equalTo: fieldContainer.centerYAnchor), textField.heightAnchor.constraint(equalTo: fieldContainer.heightAnchor)
-        ])
-    }
-    required init?(coder: NSCoder) { fatalError() }
-    func configure(title: String, value: String) { titleLabel.text = title; textField.text = value }
-    @objc private func textChanged() { onTextChange?(textField.text ?? "") }
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat { return UITableView.automaticDimension }
+    func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat { return 85 }
 }

@@ -6,16 +6,27 @@ class FineMotorSkillsViewController: UIViewController {
     var patientID: String?
     
     var questions: [Question] = [
-        Question(id: 1, text: "Which object helps practice finger control?", options: ["Pencil", "Football", "Blanket", "Plate"], selectedOptionIndex: nil),
-        Question(id: 2, text: "Which action needs good hand-eye coordination?", options: ["Buttoning shirt", "Running", "Listening", "Jumping"], selectedOptionIndex: nil),
-        Question(id: 3, text: "What do you use to pick up beads?", options: ["Fingers", "Feet", "Elbow", "Knee"], selectedOptionIndex: nil),
-        Question(id: 4, text: "Can you stack 5 blocks?", options: ["Easily", "With help", "Only 2-3", "No"], selectedOptionIndex: nil),
-        Question(id: 5, text: "Can you draw a circle?", options: ["Yes", "Sort of", "No", "Scribble"], selectedOptionIndex: nil),
-        Question(id: 6, text: "Can you use scissors to cut paper?", options: ["Yes, on line", "Yes, randomly", "With help", "No"], selectedOptionIndex: nil),
-        Question(id: 7, text: "Can you zip up a jacket?", options: ["Yes", "With help", "No", "Never tried"], selectedOptionIndex: nil),
-        Question(id: 8, text: "Can you open a water bottle cap?", options: ["Yes", "Too tight", "No", "Sometimes"], selectedOptionIndex: nil),
-        Question(id: 9, text: "Do you struggle with handwriting?", options: ["Yes, messy", "No, neat", "Too slow", "Cannot write"], selectedOptionIndex: nil),
-        Question(id: 10, text: "Can you tie shoelaces?", options: ["Yes", "Learning", "No", "Velcro only"], selectedOptionIndex: nil)
+        // Phase 3: Fine Motor Milestones
+        Question(id: 1, text: "Palmar grasp achieved (~3–4 months)?", options: ["On time", "Delayed", "Not achieved", "Unsure"], selectedOptionIndex: nil),
+        Question(id: 2, text: "Pincer grasp (thumb + forefinger, ~9–10 months)?", options: ["On time", "Delayed", "Not achieved", "Unsure"], selectedOptionIndex: nil),
+        Question(id: 3, text: "Building a tower of 2–3 blocks (~15–18 months)?", options: ["On time", "Delayed", "Not achieved", "Unsure"], selectedOptionIndex: nil),
+        Question(id: 4, text: "Scribbling (~18 months)?", options: ["On time", "Delayed", "Not achieved", "Unsure"], selectedOptionIndex: nil),
+        Question(id: 5, text: "Drawing a circle (~3 years)?", options: ["On time", "Delayed", "Not achieved", "Unsure"], selectedOptionIndex: nil),
+        Question(id: 6, text: "Drawing a cross (~4 years)?", options: ["On time", "Delayed", "Not achieved", "Unsure"], selectedOptionIndex: nil),
+        Question(id: 7, text: "Drawing a triangle (~5 years)?", options: ["On time", "Delayed", "Not achieved", "Unsure"], selectedOptionIndex: nil),
+        Question(id: 8, text: "Holding a crayon/pencil: grip type?", options: ["Fisted grip", "Digital pronate", "Tripod", "Not holding yet"], selectedOptionIndex: nil),
+        Question(id: 9, text: "Able to use scissors?", options: ["Independently", "With assistance", "Cannot use", "Not tried"], selectedOptionIndex: nil),
+        Question(id: 10, text: "Buttoning and unbuttoning clothes?", options: ["Independent", "With help", "Cannot do", "Not tried"], selectedOptionIndex: nil),
+        Question(id: 11, text: "Tying shoelaces?", options: ["Independent", "With help", "Cannot do", "Not tried"], selectedOptionIndex: nil),
+        // Phase 9: Pencil Grasp & Handwriting Observations
+        Question(id: 12, text: "Pencil pressure — too heavy or too light?", options: ["Too heavy", "Too light", "Appropriate", "Variable"], selectedOptionIndex: nil),
+        Question(id: 13, text: "Paper stability — does the child use the helper hand?", options: ["Yes", "Sometimes", "No", "Unsure"], selectedOptionIndex: nil),
+        Question(id: 14, text: "Letter formation — correct starting points and directionality?", options: ["Yes", "Partially", "No", "Not writing yet"], selectedOptionIndex: nil),
+        // Phase 9: Fine Motor Dexterity
+        Question(id: 15, text: "Pegboard tasks (speed and accuracy)?", options: ["Age appropriate", "Slow but accurate", "Inaccurate", "Cannot perform"], selectedOptionIndex: nil),
+        Question(id: 16, text: "Block stacking ability?", options: ["Age appropriate", "Below average", "Cannot stack", "Unsure"], selectedOptionIndex: nil),
+        Question(id: 17, text: "String beading ability?", options: ["Independent", "With help", "Cannot do", "Not tried"], selectedOptionIndex: nil),
+        Question(id: 18, text: "In-hand manipulation (coin dropping into slot)?", options: ["Age appropriate", "Difficulty", "Cannot perform", "Not tried"], selectedOptionIndex: nil)
     ]
     var currentQuestionIndex = 0
 
@@ -239,6 +250,7 @@ class FineMotorSkillsViewController: UIViewController {
             do {
                 try await supabase.from("assessments").insert(log).execute()
                 await MainActor.run {
+                    NotificationCenter.default.post(name: NSNotification.Name("AssessmentDidComplete"), object: nil, userInfo: ["assessmentName": "Fine Motor Skills"])
                     self.navigationController?.popViewController(animated: true)
                 }
             } catch {

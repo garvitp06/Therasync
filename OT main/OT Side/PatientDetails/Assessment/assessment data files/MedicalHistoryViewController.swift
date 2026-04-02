@@ -14,20 +14,24 @@ class MedicalHistoryViewController: UIViewController, UITableViewDataSource, UIT
     private var existingRecordID: Int? // Fixed: Variable restored
     
     var conditions: [MedicalCondition] = [
-        MedicalCondition(name: "Epilepsy / Seizures", isActive: false),
-        MedicalCondition(name: "ADHD / Attention Deficit", isActive: false),
+        // Phase 4: Diagnoses
+        MedicalCondition(name: "Autism Spectrum Disorder (ASD)", isActive: false),
+        MedicalCondition(name: "Intellectual Disability (ID)", isActive: false),
+        MedicalCondition(name: "ADHD — Combined, Inattentive, or Hyperactive-Impulsive", isActive: false),
+        MedicalCondition(name: "Developmental Coordination Disorder (DCD)", isActive: false),
+        MedicalCondition(name: "Epilepsy / Seizure Disorder", isActive: false),
+        MedicalCondition(name: "Anxiety Disorders", isActive: false),
+        MedicalCondition(name: "Sensory Processing Disorder (SPD)", isActive: false),
+        MedicalCondition(name: "Gastrointestinal Issues (constipation, GERD, food allergies)", isActive: false),
+        MedicalCondition(name: "Sleep Disorders (insomnia, night waking, sleep apnea)", isActive: false),
+        MedicalCondition(name: "Genetic Conditions (Down Syndrome, Fragile X, Rett)", isActive: false),
+        MedicalCondition(name: "Hearing Impairment", isActive: false),
+        MedicalCondition(name: "Visual Impairment / Cortical Visual Impairment", isActive: false),
         MedicalCondition(name: "Speech / Language Delay", isActive: false),
-        MedicalCondition(name: "Sensory Processing Disorder", isActive: false),
-        MedicalCondition(name: "Sleep Disorders", isActive: false),
         MedicalCondition(name: "Motor Coordination / Dyspraxia", isActive: false),
-        MedicalCondition(name: "Anxiety / Mood Disorders", isActive: false),
-        MedicalCondition(name: "Gastrointestinal (GI) Issues", isActive: false),
-        MedicalCondition(name: "Food Allergies / Intolerances", isActive: false),
-        MedicalCondition(name: "Visual / Auditory Impairment", isActive: false),
         MedicalCondition(name: "Asthma", isActive: false),
         MedicalCondition(name: "Diabetes", isActive: false),
         MedicalCondition(name: "Heart Disease", isActive: false),
-        MedicalCondition(name: "Hypertension", isActive: false),
         MedicalCondition(name: "Dental Treatment History", isActive: false)
     ]
     var otherConditionText: String = ""
@@ -197,8 +201,8 @@ class MedicalHistoryViewController: UIViewController, UITableViewDataSource, UIT
                 }
                 
                 await MainActor.run {
-                    // Navigation will happen, but good to reset state just in case
-                    navigationController?.popViewController(animated: true)
+                    NotificationCenter.default.post(name: NSNotification.Name("AssessmentDidComplete"), object: nil, userInfo: ["assessmentName": "Medical History"])
+                    self.navigationController?.popViewController(animated: true)
                 }
             } catch {
                 print("Save Error: \(error)")

@@ -6,16 +6,18 @@ class CognitiveSkillsViewController: UIViewController {
     var patientID: String?
     
     var questions: [Question] = [
-        Question(id: 1, text: "Which object is soft?", options: ["Teddy Bear", "Pencil Box", "Chair", "Ladder"], selectedOptionIndex: nil),
-        Question(id: 2, text: "Which number comes after 5?", options: ["2", "7", "1", "4"], selectedOptionIndex: nil),
-        Question(id: 3, text: "What is the shape of a ball?", options: ["Square", "Rectangle", "Circle", "Triangle"], selectedOptionIndex: nil),
-        Question(id: 4, text: "Which animal says 'Meow'?", options: ["Dog", "Cat", "Cow", "Bird"], selectedOptionIndex: nil),
-        Question(id: 5, text: "What color is a banana?", options: ["Red", "Blue", "Yellow", "Purple"], selectedOptionIndex: nil),
-        Question(id: 6, text: "Which one is cold?", options: ["Fire", "Soup", "Ice Cream", "Sun"], selectedOptionIndex: nil),
-        Question(id: 7, text: "What do you use to see?", options: ["Ears", "Eyes", "Nose", "Hands"], selectedOptionIndex: nil),
-        Question(id: 8, text: "Which one is bigger?", options: ["Elephant", "Mouse", "Ant", "Cat"], selectedOptionIndex: nil),
-        Question(id: 9, text: "Match the shapes: Triangle", options: ["3 sides", "4 sides", "No sides", "5 sides"], selectedOptionIndex: nil),
-        Question(id: 10, text: "What do you do when you are tired?", options: ["Run", "Sleep", "Eat", "Jump"], selectedOptionIndex: nil)
+        // Phase 3: Cognitive Milestones
+        Question(id: 1, text: "Object permanence achieved (~8–12 months)?", options: ["On time", "Delayed", "Not achieved", "Unsure"], selectedOptionIndex: nil),
+        Question(id: 2, text: "Symbolic/pretend play (~18 months)?", options: ["On time", "Delayed", "Not achieved", "Unsure"], selectedOptionIndex: nil),
+        Question(id: 3, text: "Cause-and-effect understanding?", options: ["Yes", "Emerging", "Not observed", "Unsure"], selectedOptionIndex: nil),
+        Question(id: 4, text: "Matching, sorting, categorization ability?", options: ["Age appropriate", "Emerging", "Not achieved", "Unsure"], selectedOptionIndex: nil),
+        Question(id: 5, text: "Understanding of \"mine\" and \"yours\" (possessiveness)?", options: ["Yes", "Emerging", "Not observed", "Unsure"], selectedOptionIndex: nil),
+        Question(id: 6, text: "Recognizing own name in writing?", options: ["Yes", "Partially", "No", "Unsure"], selectedOptionIndex: nil),
+        Question(id: 7, text: "Recognizing letters and numbers?", options: ["Yes — most", "Some", "No", "Not age appropriate"], selectedOptionIndex: nil),
+        // Phase 9: Visual Motor Integration
+        Question(id: 8, text: "Can copy simple shapes (circle, cross, triangle, square, diamond)?", options: ["All shapes", "Some shapes", "Only circle", "None"], selectedOptionIndex: nil),
+        Question(id: 9, text: "Scissor holding posture (thumb up)?", options: ["Correct posture", "Needs correction", "Cannot hold", "Not tried"], selectedOptionIndex: nil),
+        Question(id: 10, text: "Can cut on a line (straight, curved, geometric)?", options: ["All types", "Straight only", "With difficulty", "Cannot cut"], selectedOptionIndex: nil)
     ]
     var currentQuestionIndex = 0
 
@@ -177,7 +179,7 @@ class CognitiveSkillsViewController: UIViewController {
             do {
                 try await supabase.from("assessments").insert(log).execute()
                 await MainActor.run {
-                    // Success: Navigate back
+                    NotificationCenter.default.post(name: NSNotification.Name("AssessmentDidComplete"), object: nil, userInfo: ["assessmentName": "Cognitive Skills"])
                     self.navigationController?.popViewController(animated: true)
                 }
             } catch {

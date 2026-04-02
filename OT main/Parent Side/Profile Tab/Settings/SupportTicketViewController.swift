@@ -6,7 +6,6 @@
 //
 import UIKit
 import PhotosUI
-
 class SupportTicketViewController: UIViewController, PHPickerViewControllerDelegate {
     
     private let descriptionLabel: UILabel = {
@@ -41,7 +40,6 @@ class SupportTicketViewController: UIViewController, PHPickerViewControllerDeleg
         iv.translatesAutoresizingMaskIntoConstraints = false
         return iv
     }()
-
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
@@ -54,12 +52,21 @@ class SupportTicketViewController: UIViewController, PHPickerViewControllerDeleg
         
         updateLayerColors()
     }
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(false, animated: animated)
+    }
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        if isMovingFromParent {
+            navigationController?.setNavigationBarHidden(true, animated: animated)
+        }
+    }
     
     private func updateLayerColors() {
         let isDark = UserDefaults.standard.bool(forKey: "Dark Mode")
         textView.layer.borderColor = isDark ? UIColor.darkGray.cgColor : UIColor.systemGray4.cgColor
     }
-
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
         super.traitCollectionDidChange(previousTraitCollection)
         updateLayerColors()

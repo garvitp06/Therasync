@@ -5,7 +5,6 @@
 //  Created by Garvit Pareek on 20/12/2025.
 //
 import UIKit
-
 class LinkedCaregiversViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
     
     // MARK: - Properties
@@ -22,7 +21,6 @@ class LinkedCaregiversViewController: UIViewController, UITableViewDelegate, UIT
         btn.translatesAutoresizingMaskIntoConstraints = false
         return btn
     }()
-
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -31,6 +29,16 @@ class LinkedCaregiversViewController: UIViewController, UITableViewDelegate, UIT
         
         // Listen for the theme change notification to refresh the table cells
         NotificationCenter.default.addObserver(self, selector: #selector(refreshTheme), name: NSNotification.Name("AppThemeChanged"), object: nil)
+    }
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(false, animated: animated)
+    }
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        if isMovingFromParent {
+            navigationController?.setNavigationBarHidden(true, animated: animated)
+        }
     }
     
     deinit {
@@ -71,7 +79,6 @@ class LinkedCaregiversViewController: UIViewController, UITableViewDelegate, UIT
             inviteButton.heightAnchor.constraint(equalToConstant: 55)
         ])
     }
-
     // MARK: - TableView Data Source
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return caregivers.count
@@ -101,7 +108,6 @@ class LinkedCaregiversViewController: UIViewController, UITableViewDelegate, UIT
         if caregivers[indexPath.row].contains("(Primary)") { return }
         showEditAlert(at: indexPath)
     }
-
     // MARK: - Invitation & Edit Alerts
     // The alert controllers naturally adapt to Dark Mode if you use standard UIAlertControllers
     private func showEditAlert(at indexPath: IndexPath) {
@@ -119,7 +125,6 @@ class LinkedCaregiversViewController: UIViewController, UITableViewDelegate, UIT
         }))
         present(alert, animated: true)
     }
-
     @objc private func showInviteOptions() {
         let alert = UIAlertController(title: "Invite Caregiver", message: "Choose a method to invite a new caregiver.", preferredStyle: .actionSheet)
         alert.addAction(UIAlertAction(title: "Send Email Invite", style: .default, handler: { _ in self.presentEmailInput() }))
@@ -127,7 +132,6 @@ class LinkedCaregiversViewController: UIViewController, UITableViewDelegate, UIT
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         present(alert, animated: true)
     }
-
     private func presentEmailInput() {
         let alert = UIAlertController(title: "Invite via Email", message: "Enter the email address.", preferredStyle: .alert)
         alert.addTextField { $0.placeholder = "email@example.com" }
@@ -135,7 +139,6 @@ class LinkedCaregiversViewController: UIViewController, UITableViewDelegate, UIT
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         present(alert, animated: true)
     }
-
     private func showJoinCode() {
         let code = "OT-789-XYZ"
         let alert = UIAlertController(title: "Join Code", message: "Share this code: \(code)", preferredStyle: .alert)
@@ -146,7 +149,6 @@ class LinkedCaregiversViewController: UIViewController, UITableViewDelegate, UIT
         alert.addAction(UIAlertAction(title: "OK", style: .cancel))
         present(alert, animated: true)
     }
-
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         if caregivers[indexPath.row].contains("(Primary)") { return nil }
         let deleteAction = UIContextualAction(style: .destructive, title: "Remove") { [weak self] (_, _, completion) in
@@ -167,7 +169,6 @@ class LinkedCaregiversViewController: UIViewController, UITableViewDelegate, UIT
         }))
         present(alert, animated: true)
     }
-
     // MARK: - Toast
     private func showToast(message: String) {
         let toastLabel = UILabel()

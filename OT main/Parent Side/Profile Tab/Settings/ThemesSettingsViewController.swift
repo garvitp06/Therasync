@@ -5,7 +5,6 @@
 //  Created by Garvit Pareek on 20/12/2025.
 //
 import UIKit
-
 class ThemesSettingsViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
     
     private let tableView = UITableView(frame: .zero, style: .insetGrouped)
@@ -15,7 +14,6 @@ class ThemesSettingsViewController: UIViewController, UITableViewDelegate, UITab
         ("Reduced Motion", "Simplifies animations for sensitive eyes"),
         ("Dark Mode", "Reduces screen brightness and glare")
     ]
-
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
@@ -42,7 +40,6 @@ class ThemesSettingsViewController: UIViewController, UITableViewDelegate, UITab
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
     }
-
     // MARK: - TableView
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return options.count
@@ -74,15 +71,18 @@ class ThemesSettingsViewController: UIViewController, UITableViewDelegate, UITab
     }
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
-        // 1. Get the current saved state
+        navigationController?.setNavigationBarHidden(false, animated: animated)
+        // Sync the window style to the saved state
         let isDarkMode = UserDefaults.standard.bool(forKey: "Dark Mode")
-        
-        // 2. Sync the window style to the saved state (ignoring system settings)
         view.window?.overrideUserInterfaceStyle = isDarkMode ? .dark : .light
-        
-        // 3. Refresh table to make sure checkboxes and colors match
+        // Refresh table to make sure toggles and colors match
         tableView.reloadData()
+    }
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        if isMovingFromParent {
+            navigationController?.setNavigationBarHidden(true, animated: animated)
+        }
     }
     @objc private func themeChanged(_ sender: UISwitch) {
         let optionName = options[sender.tag].0
@@ -154,7 +154,6 @@ extension UITextField {
         // 4. Apply the color logic
         self.updatePlaceholderColor()
     }
-
     func updatePlaceholderColor() {
         guard let pText = self.placeholder else { return }
         

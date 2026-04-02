@@ -8,7 +8,7 @@ protocol NewAssignmentDelegate: AnyObject {
     func didCreateAssignment()
 }
 
-class NewAssignmentViewController: UIViewController, UITextViewDelegate,UITextFieldDelegate{
+class NewAssignmentViewController: UIViewController, UITextViewDelegate, UITextFieldDelegate {
     
     // MARK: - Properties
     var patientID: String?
@@ -150,7 +150,6 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate,UITextFi
         typeContainer.heightAnchor.constraint(equalToConstant: 55).isActive = true
         typeContainer.addSubview(typeTextField)
 
-        // --- PASTE THE CHEVRON CODE HERE ---
         let chevronIcon = UIImageView(image: UIImage(systemName: "chevron.right"))
         chevronIcon.tintColor = .systemGray2
         chevronIcon.contentMode = .scaleAspectFit
@@ -161,7 +160,6 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate,UITextFi
 
         typeTextField.rightView = rightView
         typeTextField.rightViewMode = .always
-        // -----------------------------------
         
         mainStack.addArrangedSubview(titleTextField)
         mainStack.addArrangedSubview(instructionTextView)
@@ -187,7 +185,6 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate,UITextFi
             mainStack.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -20),
             
             typeTextField.leadingAnchor.constraint(equalTo: typeContainer.leadingAnchor, constant: 16),
-            // Add a trailing constraint so the chevron doesn't hit the edge of the container
             typeTextField.trailingAnchor.constraint(equalTo: typeContainer.trailingAnchor, constant: -8),
             typeTextField.centerYAnchor.constraint(equalTo: typeContainer.centerYAnchor)
         ])
@@ -279,11 +276,11 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate,UITextFi
     }
     
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-            if textField == typeTextField {
-                return false // This disables the keyboard typing
-            }
-            return true
+        if textField == typeTextField {
+            return false // This disables the keyboard typing
         }
+        return true
+    }
     
     private func showDocumentPicker() {
         let picker = UIDocumentPickerViewController(forOpeningContentTypes: [.pdf, .text, .image])
@@ -301,7 +298,7 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate,UITextFi
 
     @objc private func didTapSave() {
         let questions = questionTextFields.compactMap { $0.text }.filter { !$0.isEmpty }
-        guard let title = titleTextField.text, !title.isEmpty, let pID = patientID, let type = typeTextField.text else {
+        guard let title = titleTextField.text, !title.isEmpty, let pID = patientID, let type = typeTextField.text, !type.isEmpty else {
             let alert = UIAlertController(title: "Required", message: "Please fill in all required fields (Title, Type).", preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "OK", style: .default))
             present(alert, animated: true)
@@ -334,18 +331,34 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate,UITextFi
                 }
             } catch {
                 await MainActor.run {
+                    // Reset UI
                     self.navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "checkmark"), style: .done, target: self, action: #selector(self.didTapSave))
                     self.view.isUserInteractionEnabled = true
-                    print("Error: \(error)")
+                    
+                    // Show exact error reason
+                    print("❌ Save Error: \(error)")
+                    let alert = UIAlertController(title: "Upload Failed", message: error.localizedDescription, preferredStyle: .alert)
+                    alert.addAction(UIAlertAction(title: "OK", style: .default))
+                    self.present(alert, animated: true)
                 }
             }
         }
     }
 
+    // MARK: - Safe Filename Helper
+    /// Removes ALL characters that aren't letters, numbers, dashes, underscores, or periods.
+    private func sanitizeFileName(_ fileName: String) -> String {
+        let allowedCharacters = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: ".-_"))
+        return fileName.components(separatedBy: allowedCharacters.inverted).joined(separator: "_")
+    }
+
     private func uploadAttachments() async throws -> [String] {
         var urls: [String] = []
         for localUrl in localAttachmentURLs {
-            let fileName = "\(UUID().uuidString)_\(localUrl.lastPathComponent)"
+            // Because we already sanitized the filename when copying it to the temp directory,
+            // localUrl.lastPathComponent is guaranteed to be Supabase-safe.
+            let fileName = localUrl.lastPathComponent
+            
             let data = try Data(contentsOf: localUrl)
             try await supabase.storage.from("assignment-attachments").upload(path: fileName, file: data, options: FileOptions(contentType: "application/octet-stream"))
             let publicUrl = try supabase.storage.from("assignment-attachments").getPublicURL(path: fileName)
@@ -363,7 +376,7 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate,UITextFi
         let card = UIView()
         card.backgroundColor = .white
         card.layer.cornerRadius = 15
-        card.heightAnchor.constraint(greaterThanOrEqualToConstant: 56).isActive = true  // Increased for 2-line support
+        card.heightAnchor.constraint(greaterThanOrEqualToConstant: 56).isActive = true
         
         let icon = UIImageView(image: UIImage(systemName: iconName))
         icon.tintColor = .systemGreen
@@ -372,8 +385,8 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate,UITextFi
         let label = UILabel()
         label.text = name
         label.font = .systemFont(ofSize: 14)
-        label.numberOfLines = 2  // Allow up to 2 lines for better readability
-        label.lineBreakMode = .byTruncatingMiddle  // iOS-native: truncates middle, preserves extension
+        label.numberOfLines = 2
+        label.lineBreakMode = .byTruncatingMiddle
         label.translatesAutoresizingMaskIntoConstraints = false
         
         card.addSubview(icon)
@@ -382,6 +395,10 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate,UITextFi
         let deleteBtn = UIButton(type: .system)
         deleteBtn.setImage(UIImage(systemName: "xmark.circle.fill"), for: .normal)
         deleteBtn.tintColor = .systemGray2
+        deleteBtn.translatesAutoresizingMaskIntoConstraints = false
+        
+        deleteBtn.setContentHuggingPriority(.required, for: .horizontal)
+        deleteBtn.setContentCompressionResistancePriority(.required, for: .horizontal)
         
         NSLayoutConstraint.activate([
             icon.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 12),
@@ -392,7 +409,10 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate,UITextFi
             label.leadingAnchor.constraint(equalTo: icon.trailingAnchor, constant: 10),
             label.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -12),
             label.topAnchor.constraint(equalTo: card.topAnchor, constant: 8),
-            label.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -8)
+            label.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -8),
+            
+            deleteBtn.widthAnchor.constraint(equalToConstant: 30),
+            deleteBtn.heightAnchor.constraint(equalToConstant: 30)
         ])
         
         container.addArrangedSubview(card)
@@ -401,13 +421,10 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate,UITextFi
         attachmentsStack.addArrangedSubview(container)
         localAttachmentURLs.append(url)
         
-        // ROBUST DELETION LOGIC
         deleteBtn.addAction(UIAction(handler: { [weak self, weak container] _ in
             self?.confirmDeletion(title: "Remove Attachment", message: "Remove '\(name)'?") {
-                // Find and remove the EXACT url from the array
                 if let index = self?.localAttachmentURLs.firstIndex(where: { $0.absoluteString == url.absoluteString }) {
                     self?.localAttachmentURLs.remove(at: index)
-                    print("Successfully removed: \(url.lastPathComponent)")
                 }
                 
                 UIView.animate(withDuration: 0.2, animations: {
@@ -437,7 +454,6 @@ extension NewAssignmentViewController: UIPickerViewDelegate, UIPickerViewDataSou
     func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
         picker.dismiss(animated: true)
         
-        // Check if adding these would exceed the limit
         let remainingSlots = maxAttachmentLimit - localAttachmentURLs.count
         if results.count > remainingSlots {
             showLimitAlert()
@@ -446,11 +462,23 @@ extension NewAssignmentViewController: UIPickerViewDelegate, UIPickerViewDataSou
 
         for result in results {
             result.itemProvider.loadFileRepresentation(forTypeIdentifier: UTType.item.identifier) { [weak self] (url, error) in
-                guard let localUrl = url else { return }
-                let tempUrl = FileManager.default.temporaryDirectory.appendingPathComponent(localUrl.lastPathComponent)
-                try? FileManager.default.copyItem(at: localUrl, to: tempUrl)
-                DispatchQueue.main.async {
-                    self?.addAttachmentRow(name: tempUrl.lastPathComponent, iconName: "photo.fill", url: tempUrl)
+                guard let self = self, let localUrl = url else { return }
+                
+                // Scrub the original file name of any weird characters/spaces BEFORE saving
+                let safeOriginalName = self.sanitizeFileName(localUrl.lastPathComponent)
+                let uniqueFileName = UUID().uuidString + "_" + safeOriginalName
+                let tempUrl = FileManager.default.temporaryDirectory.appendingPathComponent(uniqueFileName)
+                
+                do {
+                    if FileManager.default.fileExists(atPath: tempUrl.path) {
+                        try FileManager.default.removeItem(at: tempUrl)
+                    }
+                    try FileManager.default.copyItem(at: localUrl, to: tempUrl)
+                    DispatchQueue.main.async {
+                        self.addAttachmentRow(name: localUrl.lastPathComponent, iconName: "photo.fill", url: tempUrl)
+                    }
+                } catch {
+                    print("Error copying file to temporary directory: \(error)")
                 }
             }
         }
@@ -467,7 +495,6 @@ extension NewAssignmentViewController: UIPickerViewDelegate, UIPickerViewDataSou
     }
     
     func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
-        // Check if adding these would exceed the limit
         let remainingSlots = maxAttachmentLimit - localAttachmentURLs.count
         if urls.count > remainingSlots {
             showLimitAlert()
@@ -475,7 +502,27 @@ extension NewAssignmentViewController: UIPickerViewDelegate, UIPickerViewDataSou
         }
 
         for url in urls {
-            addAttachmentRow(name: url.lastPathComponent, iconName: "doc.fill", url: url)
+            let hasAccess = url.startAccessingSecurityScopedResource()
+            defer {
+                if hasAccess {
+                    url.stopAccessingSecurityScopedResource()
+                }
+            }
+            
+            // Scrub the original file name of any weird characters/spaces BEFORE saving
+            let safeOriginalName = self.sanitizeFileName(url.lastPathComponent)
+            let uniqueFileName = UUID().uuidString + "_" + safeOriginalName
+            let tempUrl = FileManager.default.temporaryDirectory.appendingPathComponent(uniqueFileName)
+            
+            do {
+                if FileManager.default.fileExists(atPath: tempUrl.path) {
+                    try FileManager.default.removeItem(at: tempUrl)
+                }
+                try FileManager.default.copyItem(at: url, to: tempUrl)
+                addAttachmentRow(name: url.lastPathComponent, iconName: "doc.fill", url: tempUrl)
+            } catch {
+                print("Error copying document to temporary directory: \(error)")
+            }
         }
     }
 }

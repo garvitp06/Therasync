@@ -4,9 +4,7 @@
 //
 //  Created by Garvit Pareek on 20/12/2025.
 //
-
 import UIKit
-
 class VolumeSettingsViewController: UIViewController {
     
     private let titleLabel: UILabel = {
@@ -38,7 +36,6 @@ class VolumeSettingsViewController: UIViewController {
         slider.translatesAutoresizingMaskIntoConstraints = false
         return slider
     }()
-
     // The card container
     private let container: UIView = {
         let view = UIView()
@@ -48,7 +45,6 @@ class VolumeSettingsViewController: UIViewController {
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
-
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
@@ -59,6 +55,16 @@ class VolumeSettingsViewController: UIViewController {
         volumeSlider.value = savedLimit == 0 ? 0.8 : savedLimit
         
         volumeSlider.addTarget(self, action: #selector(sliderValueChanged(_:)), for: .valueChanged)
+    }
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(false, animated: animated)
+    }
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        if isMovingFromParent {
+            navigationController?.setNavigationBarHidden(true, animated: animated)
+        }
     }
     
     private func setupUI() {

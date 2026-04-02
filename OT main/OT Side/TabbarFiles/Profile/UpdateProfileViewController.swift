@@ -97,7 +97,7 @@ class UpdateProfileViewController: UIViewController, UIImagePickerControllerDele
     )
     private let navSpinner: UIActivityIndicatorView = {
         let s = UIActivityIndicatorView(style: .medium)
-        s.color = .darkGray
+        s.color = .white
         s.hidesWhenStopped = true
         return s
     }()
@@ -105,6 +105,8 @@ class UpdateProfileViewController: UIViewController, UIImagePickerControllerDele
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "Edit Profile"
+        navigationItem.largeTitleDisplayMode = .always
+        applyWhiteNavBar()
         navigationItem.rightBarButtonItem = saveBarButton
         navigationItem.leftBarButtonItem = UIBarButtonItem(
             image: UIImage(systemName: "chevron.backward"),
@@ -119,12 +121,19 @@ class UpdateProfileViewController: UIViewController, UIImagePickerControllerDele
     }
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        navigationController?.navigationBar.prefersLargeTitles = true
+        applyWhiteNavBar()
+    }
+
+    private func applyWhiteNavBar() {
         let appearance = UINavigationBarAppearance()
         appearance.configureWithTransparentBackground()
-        appearance.titleTextAttributes = [.foregroundColor: UIColor.black]
+        appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
+        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.white]
         navigationController?.navigationBar.standardAppearance   = appearance
         navigationController?.navigationBar.scrollEdgeAppearance = appearance
-        navigationController?.navigationBar.tintColor = .black
+        navigationController?.navigationBar.compactAppearance    = appearance
+        navigationController?.navigationBar.tintColor = .white
     }
     deinit { NotificationCenter.default.removeObserver(self) }
     // MARK: - Nav Bar Saving State

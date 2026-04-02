@@ -34,7 +34,7 @@ final class ReportsViewController: UIViewController {
         v.translatesAutoresizingMaskIntoConstraints = false
         return v
     }()
-    
+
     private let tableView: UITableView = {
         let tv = UITableView(frame: .zero, style: .insetGrouped)
         tv.backgroundColor = .clear
@@ -67,40 +67,35 @@ final class ReportsViewController: UIViewController {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
+        view.backgroundColor = .systemBackground
         title = "Reports"
+        navigationItem.largeTitleDisplayMode = .always
         setupUI()
-        
-        // Initial Fetch
         findLinkedChildAndFetchReports()
     }
     
     override func viewWillAppear(_ animated: Bool) {
-            super.viewWillAppear(animated)
-            navigationController?.setNavigationBarHidden(false, animated: true)
-            
-            // Setup Nav Bar
-            let appearance = UINavigationBarAppearance()
-            appearance.configureWithTransparentBackground()
-            
-            // Change both standard and large titles to BLACK
-            appearance.titleTextAttributes = [.foregroundColor: UIColor.black]
-            appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.black]
-            
-            navigationController?.navigationBar.standardAppearance = appearance
-            
-            // Optional: You may also want to change the tintColor (Back button color)
-            // to black or systemBlue so it matches and is visible!
-            navigationController?.navigationBar.tintColor = .black
-            
-            navigationController?.navigationBar.prefersLargeTitles = true
-            
-            // Silent Refresh if patient is linked
-            if let pid = linkedPatient?.patientID, !isLoading {
-                Task {
-                    await fetchReports(for: pid)
-                }
-            }
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(false, animated: true)
+        navigationController?.navigationBar.prefersLargeTitles = true
+
+        // Transparent nav bar so gradient shows through
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithTransparentBackground()
+        appearance.titleTextAttributes = [.foregroundColor: UIColor.black]
+        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.black]
+        navigationController?.navigationBar.standardAppearance = appearance
+        navigationController?.navigationBar.scrollEdgeAppearance = appearance
+        navigationController?.navigationBar.compactAppearance = appearance
+        navigationController?.navigationBar.tintColor = .white
+
+        // Prevent auto-scroll jump when large title kicks in
+        tableView.setContentOffset(.zero, animated: false)
+
+        if let pid = linkedPatient?.patientID, !isLoading {
+            Task { await fetchReports(for: pid) }
         }
+    }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
@@ -111,30 +106,28 @@ final class ReportsViewController: UIViewController {
     private func setupUI() {
         view.addSubview(backgroundView)
         view.sendSubviewToBack(backgroundView)
-        
         view.addSubview(tableView)
         view.addSubview(emptyStateLabel)
         view.addSubview(activityIndicator)
         
         tableView.delegate = self
         tableView.dataSource = self
-        // Register the unique cell class defined below
         tableView.register(ParentReportsCell.self, forCellReuseIdentifier: ParentReportsCell.identifier)
-        
+
         NSLayoutConstraint.activate([
             backgroundView.topAnchor.constraint(equalTo: view.topAnchor),
             backgroundView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             backgroundView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             backgroundView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            
+
             tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            
+
             activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            
+
             emptyStateLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             emptyStateLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor),
             emptyStateLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 40),
@@ -337,8 +330,12 @@ class ParentReportsCell: UITableViewCell {
     
     private let containerView: UIView = {
         let v = UIView()
-        v.backgroundColor = .white.withAlphaComponent(0.95)
-        v.layer.cornerRadius = 16
+        v.backgroundColor = .systemBackground
+        v.layer.cornerRadius = 26
+        v.layer.shadowColor = UIColor.black.cgColor
+        v.layer.shadowOpacity = 0.06
+        v.layer.shadowOffset = CGSize(width: 0, height: 2)
+        v.layer.shadowRadius = 8
         v.translatesAutoresizingMaskIntoConstraints = false
         return v
     }()

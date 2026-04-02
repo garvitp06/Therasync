@@ -408,10 +408,12 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = U3PTUQWLGJ;
+				DEVELOPMENT_TEAM = 9Q2N5ARNGB;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "OT main/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = TheraSync;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Needer for recording assignment";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Neede for recording video";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -423,7 +425,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.srmist.therasync;
+				PRODUCT_BUNDLE_IDENTIFIER = com.srmist.therasync.gp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -447,10 +449,12 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = U3PTUQWLGJ;
+				DEVELOPMENT_TEAM = 9Q2N5ARNGB;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "OT main/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = TheraSync;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Needer for recording assignment";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Neede for recording video";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -462,7 +466,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.srmist.therasync;
+				PRODUCT_BUNDLE_IDENTIFIER = com.srmist.therasync.gp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";

@@ -2,129 +2,113 @@ import UIKit
 import Supabase
 
 class NewLoginViewController: UIViewController {
-    
-    // MARK: - UI Constants
-    private let componentHeight: CGFloat = 48
-    private let componentCornerRadius: CGFloat = 24
-    
-    // MARK: - UI Components
+
+    // MARK: - State
+    private var isAgreed = false
+
+    // MARK: - UI
+
+    private let logoImageView: UIImageView = {
+        let iv = UIImageView()
+        iv.image = UIImage(systemName: "waveform.path.ecg.rectangle.fill")
+        iv.tintColor = .systemBlue
+        iv.contentMode = .scaleAspectFit
+        iv.translatesAutoresizingMaskIntoConstraints = false
+        return iv
+    }()
+
     private let titleLabel: UILabel = {
-        let label = UILabel()
-        label.text = "TheraSync"
-        label.font = .systemFont(ofSize: 40, weight: .bold)
-        label.textColor = .white
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
+        let l = UILabel()
+        l.text = "TheraSync"
+        l.font = .systemFont(ofSize: 34, weight: .bold)
+        l.textColor = .black
+        l.translatesAutoresizingMaskIntoConstraints = false
+        return l
     }()
-    
-    private let welcomeLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Welcome"
-        label.font = .systemFont(ofSize: 28, weight: .medium)
-        label.textColor = .white
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
+
+    private let subtitleLabel: UILabel = {
+        let l = UILabel()
+        l.text = "Sign in to your account"
+        l.font = .systemFont(ofSize: 16)
+        l.textColor = .systemGray
+        l.translatesAutoresizingMaskIntoConstraints = false
+        return l
     }()
-    
-    private let emailLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Email"
-        label.font = .systemFont(ofSize: 16, weight: .bold)
-        label.textColor = .black
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
+
+    // Email
+    private let emailContainer: UIView = {
+        let v = UIView()
+        v.backgroundColor = .systemGray6
+        v.layer.cornerRadius = 26
+        v.translatesAutoresizingMaskIntoConstraints = false
+        return v
     }()
-    
-    private lazy var emailContainer: UIView = {
-        let view = UIView()
-        view.backgroundColor = .white
-        view.layer.cornerRadius = componentCornerRadius
-        view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOpacity = 0.05
-        view.layer.shadowOffset = CGSize(width: 0, height: 2)
-        view.layer.shadowRadius = 4
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
+    private let emailIconView: UIImageView = {
+        let iv = UIImageView(image: UIImage(systemName: "envelope"))
+        iv.tintColor = .systemGray3
+        iv.contentMode = .scaleAspectFit
+        iv.translatesAutoresizingMaskIntoConstraints = false
+        return iv
     }()
-    
     private let emailTextField: UITextField = {
         let tf = UITextField()
-        tf.placeholder = "something@email.com"
-        tf.font = .systemFont(ofSize: 15)
+        tf.placeholder = "Email address"
+        tf.font = .systemFont(ofSize: 16)
         tf.keyboardType = .emailAddress
         tf.autocapitalizationType = .none
-        tf.translatesAutoresizingMaskIntoConstraints = false
+        tf.autocorrectionType = .no
         tf.returnKeyType = .next
+        tf.translatesAutoresizingMaskIntoConstraints = false
         return tf
     }()
-    
-    private let passwordLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Password"
-        label.font = .systemFont(ofSize: 16, weight: .bold)
-        label.textColor = .black
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
+
+    // Password
+    private let passwordContainer: UIView = {
+        let v = UIView()
+        v.backgroundColor = .systemGray6
+        v.layer.cornerRadius = 26
+        v.translatesAutoresizingMaskIntoConstraints = false
+        return v
     }()
-    
-    private lazy var passwordContainer: UIView = {
-        let view = UIView()
-        view.backgroundColor = .white
-        view.layer.cornerRadius = componentCornerRadius
-        view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOpacity = 0.05
-        view.layer.shadowOffset = CGSize(width: 0, height: 2)
-        view.layer.shadowRadius = 4
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
+    private let passwordIconView: UIImageView = {
+        let iv = UIImageView(image: UIImage(systemName: "lock"))
+        iv.tintColor = .systemGray3
+        iv.contentMode = .scaleAspectFit
+        iv.translatesAutoresizingMaskIntoConstraints = false
+        return iv
     }()
-    
-    private lazy var passwordTextField: UITextField = {
+    private let passwordTextField: UITextField = {
         let tf = UITextField()
-            tf.placeholder = "********"
-            tf.font = .systemFont(ofSize: 15)
-            tf.isSecureTextEntry = true
-            tf.translatesAutoresizingMaskIntoConstraints = false
-            tf.returnKeyType = .done
-            tf.delegate = self
-
-            tf.textContentType = .oneTimeCode
-            tf.passwordRules = nil
-
-        let eyeButton = UIButton(type: .system)
-        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .regular)
-
-        eyeButton.setImage(UIImage(systemName: "eye.slash", withConfiguration: config), for: .normal)
-        eyeButton.tintColor = .systemGray
-        eyeButton.frame = CGRect(x: 0, y: 0, width: 44, height: 44)
-
-        eyeButton.addTarget(self, action: #selector(handlePasswordVisibilityTap), for: .touchUpInside)
-
-        tf.rightView = eyeButton
-        tf.rightViewMode = .always
-
+        tf.placeholder = "Password"
+        tf.font = .systemFont(ofSize: 16)
+        tf.isSecureTextEntry = true
+        tf.textContentType = .password
+        tf.passwordRules = nil
+        tf.returnKeyType = .done
+        tf.translatesAutoresizingMaskIntoConstraints = false
         return tf
     }()
-
-    
-    private let passwordVisibilityButton: UIButton = {
+    private let eyeButton: UIButton = {
         let btn = UIButton(type: .system)
-        btn.setImage(UIImage(systemName: "eye.slash"), for: .normal)
-        btn.tintColor = .gray
-        btn.translatesAutoresizingMaskIntoConstraints = false
+        let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .regular)
+        btn.setImage(UIImage(systemName: "eye.slash", withConfiguration: config), for: .normal)
+        btn.tintColor = .systemGray3
+        // IMPORTANT: Must use frame-based sizing — rightView is NOT managed by Auto Layout
+        btn.frame = CGRect(x: 0, y: 0, width: 44, height: 52)
         return btn
     }()
-    
+
     private let forgotPasswordButton: UIButton = {
         let btn = UIButton(type: .system)
-        btn.setTitle("Forgot Password ?", for: .normal)
-        btn.setTitleColor(.black, for: .normal)
-        btn.titleLabel?.font = .systemFont(ofSize: 12)
+        btn.setTitle("Forgot Password?", for: .normal)
+        btn.setTitleColor(.systemBlue, for: .normal)
+        btn.titleLabel?.font = .systemFont(ofSize: 14, weight: .medium)
         btn.contentHorizontalAlignment = .right
         btn.translatesAutoresizingMaskIntoConstraints = false
         return btn
     }()
-    
+
+    // Terms
     private let checkboxButton: UIButton = {
         let btn = UIButton(type: .system)
         btn.setImage(UIImage(systemName: "square"), for: .normal)
@@ -132,469 +116,434 @@ class NewLoginViewController: UIViewController {
         btn.translatesAutoresizingMaskIntoConstraints = false
         return btn
     }()
-    
-    private let termsStackView: UIStackView = {
-        let stack = UIStackView()
-        stack.axis = .horizontal
-        stack.spacing = 4
-        stack.alignment = .center
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        return stack
-    }()
-    
     private let termsBaseLabel: UILabel = {
-        let label = UILabel()
-        label.text = "I agree to TheraSync's"
-        label.font = .systemFont(ofSize: 13)
-        label.textColor = .black
-        return label
+        let l = UILabel()
+        l.text = "I agree to TheraSync's"
+        l.font = .systemFont(ofSize: 13)
+        l.textColor = .systemGray
+        l.translatesAutoresizingMaskIntoConstraints = false
+        return l
     }()
-    
     private let termsButton: UIButton = {
         let btn = UIButton(type: .system)
         btn.setTitle("Terms & Conditions", for: .normal)
         btn.setTitleColor(.systemBlue, for: .normal)
         btn.titleLabel?.font = .systemFont(ofSize: 13)
+        btn.translatesAutoresizingMaskIntoConstraints = false
         return btn
     }()
-    
-    private lazy var loginButton: UIButton = {
+
+    private let loginButton: UIButton = {
         let btn = UIButton(type: .system)
-        btn.setTitle("Login", for: .normal)
+        btn.setTitle("Sign In", for: .normal)
         btn.setTitleColor(.white, for: .normal)
         btn.backgroundColor = .systemBlue
         btn.titleLabel?.font = .boldSystemFont(ofSize: 17)
-        btn.layer.cornerRadius = componentCornerRadius
+        btn.layer.cornerRadius = 26
         btn.translatesAutoresizingMaskIntoConstraints = false
         return btn
     }()
-    
+
     private let orLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Or"
-        label.font = .systemFont(ofSize: 16)
-        label.textColor = .systemGray
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
+        let l = UILabel()
+        l.text = "or continue with"
+        l.font = .systemFont(ofSize: 13)
+        l.textColor = .systemGray3
+        l.textAlignment = .center
+        l.translatesAutoresizingMaskIntoConstraints = false
+        return l
     }()
-    
     private let leftLine: UIView = {
-        let view = UIView()
-        view.backgroundColor = .systemGray
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
+        let v = UIView()
+        v.backgroundColor = .systemGray5
+        v.translatesAutoresizingMaskIntoConstraints = false
+        return v
     }()
-    
     private let rightLine: UIView = {
-        let view = UIView()
-        view.backgroundColor = .systemGray
-        view.translatesAutoresizingMaskIntoConstraints = false
-        return view
+        let v = UIView()
+        v.backgroundColor = .systemGray5
+        v.translatesAutoresizingMaskIntoConstraints = false
+        return v
     }()
-    
-    private lazy var appleButton: UIButton = {
-        var config = UIButton.Configuration.plain()
-        config.image = UIImage(systemName: "applelogo")
-        config.imagePadding = 10
-        config.baseForegroundColor = .black
-        var container = AttributeContainer()
-        container.font = UIFont.systemFont(ofSize: 16, weight: .bold)
-        config.attributedTitle = AttributedString("Sign in with Apple", attributes: container)
-        let btn = UIButton(configuration: config)
-        btn.backgroundColor = .white
-        btn.layer.cornerRadius = componentCornerRadius
-        btn.layer.borderWidth = 1
-        btn.layer.borderColor = UIColor.black.cgColor
+
+    private let appleButton: UIButton = {
+        let btn = UIButton(type: .system)
+        btn.setTitle("  Sign in with Apple", for: .normal)
+        btn.setTitleColor(.black, for: .normal)
+        btn.titleLabel?.font = .systemFont(ofSize: 15, weight: .semibold)
+        btn.setImage(UIImage(systemName: "applelogo"), for: .normal)
+        btn.tintColor = .black
+        btn.backgroundColor = .systemGray6
+        btn.layer.cornerRadius = 26
         btn.translatesAutoresizingMaskIntoConstraints = false
         return btn
     }()
-    
-    private lazy var googleButton: UIButton = {
-        var config = UIButton.Configuration.plain()
-        config.imagePadding = 10
-        config.baseForegroundColor = .black
-        var container = AttributeContainer()
-        container.font = UIFont.systemFont(ofSize: 16, weight: .bold)
-        config.attributedTitle = AttributedString("Sign in with Google", attributes: container)
-        
-        if let originalImage = UIImage(named: "Logo-google-icon-PNG") {
-            let targetSize = CGSize(width: 18, height: 18)
-            let renderer = UIGraphicsImageRenderer(size: targetSize)
-            let finalImage = renderer.image { _ in
-                originalImage.draw(in: CGRect(origin: .zero, size: targetSize))
-            }
-            config.image = finalImage.withRenderingMode(.alwaysOriginal)
-        }
-        
-        let btn = UIButton(configuration: config)
-        btn.backgroundColor = .white
-        btn.layer.cornerRadius = componentCornerRadius
-        btn.layer.borderWidth = 1
-        btn.layer.borderColor = UIColor.black.cgColor
+
+    private let googleButton: UIButton = {
+        let btn = UIButton(type: .system)
+        btn.setTitle("  Sign in with Google", for: .normal)
+        btn.setTitleColor(.black, for: .normal)
+        btn.titleLabel?.font = .systemFont(ofSize: 15, weight: .semibold)
+        btn.tintColor = .black
+        btn.backgroundColor = .systemGray6
+        btn.layer.cornerRadius = 26
         btn.translatesAutoresizingMaskIntoConstraints = false
         return btn
     }()
-    
+
     private let createAccountButton: UIButton = {
         let btn = UIButton(type: .system)
-        btn.setTitle("Create Account", for: .normal)
-        btn.setTitleColor(.systemBlue, for: .normal)
         btn.translatesAutoresizingMaskIntoConstraints = false
+        let attr = NSMutableAttributedString(
+            string: "Don't have an account?  ",
+            attributes: [.foregroundColor: UIColor.systemGray,
+                         .font: UIFont.systemFont(ofSize: 14)]
+        )
+        attr.append(NSAttributedString(
+            string: "Create one",
+            attributes: [.foregroundColor: UIColor.systemBlue,
+                         .font: UIFont.boldSystemFont(ofSize: 14)]
+        ))
+        btn.setAttributedTitle(attr, for: .normal)
         return btn
     }()
-    
-    // --- NEW: Activity Indicator ---
+
     private let activityIndicator: UIActivityIndicatorView = {
-        let spinner = UIActivityIndicatorView(style: .large)
-        spinner.color = .white // Visible against the gradient
-        spinner.hidesWhenStopped = true
-        spinner.translatesAutoresizingMaskIntoConstraints = false
-        return spinner
+        let s = UIActivityIndicatorView(style: .large)
+        s.color = .systemBlue
+        s.hidesWhenStopped = true
+        s.translatesAutoresizingMaskIntoConstraints = false
+        return s
     }()
-    
-    // Logic State
-    private var isAgreed = false
-    
+
     // MARK: - Lifecycle
-    override func loadView() {
-        self.view = GradientView()
-    }
-    
     override func viewDidLoad() {
         super.viewDidLoad()
+        view.backgroundColor = .systemBackground
         setupHierarchy()
         setupConstraints()
+        setupGoogleIcon()
         setupActions()
-        setupDismissKeyboardGesture()
-    }
-    
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        navigationController?.setNavigationBarHidden(true, animated: animated)
-    }
-    
-    // MARK: - Setup
-    private func setupDismissKeyboardGesture() {
+
+        // Add eye button as right view of password field
+        passwordTextField.rightView = eyeButton
+        passwordTextField.rightViewMode = .always
+
         let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
-        // This allows buttons to still receive their touch events immediately
         tap.cancelsTouchesInView = false
         view.addGestureRecognizer(tap)
     }
 
-    @objc private func dismissKeyboard() {
-        view.endEditing(true)
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: animated)
     }
-    
+
+    // MARK: - Setup
     private func setupHierarchy() {
-        [titleLabel, welcomeLabel, emailLabel, emailContainer, passwordLabel, passwordContainer,
-         forgotPasswordButton, checkboxButton, termsStackView, loginButton, leftLine, orLabel,
-         rightLine, appleButton, googleButton, createAccountButton,
-         activityIndicator] // Added indicator
-        .forEach { view.addSubview($0) }
-        
+        [titleLabel, subtitleLabel,
+         emailContainer, passwordContainer,
+         forgotPasswordButton,
+         checkboxButton, termsBaseLabel, termsButton,
+         loginButton,
+         leftLine, orLabel, rightLine,
+         appleButton, googleButton,
+         createAccountButton,
+         activityIndicator].forEach { view.addSubview($0) }
+
+        emailContainer.addSubview(emailIconView)
         emailContainer.addSubview(emailTextField)
+        passwordContainer.addSubview(passwordIconView)
         passwordContainer.addSubview(passwordTextField)
-//        passwordContainer.addSubview(passwordVisibilityButton)
-        termsStackView.addArrangedSubview(termsBaseLabel)
-        termsStackView.addArrangedSubview(termsButton)
     }
-    
+
+    private func setupGoogleIcon() {
+        guard let img = UIImage(named: "Logo-google-icon-PNG") else { return }
+        let size = CGSize(width: 18, height: 18)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        let resized = renderer.image { _ in img.draw(in: CGRect(origin: .zero, size: size)) }
+        // Use setImage directly — do NOT mix UIButton.Configuration with UIButton(type: .system)
+        googleButton.setImage(resized.withRenderingMode(.alwaysOriginal), for: .normal)
+    }
+
     private func setupConstraints() {
-        let margin: CGFloat = 24
-        let textPadding: CGFloat = 18
-        let safeArea = view.safeAreaLayoutGuide
-        
+        let m: CGFloat = 28
+        let safe = view.safeAreaLayoutGuide
+
         NSLayoutConstraint.activate([
-            // Center the Activity Indicator
-            activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            
-            titleLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 100),
-            titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: margin),
-            
-            welcomeLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 8),
-            welcomeLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: margin),
-            
-            emailLabel.topAnchor.constraint(equalTo: welcomeLabel.bottomAnchor, constant: 40),
-            emailLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: margin),
-            
-            emailContainer.topAnchor.constraint(equalTo: emailLabel.bottomAnchor, constant: 8),
-            emailContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: margin),
-            emailContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -margin),
-            emailContainer.heightAnchor.constraint(equalToConstant: componentHeight),
-            
-            emailTextField.leadingAnchor.constraint(equalTo: emailContainer.leadingAnchor, constant: textPadding),
-            emailTextField.trailingAnchor.constraint(equalTo: emailContainer.trailingAnchor, constant: -textPadding),
-            emailTextField.centerYAnchor.constraint(equalTo: emailContainer.centerYAnchor),
-            
-            passwordLabel.topAnchor.constraint(equalTo: emailContainer.bottomAnchor, constant: 20),
-            passwordLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: margin),
-            
-            passwordContainer.topAnchor.constraint(equalTo: passwordLabel.bottomAnchor, constant: 8),
-            passwordContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: margin),
-            passwordContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -margin),
-            passwordContainer.heightAnchor.constraint(equalToConstant: componentHeight),
-            
-//            passwordVisibilityButton.trailingAnchor.constraint(equalTo: passwordContainer.trailingAnchor, constant: -16),
-//            passwordVisibilityButton.centerYAnchor.constraint(equalTo: passwordContainer.centerYAnchor),
-//            passwordVisibilityButton.widthAnchor.constraint(equalToConstant: 24),
-            
-            passwordTextField.leadingAnchor.constraint(equalTo: passwordContainer.leadingAnchor, constant: textPadding),
-            passwordTextField.trailingAnchor.constraint(equalTo: passwordContainer.trailingAnchor, constant: -18),
-            passwordTextField.centerYAnchor.constraint(equalTo: passwordContainer.centerYAnchor),
-            
+            titleLabel.topAnchor.constraint(equalTo: safe.topAnchor, constant: 86),
+            titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: m),
+
+            subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 4),
+            subtitleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: m),
+
+            // Email
+            emailContainer.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: 30),
+            emailContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: m),
+            emailContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -m),
+            emailContainer.heightAnchor.constraint(equalToConstant: 52),
+
+            emailIconView.leadingAnchor.constraint(equalTo: emailContainer.leadingAnchor, constant: 14),
+            emailIconView.centerYAnchor.constraint(equalTo: emailContainer.centerYAnchor),
+            emailIconView.widthAnchor.constraint(equalToConstant: 18),
+            emailIconView.heightAnchor.constraint(equalToConstant: 18),
+
+            emailTextField.leadingAnchor.constraint(equalTo: emailIconView.trailingAnchor, constant: 10),
+            emailTextField.trailingAnchor.constraint(equalTo: emailContainer.trailingAnchor, constant: -14),
+            emailTextField.topAnchor.constraint(equalTo: emailContainer.topAnchor),
+            emailTextField.bottomAnchor.constraint(equalTo: emailContainer.bottomAnchor),
+
+            // Password
+            passwordContainer.topAnchor.constraint(equalTo: emailContainer.bottomAnchor, constant: 14),
+            passwordContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: m),
+            passwordContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -m),
+            passwordContainer.heightAnchor.constraint(equalToConstant: 52),
+
+            passwordIconView.leadingAnchor.constraint(equalTo: passwordContainer.leadingAnchor, constant: 14),
+            passwordIconView.centerYAnchor.constraint(equalTo: passwordContainer.centerYAnchor),
+            passwordIconView.widthAnchor.constraint(equalToConstant: 18),
+            passwordIconView.heightAnchor.constraint(equalToConstant: 18),
+
+            passwordTextField.leadingAnchor.constraint(equalTo: passwordIconView.trailingAnchor, constant: 10),
+            passwordTextField.trailingAnchor.constraint(equalTo: passwordContainer.trailingAnchor, constant: -4),
+            passwordTextField.topAnchor.constraint(equalTo: passwordContainer.topAnchor),
+            passwordTextField.bottomAnchor.constraint(equalTo: passwordContainer.bottomAnchor),
+
+            // Forgot
             forgotPasswordButton.topAnchor.constraint(equalTo: passwordContainer.bottomAnchor, constant: 8),
-            forgotPasswordButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -margin),
-            
-            checkboxButton.topAnchor.constraint(equalTo: forgotPasswordButton.bottomAnchor, constant: 10),
-            checkboxButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: margin),
+            forgotPasswordButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -m),
+
+            // Terms
+            checkboxButton.topAnchor.constraint(equalTo: forgotPasswordButton.bottomAnchor, constant: 12),
+            checkboxButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: m),
             checkboxButton.widthAnchor.constraint(equalToConstant: 24),
             checkboxButton.heightAnchor.constraint(equalToConstant: 24),
-            
-            termsStackView.centerYAnchor.constraint(equalTo: checkboxButton.centerYAnchor),
-            termsStackView.leadingAnchor.constraint(equalTo: checkboxButton.trailingAnchor, constant: 10),
-            
-            loginButton.topAnchor.constraint(equalTo: checkboxButton.bottomAnchor, constant: 20),
-            loginButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: margin),
-            loginButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -margin),
-            loginButton.heightAnchor.constraint(equalToConstant: componentHeight),
-            
-            orLabel.topAnchor.constraint(equalTo: loginButton.bottomAnchor, constant: 20),
+
+            termsBaseLabel.centerYAnchor.constraint(equalTo: checkboxButton.centerYAnchor),
+            termsBaseLabel.leadingAnchor.constraint(equalTo: checkboxButton.trailingAnchor, constant: 6),
+
+            termsButton.centerYAnchor.constraint(equalTo: checkboxButton.centerYAnchor),
+            termsButton.leadingAnchor.constraint(equalTo: termsBaseLabel.trailingAnchor, constant: 2),
+
+            // Login
+            loginButton.topAnchor.constraint(equalTo: checkboxButton.bottomAnchor, constant: 24),
+            loginButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: m),
+            loginButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -m),
+            loginButton.heightAnchor.constraint(equalToConstant: 52),
+
+            // Divider
+            orLabel.topAnchor.constraint(equalTo: loginButton.bottomAnchor, constant: 22),
             orLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            
+
             leftLine.centerYAnchor.constraint(equalTo: orLabel.centerYAnchor),
-            leftLine.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: margin),
-            leftLine.trailingAnchor.constraint(equalTo: orLabel.leadingAnchor, constant: -10),
+            leftLine.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: m),
+            leftLine.trailingAnchor.constraint(equalTo: orLabel.leadingAnchor, constant: -12),
             leftLine.heightAnchor.constraint(equalToConstant: 1),
-            
+
             rightLine.centerYAnchor.constraint(equalTo: orLabel.centerYAnchor),
-            rightLine.leadingAnchor.constraint(equalTo: orLabel.trailingAnchor, constant: 10),
-            rightLine.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -margin),
+            rightLine.leadingAnchor.constraint(equalTo: orLabel.trailingAnchor, constant: 12),
+            rightLine.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -m),
             rightLine.heightAnchor.constraint(equalToConstant: 1),
-            
-            appleButton.topAnchor.constraint(equalTo: orLabel.bottomAnchor, constant: 20),
-            appleButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: margin),
-            appleButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -margin),
-            appleButton.heightAnchor.constraint(equalToConstant: componentHeight),
-            
-            googleButton.topAnchor.constraint(equalTo: appleButton.bottomAnchor, constant: 15),
-            googleButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: margin),
-            googleButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -margin),
-            googleButton.heightAnchor.constraint(equalToConstant: componentHeight),
-            
+
+            // Social
+            appleButton.topAnchor.constraint(equalTo: orLabel.bottomAnchor, constant: 18),
+            appleButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: m),
+            appleButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -m),
+            appleButton.heightAnchor.constraint(equalToConstant: 50),
+
+            googleButton.topAnchor.constraint(equalTo: appleButton.bottomAnchor, constant: 12),
+            googleButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: m),
+            googleButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -m),
+            googleButton.heightAnchor.constraint(equalToConstant: 50),
+
+            // Create account
             createAccountButton.topAnchor.constraint(equalTo: googleButton.bottomAnchor, constant: 20),
             createAccountButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            createAccountButton.bottomAnchor.constraint(lessThanOrEqualTo: safeArea.bottomAnchor, constant: -20)
+            createAccountButton.bottomAnchor.constraint(lessThanOrEqualTo: safe.bottomAnchor, constant: -16),
+
+            // Spinner
+            activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor),
         ])
     }
-    
+
     private func setupActions() {
         emailTextField.delegate = self
         passwordTextField.delegate = self
+        eyeButton.addTarget(self, action: #selector(handlePasswordVisibilityTap), for: .touchUpInside)
         checkboxButton.addTarget(self, action: #selector(handleCheckboxTap), for: .touchUpInside)
         loginButton.addTarget(self, action: #selector(handleLoginTap), for: .touchUpInside)
         termsButton.addTarget(self, action: #selector(handleTermsTap), for: .touchUpInside)
         createAccountButton.addTarget(self, action: #selector(handleCreateAccountTap), for: .touchUpInside)
         forgotPasswordButton.addTarget(self, action: #selector(handleForgotPasswordTap), for: .touchUpInside)
-//        passwordVisibilityButton.addTarget(self, action: #selector(handlePasswordVisibilityTap), for: .touchUpInside)
     }
-    
-    // MARK: - Loading State Helper
+
+    // MARK: - Loading
     private func setLoading(_ loading: Bool) {
         if loading {
             activityIndicator.startAnimating()
-            view.isUserInteractionEnabled = false // Prevent double clicks
-            loginButton.setTitle("", for: .normal) // Hide text for cleaner look
+            view.isUserInteractionEnabled = false
+            loginButton.setTitle("", for: .normal)
         } else {
             activityIndicator.stopAnimating()
             view.isUserInteractionEnabled = true
-            loginButton.setTitle("Login", for: .normal)
+            loginButton.setTitle("Sign In", for: .normal)
         }
     }
-    
-    // MARK: - Handlers
+
+    // MARK: - Actions
+    @objc private func dismissKeyboard() { view.endEditing(true) }
+
+    @objc private func handlePasswordVisibilityTap() {
+        passwordTextField.isSecureTextEntry.toggle()
+        let symbol = passwordTextField.isSecureTextEntry ? "eye.slash" : "eye"
+        let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .regular)
+        eyeButton.setImage(UIImage(systemName: symbol, withConfiguration: config), for: .normal)
+    }
+
+    @objc private func handleCheckboxTap() {
+        isAgreed.toggle()
+        checkboxButton.setImage(UIImage(systemName: isAgreed ? "checkmark.square.fill" : "square"), for: .normal)
+    }
+
     @objc private func handleLoginTap() {
+        view.endEditing(true)
         guard let email = emailTextField.text, !email.isEmpty,
               let password = passwordTextField.text, !password.isEmpty else {
             showAlert(message: "Please enter both email and password.")
             return
         }
-        
-        if !isAgreed {
+        guard isAgreed else {
             showAlert(message: "Please agree to the Terms & Conditions.")
             return
         }
         
-        // 1. Start Loading
         setLoading(true)
         
-        Task {
+        Task { [weak self] in // <-- Weak capture prevents retain cycles
             do {
                 try await AuthService.shared.login(email: email.lowercased(), password: password)
                 let role = try await AuthService.shared.fetchUserRole()
                 
                 await MainActor.run {
+                    guard let self = self else { return } // <-- Ensure VC is alive
                     if role == "1" {
-                        // Therapist -> Main Tab
                         self.switchToRoot(MainTabBarController())
-                        // Note: We do NOT stop loading here. The view is transitioning.
                     } else if role == "0" {
-                        // Parent -> Check Linking logic
                         self.checkParentLinkingAndRoute()
                     } else {
-                        // Logic Error: Stop loading
                         self.setLoading(false)
                         self.showAlert(message: "Role not found.")
                     }
                 }
             } catch {
                 await MainActor.run {
-                    // Network/Auth Error: Stop loading
-                    self.setLoading(false)
-                    self.showAlert(message: "Login failed: \(error.localizedDescription)")
+                    self?.setLoading(false)
+                    self?.showAlert(message: "Login failed: \(error.localizedDescription)")
                 }
             }
         }
     }
-    
-    // Route User Logic (Optional: Kept if you use it elsewhere, otherwise checkParentLinkingAndRoute covers it)
+
     func routeUser() {
         Task {
             do {
                 let user = try await supabase.auth.session.user
                 let fetched: [Patient] = try await supabase
-                    .from("patients")
-                    .select()
-                    .eq("parent_uid", value: user.id)
-                    .execute().value
-                
+                    .from("patients").select()
+                    .eq("parent_uid", value: user.id).execute().value
                 await MainActor.run {
-                    if fetched.isEmpty {
-                        self.view.window?.rootViewController = UINavigationController(rootViewController: ParentEmptyStateViewController())
-                    } else {
-                        self.view.window?.rootViewController = ParentTabBarViewController()
-                    }
+                    self.view.window?.rootViewController = fetched.isEmpty
+                        ? UINavigationController(rootViewController: ParentEmptyStateViewController())
+                        : ParentTabBarViewController()
                 }
-            } catch { /* Handle error */ }
+            } catch {}
         }
     }
-    
+
     private func checkParentLinkingAndRoute() {
-        Task {
+        Task { [weak self] in
             do {
+                // 1. Fetch the currently authenticated user
                 let user = try await supabase.auth.session.user
                 
-                // 1. Fetch both linking fields from the profile
-                let response = try await supabase
-                    .from("profiles")
+                // 2. Fetch the specific profile fields for this user
+                let response = try await supabase.from("profiles")
                     .select("linked_patient_id, linked_patient_id_2")
                     .eq("id", value: user.id)
                     .single()
                     .execute()
                 
-                let data = response.data
-                let dict = try JSONSerialization.jsonObject(with: data) as? [String: Any]
-                
-                // Check both slots
-                let linkedID1 = dict?["linked_patient_id"] as? String
-                let linkedID2 = dict?["linked_patient_id_2"] as? String
-                
+                // 3. Parse the JSON response safely
+                let dict = try JSONSerialization.jsonObject(with: response.data) as? [String: Any]
+                let id1 = dict?["linked_patient_id"] as? String
+                let id2 = dict?["linked_patient_id_2"] as? String
+
+                // 4. Route on the Main Thread
                 await MainActor.run {
-                    guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                          let window = windowScene.windows.first else {
-                        self.setLoading(false)
-                        return
-                    }
+                    guard let self = self else { return }
                     
-                    // Logic: If BOTH slots are nil or empty, show the link screen.
-                    let hasNoLinkedChildren = (linkedID1 == nil || linkedID1?.isEmpty == true) &&
-                    (linkedID2 == nil || linkedID2?.isEmpty == true)
+                    let hasNone = (id1 == nil || id1!.isEmpty) && (id2 == nil || id2!.isEmpty)
                     
-                    if hasNoLinkedChildren {
-                        let emptyVC = ParentEmptyStateViewController()
-                        window.rootViewController = UINavigationController(rootViewController: emptyVC)
+                    if hasNone {
+                        // No children linked, route to empty state
+                        let emptyStateNav = UINavigationController(rootViewController: ParentEmptyStateViewController())
+                        self.switchToRoot(emptyStateNav)
                     } else {
-                        // Set the initial active child to whichever slot is filled (prioritizing slot 1)
-                        let activeID = (linkedID1 != nil && !linkedID1!.isEmpty) ? linkedID1 : linkedID2
-                        UserDefaults.standard.set(activeID, forKey: "LastSelectedChildID")
+                        // At least one child linked, save default and route to dashboard
+                        let defaultId = (id1 != nil && !id1!.isEmpty) ? id1 : id2
+                        UserDefaults.standard.set(defaultId, forKey: "LastSelectedChildID")
                         
-                        window.rootViewController = ParentTabBarViewController()
+                        self.switchToRoot(ParentTabBarViewController())
                     }
-                    
-                    UIView.transition(with: window, duration: 0.5, options: .transitionCrossDissolve, animations: nil)
-                    // Note: No need to stop loading here either, as root is replaced.
                 }
             } catch {
-                print("❌ Login Route Error: \(error)")
+                // 5. Fallback: If network fails or profile is missing, default to empty state safely
                 await MainActor.run {
-                    // Even on error, switch to safe empty state
-                    self.switchToRoot(UINavigationController(rootViewController: ParentEmptyStateViewController()))
+                    guard let self = self else { return }
+                    let emptyStateNav = UINavigationController(rootViewController: ParentEmptyStateViewController())
+                    self.switchToRoot(emptyStateNav)
                 }
             }
         }
     }
-    
-    private func switchToRoot(_ viewController: UIViewController) {
-        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let window = windowScene.windows.first else {
-            return
-        }
-        
-        window.rootViewController = viewController
-        UIView.transition(with: window, duration: 0.5, options: .transitionCrossDissolve, animations: nil)
-    }
-    
-    // MARK: - Actions
-    @objc private func handlePasswordVisibilityTap() {
-        passwordTextField.isSecureTextEntry.toggle()
 
-        guard let btn = passwordTextField.rightView as? UIButton else { return }
-
-        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .regular)
-        let symbol = passwordTextField.isSecureTextEntry ? "eye.slash" : "eye"
-
-        btn.setImage(UIImage(systemName: symbol, withConfiguration: config), for: .normal)
+    private func switchToRoot(_ vc: UIViewController) {
+        guard let windowScene = UIApplication.shared.connectedScenes
+                .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene,
+              let window = windowScene.windows.first(where: { $0.windowLevel == .normal }) else { return }
+        // Set rootViewController directly — never wrap this in UIView.transition animation block
+        window.rootViewController = vc
+        window.makeKeyAndVisible()
     }
 
-    
-    @objc private func handleCheckboxTap() {
-        isAgreed.toggle()
-        checkboxButton.setImage(UIImage(systemName: isAgreed ? "checkmark.square.fill" : "square"), for: .normal)
-    }
-    
     @objc private func handleCreateAccountTap() {
         navigationController?.pushViewController(register(), animated: true)
     }
-    
     @objc private func handleTermsTap() {
-        let termsVC = TermsViewController()
-        termsVC.delegate = self
-        self.present(termsVC, animated: true)
+        let vc = TermsViewController(); vc.delegate = self; present(vc, animated: true)
     }
-    
     @objc private func handleForgotPasswordTap() {
-        navigationController?.pushViewController(ForgotPasswordViewController(nibName: "ForgotPasswordViewController", bundle: nil), animated: true)
+        navigationController?.pushViewController(ForgotPasswordViewController(), animated: true)
     }
-    
+
     private func showAlert(message: String) {
         let alert = UIAlertController(title: nil, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
     }
 }
+
 // MARK: - UITextFieldDelegate
 extension NewLoginViewController: UITextFieldDelegate {
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        if textField == emailTextField {
-            passwordTextField.becomeFirstResponder() // Move to password field
-        } else {
-            textField.resignFirstResponder() // Dismiss keyboard
-            handleLoginTap() // Optional: Trigger login on 'Return'
-        }
+        if textField == emailTextField { passwordTextField.becomeFirstResponder() }
+        else { textField.resignFirstResponder(); handleLoginTap() }
         return true
     }
 }
+
+// MARK: - TermsViewControllerDelegate
 extension NewLoginViewController: TermsViewControllerDelegate {
     func termsViewControllerDidAccept(_ controller: TermsViewController) {
         isAgreed = true

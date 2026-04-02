@@ -6,16 +6,31 @@ class GrossMotorSkillsViewController: UIViewController {
     var patientID: String?
     
     var questions: [Question] = [
-        Question(id: 1, text: "Which activity helps you balance?", options: ["Standing on one foot", "Sitting on a chair", "Lying down", "Sleeping"], selectedOptionIndex: nil),
-        Question(id: 2, text: "Which action uses leg strength?", options: ["Jumping", "Writing", "Drawing", "Talking"], selectedOptionIndex: nil),
-        Question(id: 3, text: "What do you do to kick a ball?", options: ["Swing leg back", "Close eyes", "Stand still", "Hold ball"], selectedOptionIndex: nil),
-        Question(id: 4, text: "Can you walk up stairs without holding the rail?", options: ["Easily", "With difficulty", "Cannot do it", "Sometimes"], selectedOptionIndex: nil),
-        Question(id: 5, text: "Can you catch a large ball thrown to you?", options: ["Always", "Sometimes", "Rarely", "Never"], selectedOptionIndex: nil),
-        Question(id: 6, text: "How do you jump over an obstacle?", options: ["Two feet together", "One foot leads", "Step over", "Go around"], selectedOptionIndex: nil),
-        Question(id: 7, text: "Can you run without tripping often?", options: ["Yes", "No", "Sometimes", "Unsure"], selectedOptionIndex: nil),
-        Question(id: 8, text: "Can you ride a bicycle or tricycle?", options: ["Yes, well", "Learning", "No", "Not interested"], selectedOptionIndex: nil),
-        Question(id: 9, text: "Can you hop on one foot?", options: ["Yes, 5+ times", "Yes, 1-2 times", "No", "Unsure"], selectedOptionIndex: nil),
-        Question(id: 10, text: "Do you enjoy playground activities like climbing?", options: ["Love it", "It's okay", "Scared", "Avoid it"], selectedOptionIndex: nil)
+        // Phase 3: Motor Milestones
+        Question(id: 1, text: "Neck holding achieved at expected ~3 months?", options: ["On time", "Delayed", "Not achieved", "Unsure"], selectedOptionIndex: nil),
+        Question(id: 2, text: "Rolling over achieved (~4–5 months)?", options: ["On time", "Delayed", "Not achieved", "Unsure"], selectedOptionIndex: nil),
+        Question(id: 3, text: "Sitting without support (~6–8 months)?", options: ["On time", "Delayed", "Not achieved", "Unsure"], selectedOptionIndex: nil),
+        Question(id: 4, text: "Crawling (~8–10 months) — did the child crawl, or skip crawling?", options: ["Crawled on time", "Delayed", "Skipped crawling", "Unsure"], selectedOptionIndex: nil),
+        Question(id: 5, text: "Independent walking (~12–15 months)?", options: ["On time", "Delayed", "Not achieved", "Unsure"], selectedOptionIndex: nil),
+        Question(id: 6, text: "Running (~18 months)?", options: ["On time", "Delayed", "Not achieved", "Unsure"], selectedOptionIndex: nil),
+        Question(id: 7, text: "Climbing stairs (both feet one step / alternating, 2–3 years)?", options: ["On time", "Delayed", "Not achieved", "Unsure"], selectedOptionIndex: nil),
+        Question(id: 8, text: "Jumping with both feet (~2 years)?", options: ["On time", "Delayed", "Not achieved", "Unsure"], selectedOptionIndex: nil),
+        Question(id: 9, text: "Hopping on one foot (~4 years)?", options: ["On time", "Delayed", "Not achieved", "Unsure"], selectedOptionIndex: nil),
+        // Phase 9: Clinical Observations — Postural Control & Core Stability
+        Question(id: 10, text: "Can the child sit upright without back support?", options: ["Yes", "With difficulty", "No", "Sometimes"], selectedOptionIndex: nil),
+        Question(id: 11, text: "Does the child W-sit, slouch, or prop?", options: ["Frequently", "Sometimes", "Rarely", "Never"], selectedOptionIndex: nil),
+        Question(id: 12, text: "Does the child fatigue quickly when sitting at a desk?", options: ["Yes", "Sometimes", "No", "Unsure"], selectedOptionIndex: nil),
+        // Phase 9: Bilateral Coordination
+        Question(id: 13, text: "Can the child use both hands together (cutting, opening jars)?", options: ["Yes", "With difficulty", "No", "Sometimes"], selectedOptionIndex: nil),
+        Question(id: 14, text: "Does the child have an established hand dominance?", options: ["Yes — Left", "Yes — Right", "Not established", "Unsure"], selectedOptionIndex: nil),
+        Question(id: 15, text: "Does the child cross the midline comfortably?", options: ["Yes", "With difficulty", "No", "Unsure"], selectedOptionIndex: nil),
+        // Phase 9: Muscle Tone
+        Question(id: 16, text: "Observe for hypotonia (low tone) or hypertonia (high tone)?", options: ["Hypotonia", "Hypertonia", "Normal tone", "Mixed"], selectedOptionIndex: nil),
+        Question(id: 17, text: "Observe gait pattern — toe-walking, wide base?", options: ["Normal gait", "Toe-walking", "Wide base", "Other abnormality"], selectedOptionIndex: nil),
+        // Phase 9: Reflex Integration
+        Question(id: 18, text: "Moro reflex (startle) — should integrate by 4–6 months", options: ["Integrated", "Still present", "Unsure", "Not tested"], selectedOptionIndex: nil),
+        Question(id: 19, text: "ATNR — should integrate by 6 months", options: ["Integrated", "Still present", "Unsure", "Not tested"], selectedOptionIndex: nil),
+        Question(id: 20, text: "Palmar grasp reflex — should integrate by 5–6 months", options: ["Integrated", "Still present", "Unsure", "Not tested"], selectedOptionIndex: nil)
     ]
     var currentQuestionIndex = 0
     
@@ -241,6 +256,7 @@ class GrossMotorSkillsViewController: UIViewController {
             do {
                 try await supabase.from("assessments").insert(log).execute()
                 await MainActor.run {
+                    NotificationCenter.default.post(name: NSNotification.Name("AssessmentDidComplete"), object: nil, userInfo: ["assessmentName": "Gross Motor Skills"])
                     self.navigationController?.popViewController(animated: true)
                 }
             } catch {

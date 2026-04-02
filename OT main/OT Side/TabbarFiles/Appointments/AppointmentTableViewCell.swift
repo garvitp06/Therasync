@@ -168,6 +168,11 @@ class AppointmentTableViewCell: UITableViewCell {
         // Add padding inside the badge
         statusBadge.setContentHuggingPriority(.required, for: .horizontal)
     }
+
+    /// Call this to hide the right chevron (e.g. for parent-side read-only cells)
+    func hideChevron() {
+        chevronButton.isHidden = true
+    }
     
     // MARK: - Configure
     

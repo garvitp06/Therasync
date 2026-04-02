@@ -219,6 +219,7 @@ final class ADOSAssessmentViewController: UIViewController {
             do {
                 try await supabase.from("assessments").insert(log).execute()
                 await MainActor.run {
+                    NotificationCenter.default.post(name: NSNotification.Name("AssessmentDidComplete"), object: nil, userInfo: ["assessmentName": "ADOS"])
                     self.navigationController?.popViewController(animated: true)
                 }
             } catch {

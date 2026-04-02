@@ -9,15 +9,18 @@ final class SchoolComplaintsViewController: UIViewController, UITableViewDataSou
     // FIX 1: Declare the missing variable to store the database ID
     private var existingRecordID: Int?
     
-    // Data Source
+    // Data Source — Phase 10: School & Classroom Functional Assessment
     private let fields = [
-        "Academic Performance",
-        "Behavior in Class",
-        "Peer Interaction",
-        "Attention Span",
-        "Teacher's Feedback"
+        "Can the child sit in a group at circle time?",
+        "Can the child transition between activities with the class?",
+        "Can the child manage their belongings (school bag, lunch box, water bottle)?",
+        "Can the child perform classroom fine motor tasks (coloring, cutting, pasting)?",
+        "Can the child follow classroom routines?",
+        "How does the child behave in the cafeteria (noise, food)?",
+        "What accommodations are currently in place?",
+        "Does the child have an IEP or 504 Plan?"
     ]
-    private var values: [String] = ["", "", "", "", ""]
+    private var values: [String] = ["", "", "", "", "", "", "", ""]
 
     // MARK: - UI Components
     private let cardView: UIView = {
@@ -180,7 +183,10 @@ final class SchoolComplaintsViewController: UIViewController, UITableViewDataSou
                     try await supabase.from("assessments").insert(log).execute()
                 }
                 
-                await MainActor.run { navigationController?.popViewController(animated: true) }
+                await MainActor.run {
+                    NotificationCenter.default.post(name: NSNotification.Name("AssessmentDidComplete"), object: nil, userInfo: ["assessmentName": "School Complaints"])
+                    self.navigationController?.popViewController(animated: true)
+                }
             } catch {
                 print(error)
                 await MainActor.run { doneButton.isEnabled = true; doneButton.setTitle("Done", for: .normal) }

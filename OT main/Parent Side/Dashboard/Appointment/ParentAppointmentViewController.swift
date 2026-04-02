@@ -166,6 +166,7 @@ class ParentAppointmentViewController: UIViewController,
         ) as! AppointmentTableViewCell
 
         cell.configure(with: filteredAppointments[indexPath.row])
+        cell.hideChevron()
         cell.accessoryType = .none
         cell.selectionStyle = .none
         return cell
@@ -184,13 +185,13 @@ class ParentAppointmentViewController: UIViewController,
     private func setupNativeNavBar() {
         let appearance = UINavigationBarAppearance()
         appearance.configureWithTransparentBackground()
-        appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
-        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.white]
+        appearance.titleTextAttributes = [.foregroundColor: UIColor.black]
+        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.black]
 
         navigationController?.navigationBar.standardAppearance = appearance
         navigationController?.navigationBar.scrollEdgeAppearance = appearance
         navigationController?.navigationBar.compactAppearance = appearance
-        navigationController?.navigationBar.tintColor = .white
+        navigationController?.navigationBar.tintColor = .black
     }
 
     // MARK: - UI Setup

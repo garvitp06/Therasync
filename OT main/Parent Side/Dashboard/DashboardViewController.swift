@@ -380,7 +380,7 @@ final class DashboardViewController: UIViewController {
                 quoteTextLabel.trailingAnchor.constraint(equalTo: quoteContainerView.trailingAnchor, constant: -16),
                 quoteTextLabel.bottomAnchor.constraint(equalTo: quoteContainerView.bottomAnchor, constant: -16),
 
-                quickAccessLabel.topAnchor.constraint(equalTo: quoteContainerView.bottomAnchor, constant: 52),
+                quickAccessLabel.topAnchor.constraint(equalTo: quoteContainerView.bottomAnchor, constant: 100),
                 quickAccessLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
 
                 grid.topAnchor.constraint(equalTo: quickAccessLabel.bottomAnchor, constant: 14),
@@ -456,4 +456,3 @@ final class DashboardViewController: UIViewController {
         self.navigationController?.pushViewController(vc, animated: true)
     }
 }
-

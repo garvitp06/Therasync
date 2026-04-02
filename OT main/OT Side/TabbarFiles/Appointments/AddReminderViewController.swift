@@ -364,9 +364,11 @@ class AddReminderViewController: UIViewController, UITableViewDelegate, UITableV
             view.endEditing(true)
             
             if selected.parent_uid != nil {
-                statusLabel.text = "Linked to: \(selected.fullName)"
-                statusLabel.textColor = .systemGreen
+                // Parent is linked - no message needed
+                statusLabel.text = ""
+                statusLabel.textColor = .systemGray
             } else {
+                // No parent linked - show warning
                 statusLabel.text = "Selected \(selected.fullName), but no Parent is linked yet."
                 statusLabel.textColor = .systemOrange
             }
@@ -430,9 +432,11 @@ class AddReminderViewController: UIViewController, UITableViewDelegate, UITableV
                 linkedParentUUID = selected.parent_uid
                 
                 if selected.parent_uid != nil {
-                    statusLabel.text = "Linked to: \(selected.fullName)"
-                    statusLabel.textColor = .systemGreen
+                    // Parent is linked - no message needed
+                    statusLabel.text = ""
+                    statusLabel.textColor = .systemGray
                 } else {
+                    // No parent linked - show warning
                     statusLabel.text = "Selected \(selected.fullName), but no Parent is linked yet."
                     statusLabel.textColor = .systemOrange
                 }

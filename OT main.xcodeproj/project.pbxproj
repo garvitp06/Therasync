@@ -412,8 +412,6 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "OT main/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = TheraSync;
-				INFOPLIST_KEY_NSCameraUsageDescription = "Needer for recording assignment";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Neede for recording video";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -453,8 +451,6 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "OT main/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = TheraSync;
-				INFOPLIST_KEY_NSCameraUsageDescription = "Needer for recording assignment";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Neede for recording video";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;

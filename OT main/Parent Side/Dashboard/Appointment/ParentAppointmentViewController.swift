@@ -51,12 +51,51 @@ class ParentAppointmentViewController: UIViewController,
     private func fetchAppointments() {
         Task {
             do {
-                let currentUserID = try await supabase.auth.session.user.id
+                let currentUser = try await supabase.auth.session.user
+                let currentUserID = currentUser.id
 
+                // Step 1: Get the linked patient's UUID
+                // First try LastSelectedChildID from UserDefaults (patient_id_number)
+                var patientUUID: UUID?
+
+                if let savedPatientIDNumber = UserDefaults.standard.string(forKey: "LastSelectedChildID") {
+                    // Resolve patient_id_number → UUID
+                    struct PatientID: Decodable { let id: UUID }
+                    let patientRes = try await supabase
+                        .from("patients")
+                        .select("id")
+                        .eq("patient_id_number", value: savedPatientIDNumber)
+                        .limit(1)
+                        .single()
+                        .execute()
+                    let decoded = try JSONDecoder().decode(PatientID.self, from: patientRes.data)
+                    patientUUID = decoded.id
+                }
+
+                // Fallback: find patient by parent_uid
+                if patientUUID == nil {
+                    struct PatientID: Decodable { let id: UUID }
+                    let patientRes = try await supabase
+                        .from("patients")
+                        .select("id")
+                        .eq("parent_uid", value: currentUserID.uuidString)
+                        .limit(1)
+                        .single()
+                        .execute()
+                    let decoded = try JSONDecoder().decode(PatientID.self, from: patientRes.data)
+                    patientUUID = decoded.id
+                }
+
+                guard let linkedPatientID = patientUUID else {
+                    print("❌ No linked patient found for parent")
+                    return
+                }
+
+                // Step 2: Fetch appointments for this specific patient
                 let response = try await supabase
                     .from("appointments")
                     .select("*, patients(*)")
-                    .eq("parent_id", value: currentUserID)
+                    .eq("patient_id", value: linkedPatientID)
                     .order("date", ascending: true)
                     .execute()
 
@@ -127,12 +166,18 @@ class ParentAppointmentViewController: UIViewController,
         ) as! AppointmentTableViewCell
 
         cell.configure(with: filteredAppointments[indexPath.row])
+        cell.accessoryType = .none
+        cell.selectionStyle = .none
         return cell
     }
 
     func tableView(_ tableView: UITableView,
                    heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 80
+    }
+
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: false)
     }
 
     // MARK: - Navigation Bar Styling

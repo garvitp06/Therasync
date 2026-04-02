@@ -5,6 +5,21 @@ final class DashboardViewController: UIViewController {
 
     // MARK: - UI Components
 
+    private let profileImageView: UIImageView = {
+        let iv = UIImageView()
+        iv.translatesAutoresizingMaskIntoConstraints = false
+        iv.contentMode = .scaleAspectFill
+        iv.clipsToBounds = true
+        iv.layer.cornerRadius = 22
+        iv.layer.borderWidth = 2
+        iv.layer.borderColor = UIColor.white.withAlphaComponent(0.8).cgColor
+        let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .light)
+        iv.image = UIImage(systemName: "person.circle.fill", withConfiguration: config)
+        iv.tintColor = UIColor.white.withAlphaComponent(0.6)
+        iv.backgroundColor = UIColor.white.withAlphaComponent(0.15)
+        return iv
+    }()
+
     private let titleLabel: UILabel = {
         let l = UILabel()
         l.text = "Dashboard"
@@ -250,6 +265,13 @@ final class DashboardViewController: UIViewController {
                     if let patient = patientToShow {
                         self.subtitleLabel.text = "Hi \(patient.firstName)"
                         UserDefaults.standard.set(patient.patientID, forKey: "LastSelectedChildID")
+                        
+                        // Load patient profile photo
+                        let placeholderConfig = UIImage.SymbolConfiguration(pointSize: 20, weight: .light)
+                        let placeholder = UIImage(systemName: "person.circle.fill", withConfiguration: placeholderConfig)
+                        if let urlString = patient.imageURL, !urlString.isEmpty {
+                            self.profileImageView.loadImage(from: urlString, placeholder: placeholder)
+                        }
                     }
                 }
             } catch {
@@ -327,7 +349,7 @@ final class DashboardViewController: UIViewController {
 
             [
                 titleLabel, subtitleLabel, quoteContainerView,
-                quickAccessLabel, grid
+                quickAccessLabel, grid, profileImageView
             ].forEach {
                 $0.translatesAutoresizingMaskIntoConstraints = false
                 view.addSubview($0)
@@ -337,11 +359,13 @@ final class DashboardViewController: UIViewController {
             quoteTextLabel.translatesAutoresizingMaskIntoConstraints = false
 
             NSLayoutConstraint.activate([
-                // --- ADJUSTMENT START ---
-                // Increased constant from 8 to 40 to push everything down
+                // Profile avatar — top right
+                profileImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 44),
+                profileImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+                profileImageView.widthAnchor.constraint(equalToConstant: 44),
+                profileImageView.heightAnchor.constraint(equalToConstant: 44),
+
                 titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 40),
-                // --- ADJUSTMENT END ---
-                
                 titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
 
                 subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 2),

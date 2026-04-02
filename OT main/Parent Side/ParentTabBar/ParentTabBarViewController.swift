@@ -12,11 +12,29 @@ class ParentTabBarViewController: UITabBarController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // This is the standard, non-transparent tab bar background
         self.tabBar.backgroundColor = .clear
         
-        // This is the blue color for the selected icon
-        self.tabBar.tintColor = .systemBlue
+        // Match the brand orange from ParentGradientView
+        let brandOrange = UIColor(red: 255/255, green: 166/255, blue: 0/255, alpha: 1.0)
+        self.tabBar.tintColor = brandOrange
+        self.tabBar.unselectedItemTintColor = .systemGray
+        
+        // Use appearance API for better iOS 15+ stability
+        let appearance = UITabBarAppearance()
+        appearance.configureWithTransparentBackground()
+        
+        // Selected attributes
+        appearance.stackedLayoutAppearance.selected.iconColor = brandOrange
+        appearance.stackedLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: brandOrange]
+        
+        // Normal (unselected) attributes
+        appearance.stackedLayoutAppearance.normal.iconColor = .systemGray
+        appearance.stackedLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor.systemGray]
+        
+        self.tabBar.standardAppearance = appearance
+        if #available(iOS 15.0, *) {
+            self.tabBar.scrollEdgeAppearance = appearance
+        }
         
         // Set up all the view controllers for each tab
         viewControllers = [

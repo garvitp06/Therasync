@@ -87,7 +87,7 @@ final class ReportsViewController: UIViewController {
         navigationController?.navigationBar.standardAppearance = appearance
         navigationController?.navigationBar.scrollEdgeAppearance = appearance
         navigationController?.navigationBar.compactAppearance = appearance
-        navigationController?.navigationBar.tintColor = .white
+        navigationController?.navigationBar.tintColor = .black
 
         // Prevent auto-scroll jump when large title kicks in
         tableView.setContentOffset(.zero, animated: false)

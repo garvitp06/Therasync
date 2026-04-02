@@ -292,6 +292,7 @@ class AppointmentTableViewCell: UITableViewCell {
         avatarImageView.image = nil
         avatarImageView.isHidden = true
         initialsLabel.isHidden = false
+        chevronButton.isHidden = false
         appointment = nil
     }
 }

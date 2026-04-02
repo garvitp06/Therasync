@@ -144,53 +144,6 @@ class NewLoginViewController: UIViewController {
         return btn
     }()
 
-    private let orLabel: UILabel = {
-        let l = UILabel()
-        l.text = "or continue with"
-        l.font = .systemFont(ofSize: 13)
-        l.textColor = .systemGray3
-        l.textAlignment = .center
-        l.translatesAutoresizingMaskIntoConstraints = false
-        return l
-    }()
-    private let leftLine: UIView = {
-        let v = UIView()
-        v.backgroundColor = .systemGray5
-        v.translatesAutoresizingMaskIntoConstraints = false
-        return v
-    }()
-    private let rightLine: UIView = {
-        let v = UIView()
-        v.backgroundColor = .systemGray5
-        v.translatesAutoresizingMaskIntoConstraints = false
-        return v
-    }()
-
-    private let appleButton: UIButton = {
-        let btn = UIButton(type: .system)
-        btn.setTitle("  Sign in with Apple", for: .normal)
-        btn.setTitleColor(.black, for: .normal)
-        btn.titleLabel?.font = .systemFont(ofSize: 15, weight: .semibold)
-        btn.setImage(UIImage(systemName: "applelogo"), for: .normal)
-        btn.tintColor = .black
-        btn.backgroundColor = .systemGray6
-        btn.layer.cornerRadius = 26
-        btn.translatesAutoresizingMaskIntoConstraints = false
-        return btn
-    }()
-
-    private let googleButton: UIButton = {
-        let btn = UIButton(type: .system)
-        btn.setTitle("  Sign in with Google", for: .normal)
-        btn.setTitleColor(.black, for: .normal)
-        btn.titleLabel?.font = .systemFont(ofSize: 15, weight: .semibold)
-        btn.tintColor = .black
-        btn.backgroundColor = .systemGray6
-        btn.layer.cornerRadius = 26
-        btn.translatesAutoresizingMaskIntoConstraints = false
-        return btn
-    }()
-
     private let createAccountButton: UIButton = {
         let btn = UIButton(type: .system)
         btn.translatesAutoresizingMaskIntoConstraints = false
@@ -222,7 +175,6 @@ class NewLoginViewController: UIViewController {
         view.backgroundColor = .systemBackground
         setupHierarchy()
         setupConstraints()
-        setupGoogleIcon()
         setupActions()
 
         // Add eye button as right view of password field
@@ -246,8 +198,6 @@ class NewLoginViewController: UIViewController {
          forgotPasswordButton,
          checkboxButton, termsBaseLabel, termsButton,
          loginButton,
-         leftLine, orLabel, rightLine,
-         appleButton, googleButton,
          createAccountButton,
          activityIndicator].forEach { view.addSubview($0) }
 
@@ -257,14 +207,7 @@ class NewLoginViewController: UIViewController {
         passwordContainer.addSubview(passwordTextField)
     }
 
-    private func setupGoogleIcon() {
-        guard let img = UIImage(named: "Logo-google-icon-PNG") else { return }
-        let size = CGSize(width: 18, height: 18)
-        let renderer = UIGraphicsImageRenderer(size: size)
-        let resized = renderer.image { _ in img.draw(in: CGRect(origin: .zero, size: size)) }
-        // Use setImage directly — do NOT mix UIButton.Configuration with UIButton(type: .system)
-        googleButton.setImage(resized.withRenderingMode(.alwaysOriginal), for: .normal)
-    }
+
 
     private func setupConstraints() {
         let m: CGFloat = 28
@@ -331,35 +274,10 @@ class NewLoginViewController: UIViewController {
             loginButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -m),
             loginButton.heightAnchor.constraint(equalToConstant: 52),
 
-            // Divider
-            orLabel.topAnchor.constraint(equalTo: loginButton.bottomAnchor, constant: 22),
-            orLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-
-            leftLine.centerYAnchor.constraint(equalTo: orLabel.centerYAnchor),
-            leftLine.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: m),
-            leftLine.trailingAnchor.constraint(equalTo: orLabel.leadingAnchor, constant: -12),
-            leftLine.heightAnchor.constraint(equalToConstant: 1),
-
-            rightLine.centerYAnchor.constraint(equalTo: orLabel.centerYAnchor),
-            rightLine.leadingAnchor.constraint(equalTo: orLabel.trailingAnchor, constant: 12),
-            rightLine.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -m),
-            rightLine.heightAnchor.constraint(equalToConstant: 1),
-
-            // Social
-            appleButton.topAnchor.constraint(equalTo: orLabel.bottomAnchor, constant: 18),
-            appleButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: m),
-            appleButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -m),
-            appleButton.heightAnchor.constraint(equalToConstant: 50),
-
-            googleButton.topAnchor.constraint(equalTo: appleButton.bottomAnchor, constant: 12),
-            googleButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: m),
-            googleButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -m),
-            googleButton.heightAnchor.constraint(equalToConstant: 50),
-
             // Create account
-            createAccountButton.topAnchor.constraint(equalTo: googleButton.bottomAnchor, constant: 20),
+            createAccountButton.topAnchor.constraint(equalTo: loginButton.bottomAnchor, constant: 32),
             createAccountButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            createAccountButton.bottomAnchor.constraint(lessThanOrEqualTo: safe.bottomAnchor, constant: -16),
+            createAccountButton.bottomAnchor.constraint(lessThanOrEqualTo: safe.bottomAnchor, constant: -24),
 
             // Spinner
             activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),

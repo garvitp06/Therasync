@@ -117,10 +117,40 @@ class ParentNoteDetailViewController: UIViewController, UITextViewDelegate, UITe
             setupPlaceholder()
         }
     }
-
+    private var saveTimer: Timer?
     @objc private func titleDidChange() { autoSave() }
     func textViewDidChange(_ textView: UITextView) { if textView.textColor != .lightGray { autoSave() } }
     
+    private func scheduleSave() {
+        guard let id = noteID, let pID = patientID else { return }
+        let title = titleTextField.text ?? ""
+        let body = textView.textColor == .lightGray ? "" : textView.text ?? ""
+        
+        // Instantly update the parent view controller
+        delegate?.didUpdateParentNote(id: id, newTitle: title, newBody: body)
+
+        // Invalidate previous timer and wait 0.5 seconds
+        saveTimer?.invalidate()
+        saveTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in
+            self?.executeSupabaseSave(id: id, pID: pID, title: title, body: body)
+        }
+    }
+    private func executeSupabaseSave(id: UUID, pID: String, title: String, body: String) {
+        Task {
+            do {
+                let user = try await supabase.auth.session.user
+                try await supabase.from("notes").upsert([
+                    "id": id.uuidString,
+                    "patient_id": pID,
+                    "parent_uid": user.id.uuidString,
+                    "title": title,
+                    "content": body
+                ]).execute()
+            } catch {
+                print("❌ Save Error: \(error)")
+            }
+        }
+    }
     private func autoSave() {
         guard let id = noteID, let pID = patientID else { return }
         let title = titleTextField.text ?? ""

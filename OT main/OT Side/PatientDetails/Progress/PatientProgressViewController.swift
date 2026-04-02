@@ -146,35 +146,50 @@ extension PatientProgressViewController: UITableViewDataSource, UITableViewDeleg
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = UITableViewCell(style: .subtitle, reuseIdentifier: "ReportCell")
         let report = dailyReports[indexPath.row]
         
-        // Cell Styling for Gradient Background
-        cell.backgroundColor = .white.withAlphaComponent(0.9) // Slight transparency or solid white
-        cell.layer.cornerRadius = 12
-        cell.clipsToBounds = true
+        // Reuse or create a custom card cell
+        let reuseID = "ReportCardCell"
+        var cell = tableView.dequeueReusableCell(withIdentifier: reuseID)
+        if cell == nil {
+            cell = UITableViewCell(style: .subtitle, reuseIdentifier: reuseID)
+        }
+        guard let cell = cell else { return UITableViewCell() }
         
-        // Add spacing between cells using a trick or custom cell,
-        // but for standard cells, just style the content:
+        cell.backgroundColor = .white
+        cell.layer.cornerRadius = 14
+        cell.clipsToBounds = true
+        cell.selectionStyle = .none
+        
+        // Date
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
-        let dateString = formatter.string(from: report.date)
+        cell.textLabel?.text = formatter.string(from: report.date)
+        cell.textLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
+        cell.textLabel?.textColor = .black
         
-        cell.textLabel?.text = "Report - \(dateString)"
-        cell.textLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
-        
-        // Detail text
+        // Summary
         let assessmentNames = report.assessments.map { $0.assessment_type }.joined(separator: ", ")
         let assignmentText = report.latestAssignment != nil ? " + Assignment" : ""
-        cell.detailTextLabel?.text = "\(assessmentNames)\(assignmentText)"
-        cell.detailTextLabel?.textColor = .darkGray
+        let summaryText = assessmentNames.isEmpty ? "Assignment" : "\(assessmentNames)\(assignmentText)"
+        cell.detailTextLabel?.text = summaryText
+        cell.detailTextLabel?.textColor = .systemGray
+        cell.detailTextLabel?.font = .systemFont(ofSize: 13)
         
-        // Download Button
+        // Icon
+        let iconView = UIImageView(image: UIImage(systemName: "doc.text.fill"))
+        iconView.tintColor = .systemBlue
+        iconView.contentMode = .scaleAspectFit
+        iconView.frame = CGRect(x: 0, y: 0, width: 24, height: 24)
+        cell.imageView?.image = UIImage(systemName: "doc.text.fill")
+        cell.imageView?.tintColor = .systemBlue
+        
+        // Download button
         let downloadBtn = UIButton(type: .system)
-        let config = UIImage.SymbolConfiguration(pointSize: 24, weight: .medium)
-        downloadBtn.setImage(UIImage(systemName: "arrow.down.doc.fill", withConfiguration: config), for: .normal)
+        let config = UIImage.SymbolConfiguration(pointSize: 22, weight: .medium)
+        downloadBtn.setImage(UIImage(systemName: "arrow.down.circle.fill", withConfiguration: config), for: .normal)
         downloadBtn.tintColor = .systemBlue
-        downloadBtn.frame = CGRect(x: 0, y: 0, width: 50, height: 50)
+        downloadBtn.frame = CGRect(x: 0, y: 0, width: 44, height: 44)
         downloadBtn.tag = indexPath.row
         downloadBtn.addTarget(self, action: #selector(downloadPDFTapped(_:)), for: .touchUpInside)
         cell.accessoryView = downloadBtn

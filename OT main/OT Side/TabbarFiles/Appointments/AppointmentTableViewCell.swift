@@ -1,7 +1,8 @@
 import UIKit
 
+// ✅ Renamed the protocol method to reflect the new behavior
 protocol AppointmentCellDelegate: AnyObject {
-    func didTapChevron(for appointment: Appointment)
+    func didTapCell(for appointment: Appointment)
 }
 
 class AppointmentTableViewCell: UITableViewCell {
@@ -79,14 +80,15 @@ class AppointmentTableViewCell: UITableViewCell {
         return l
     }()
     
-    /// Chevron button to open patient profile
+    /// Chevron button (Now just a visual indicator)
     private let chevronButton: UIButton = {
         let b = UIButton(type: .system)
         let config = UIImage.SymbolConfiguration(pointSize: 14, weight: .semibold)
         b.setImage(UIImage(systemName: "chevron.right", withConfiguration: config), for: .normal)
         b.tintColor = .tertiaryLabel
         b.translatesAutoresizingMaskIntoConstraints = false
-        b.isUserInteractionEnabled = true
+        // ✅ Disabled interaction so the tap passes through to the cell
+        b.isUserInteractionEnabled = false
         return b
     }()
     
@@ -104,7 +106,7 @@ class AppointmentTableViewCell: UITableViewCell {
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
-        self.selectionStyle = .none
+        self.selectionStyle = .default // ✅ Changed back to default so users see a gray highlight when tapping
         self.backgroundColor = .systemBackground
         setupViews()
     }
@@ -128,7 +130,7 @@ class AppointmentTableViewCell: UITableViewCell {
         contentView.addSubview(statusBadge)
         contentView.addSubview(chevronButton)
         
-        chevronButton.addTarget(self, action: #selector(chevronTapped), for: .touchUpInside)
+        // ✅ Removed the chevron target action
         
         NSLayoutConstraint.activate([
             // Avatar
@@ -274,13 +276,6 @@ class AppointmentTableViewCell: UITableViewCell {
         statusBadge.textColor = color
         statusBadge.backgroundColor = color.withAlphaComponent(0.1)
         statusBadge.layer.borderColor = color.withAlphaComponent(0.3).cgColor
-    }
-    
-    // MARK: - Actions
-    
-    @objc private func chevronTapped() {
-        guard let appointment = appointment else { return }
-        delegate?.didTapChevron(for: appointment)
     }
     
     override func prepareForReuse() {

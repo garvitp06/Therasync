@@ -18,6 +18,8 @@ class ParentNotesViewController: UIViewController {
         tv.separatorStyle = .none
         tv.register(ParentNoteCell.self, forCellReuseIdentifier: ParentNoteCell.identifier)
         tv.translatesAutoresizingMaskIntoConstraints = false
+        tv.delegate = self
+        tv.dataSource = self
         return tv
     }()
     
@@ -53,13 +55,14 @@ class ParentNotesViewController: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = .systemGroupedBackground
         setupUI()
+        fetchParentNotes()
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(false, animated: animated)
         setupNavBar()
-        fetchParentNotes()
+
     }
 
     private func setupUI() {
@@ -146,7 +149,7 @@ class ParentNotesViewController: UIViewController {
                     self.updateState()
                     self.tableView.reloadData()
                 }
-            } catch { self.loadingIndicator.stopAnimating() }
+            } catch { print(error) }
         }
     }
 

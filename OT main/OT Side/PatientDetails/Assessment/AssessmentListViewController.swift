@@ -86,9 +86,11 @@ class AssessmentListViewController: UIViewController {
     // MARK: - UI Construction
     private func setupNavigationBar() {
         title = "Assessment List"
+        navigationItem.largeTitleDisplayMode = .never
         let appearance = UINavigationBarAppearance()
         appearance.configureWithTransparentBackground()
         appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
+        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.white]
         navigationController?.navigationBar.standardAppearance = appearance
         navigationController?.navigationBar.scrollEdgeAppearance = appearance
         navigationController?.navigationBar.tintColor = .white

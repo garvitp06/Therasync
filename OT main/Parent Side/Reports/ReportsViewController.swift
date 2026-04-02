@@ -53,17 +53,17 @@ final class ReportsViewController: UIViewController {
     }()
     
     private let emptyStateLabel: UILabel = {
-        let l = UILabel()
-        l.text = "No reports available yet."
-        l.textColor = .white.withAlphaComponent(0.9)
-        l.font = .systemFont(ofSize: 18, weight: .medium)
-        l.textAlignment = .center
-        l.numberOfLines = 0
-        l.isHidden = true
-        l.translatesAutoresizingMaskIntoConstraints = false
-        return l
-    }()
-
+            let l = UILabel()
+            l.text = "No reports available yet."
+            // Changed from .white to .black
+            l.textColor = .black
+            l.font = .systemFont(ofSize: 18, weight: .medium)
+            l.textAlignment = .center
+            l.numberOfLines = 0
+            l.isHidden = true
+            l.translatesAutoresizingMaskIntoConstraints = false
+            return l
+        }()
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -75,25 +75,32 @@ final class ReportsViewController: UIViewController {
     }
     
     override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        navigationController?.setNavigationBarHidden(false, animated: true)
-        
-        // Setup Nav Bar
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithTransparentBackground()
-        appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
-        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.white]
-        navigationController?.navigationBar.standardAppearance = appearance
-        navigationController?.navigationBar.tintColor = .white
-        navigationController?.navigationBar.prefersLargeTitles = true
-        
-        // Silent Refresh if patient is linked
-        if let pid = linkedPatient?.patientID, !isLoading {
-            Task {
-                await fetchReports(for: pid)
+            super.viewWillAppear(animated)
+            navigationController?.setNavigationBarHidden(false, animated: true)
+            
+            // Setup Nav Bar
+            let appearance = UINavigationBarAppearance()
+            appearance.configureWithTransparentBackground()
+            
+            // Change both standard and large titles to BLACK
+            appearance.titleTextAttributes = [.foregroundColor: UIColor.black]
+            appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.black]
+            
+            navigationController?.navigationBar.standardAppearance = appearance
+            
+            // Optional: You may also want to change the tintColor (Back button color)
+            // to black or systemBlue so it matches and is visible!
+            navigationController?.navigationBar.tintColor = .black
+            
+            navigationController?.navigationBar.prefersLargeTitles = true
+            
+            // Silent Refresh if patient is linked
+            if let pid = linkedPatient?.patientID, !isLoading {
+                Task {
+                    await fetchReports(for: pid)
+                }
             }
         }
-    }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)

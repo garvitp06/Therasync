@@ -116,9 +116,11 @@ class AssignmentListViewController: UIViewController {
 
     private func setupNavigationBar() {
         self.title = "Assignments"
+        navigationItem.largeTitleDisplayMode = .never
         let appearance = UINavigationBarAppearance()
         appearance.configureWithTransparentBackground()
         appearance.titleTextAttributes = [.foregroundColor: UIColor.white, .font: UIFont.systemFont(ofSize: 18, weight: .bold)]
+        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.white]
         
         navigationController?.navigationBar.standardAppearance = appearance
         navigationController?.navigationBar.scrollEdgeAppearance = appearance

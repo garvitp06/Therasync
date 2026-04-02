@@ -4,9 +4,11 @@ import Supabase
 class AppointmentViewController: UIViewController,
                                  UITableViewDelegate,
                                  UITableViewDataSource,
-                                 OTCalendarViewDelegate,
-                                 AddReminderDelegate {
-    
+                                 AddReminderDelegate,
+                                 AppointmentCellDelegate,
+                                 EditAppointmentDelegate,
+                                 OTCalendarViewDelegate { // ✅ Swapped to your custom delegate
+
     // MARK: - Data Source
     var appointments: [Appointment] = []
     var filteredAppointments: [Appointment] = []
@@ -16,22 +18,33 @@ class AppointmentViewController: UIViewController,
     private enum AppointmentFilterMode {
         case selectedDay
         case upcoming
+        case previous
     }
     
     private var filterMode: AppointmentFilterMode = .selectedDay
     
     // MARK: - UI Elements
-    private var customCalendar: OTCalendarView!
     
-    // ✅ Segmented control
+    // ✅ Replaced native calendar with your custom OTCalendarView
+    private let customCalendar: OTCalendarView = {
+        let cv = OTCalendarView()
+        cv.translatesAutoresizingMaskIntoConstraints = false
+        // Optional: Add shadow to match your UI aesthetic
+        cv.layer.shadowColor = UIColor.black.cgColor
+        cv.layer.shadowOpacity = 0.08
+        cv.layer.shadowRadius = 10
+        cv.layer.shadowOffset = CGSize(width: 0, height: 4)
+        cv.layer.masksToBounds = false
+        return cv
+    }()
+
     private lazy var segmentedControl: UISegmentedControl = {
-        let items = ["Selected Day", "Upcoming"]
+        let items = ["Selected Day", "Upcoming", "Previous"]
         let sc = UISegmentedControl(items: items)
         sc.selectedSegmentIndex = 0
         sc.addTarget(self, action: #selector(segmentChanged(_:)), for: .valueChanged)
         sc.translatesAutoresizingMaskIntoConstraints = false
         
-        // Native iOS Segment styling suitable for a dark/gradient background
         sc.selectedSegmentTintColor = .white
         sc.setTitleTextAttributes([.foregroundColor: UIColor.black], for: .selected)
         sc.setTitleTextAttributes([.foregroundColor: UIColor.white], for: .normal)
@@ -47,52 +60,36 @@ class AppointmentViewController: UIViewController,
         return tv
     }()
     
-
-    
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupNavBar()   // ✅ Configure native nav bar
+        setupNavBar()
         setupUI()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        // ✅ Show the nav bar (was previously hidden)
         navigationController?.setNavigationBarHidden(false, animated: animated)
         navigationController?.navigationBar.prefersLargeTitles = true
         fetchAppointments()
     }
     
-    // MARK: - ✅ Native Nav Bar Setup
+    // MARK: - Native Nav Bar Setup
     private func setupNavBar() {
-        // Large title "Appointments" in white
         self.title = "Appointments"
-        navigationController?.navigationBar.prefersLargeTitles = true
-        navigationItem.largeTitleDisplayMode = .always
+        let addBtn = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(didTapAdd))
+        addBtn.tintColor = .black
+        navigationItem.rightBarButtonItem = addBtn
         
-        // Transparent appearance so the gradient background shows through
         let appearance = UINavigationBarAppearance()
         appearance.configureWithTransparentBackground()
-        appearance.largeTitleTextAttributes = [
-            .foregroundColor: UIColor.white,
-            .font: UIFont.systemFont(ofSize: 34, weight: .bold)
-        ]
-        appearance.titleTextAttributes = [
-            .foregroundColor: UIColor.white
-        ]
+        appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
+        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.white]
         
         navigationController?.navigationBar.standardAppearance = appearance
         navigationController?.navigationBar.scrollEdgeAppearance = appearance
         navigationController?.navigationBar.compactAppearance = appearance
-        navigationController?.navigationBar.tintColor = .white  // Makes the + icon white
-        
-        // ✅ Native system "+" bar button item
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
-            barButtonSystemItem: .add,
-            target: self,
-            action: #selector(didTapAdd)
-        )
+        navigationController?.navigationBar.tintColor = .white
     }
     
     // MARK: - Fetching Logic
@@ -108,7 +105,6 @@ class AppointmentViewController: UIViewController,
                     .order("date", ascending: true)
                     .execute()
                 
-                // Smart Decoder (ISO8601 + Fallback)
                 let decoder = JSONDecoder()
                 decoder.dateDecodingStrategy = .custom { decoder in
                     let container = try decoder.singleValueContainer()
@@ -133,7 +129,10 @@ class AppointmentViewController: UIViewController,
                 
                 await MainActor.run {
                     self.appointments = fetchedAppointments
+                    
+                    // ✅ Feed the dates directly into your custom calendar to show the dots
                     self.customCalendar.appointmentDates = fetchedAppointments.map { $0.date }
+                    
                     self.applyFilter()
                 }
                 
@@ -156,11 +155,14 @@ class AppointmentViewController: UIViewController,
             
         case .upcoming:
             let now = Date()
-            filteredAppointments = appointments.filter { $0.date >= now }
+            filteredAppointments = appointments.filter { $0.date >= now && $0.status.lowercased() != "completed" }
             filteredAppointments.sort { $0.date < $1.date }
+            
+        case .previous:
+            let now = Date()
+            filteredAppointments = appointments.filter { $0.status.lowercased() == "completed" || $0.date < now }
+            filteredAppointments.sort { $0.date > $1.date }
         }
-        
-        let hasData = !filteredAppointments.isEmpty
         
         tableView.reloadData()
     }
@@ -190,21 +192,23 @@ class AppointmentViewController: UIViewController,
             }
         }
     }
-    
-    // MARK: - Delegates
+
+    // MARK: - ✅ OTCalendarView Delegate
     func didSelectDate(date: Date) {
         selectedDate = date
-        
-        // ✅ Automatically show Selected Day when user taps calendar
         filterMode = .selectedDay
         segmentedControl.selectedSegmentIndex = 0
         applyFilter()
     }
-    
+
     func didAddAppointment() {
         fetchAppointments()
     }
     
+    func didUpdateAppointment() {
+        fetchAppointments()
+    }
+
     @objc func didTapAdd() {
         let vc = AddReminderViewController()
         vc.delegate = self
@@ -215,7 +219,7 @@ class AppointmentViewController: UIViewController,
         if let sheet = nav.sheetPresentationController {
             sheet.detents = [.large()]
             sheet.prefersGrabberVisible = true
-            sheet.preferredCornerRadius = 24
+            sheet.preferredCornerRadius = 26
         }
         
         present(nav, animated: true)
@@ -224,8 +228,10 @@ class AppointmentViewController: UIViewController,
     @objc private func segmentChanged(_ sender: UISegmentedControl) {
         if sender.selectedSegmentIndex == 0 {
             filterMode = .selectedDay
-        } else {
+        } else if sender.selectedSegmentIndex == 1 {
             filterMode = .upcoming
+        } else {
+            filterMode = .previous
         }
         applyFilter()
     }
@@ -249,61 +255,158 @@ class AppointmentViewController: UIViewController,
         return v
     }
     
-    func tableView(_ tableView: UITableView,
-                   cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(
             withIdentifier: AppointmentTableViewCell.identifier,
             for: indexPath
         ) as! AppointmentTableViewCell
         
         let appt = filteredAppointments[indexPath.section]
-        var display = appt
-        
-        if let name = appt.patient?.firstName {
-            display.title = "\(appt.title) - \(name)"
-        }
-        
-        cell.configure(with: display)
-        cell.layer.cornerRadius = 16
+        cell.configure(with: appt)
+        cell.delegate = self
+        cell.layer.cornerRadius = 26
         cell.layer.masksToBounds = true
         
         return cell
     }
     
-    // MARK: - Swipe Delete
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 76
+    }
+
+    // MARK: - AppointmentCellDelegate (Chevron → Patient Profile)
+    // MARK: - AppointmentCellDelegate (Cell Tap → Patient Profile)
+    func didTapCell(for appointment: Appointment) {
+        guard let patient = appointment.patient else {
+            let alert = UIAlertController(title: "No Patient",
+                                          message: "No patient data linked to this appointment.",
+                                          preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            present(alert, animated: true)
+            return
+        }
+
+        let profileVC = ProfileViewController()
+        profileVC.patientData = patient
+        profileVC.hidesBottomBarWhenPushed = true
+        navigationController?.pushViewController(profileVC, animated: true)
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        // Deselect the row immediately so it doesn't stay gray
+        tableView.deselectRow(at: indexPath, animated: true)
+
+        // Get the appointment for the tapped row
+        let appt = filteredAppointments[indexPath.section]
+
+        // Trigger the exact same navigation logic
+        didTapCell(for: appt)
+    }
+
+    // MARK: - Swipe Actions
     func tableView(_ tableView: UITableView,
                    trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-        
+
+        let appt = filteredAppointments[indexPath.section]
+        let isCompleted = appt.status.lowercased() == "completed"
+
         let deleteAction = UIContextualAction(style: .destructive, title: nil) { [weak self] _, _, completion in
             self?.showDeleteConfirmation(indexPath: indexPath, completion: completion)
         }
+        deleteAction.image = createCircularImage(systemName: "trash.fill", backgroundColor: .systemRed)
+        deleteAction.backgroundColor = .systemBackground
+
+        let infoAction = UIContextualAction(style: .normal, title: nil) { [weak self] _, _, completion in
+            self?.openEditAppointment(at: indexPath)
+            completion(true)
+        }
+        infoAction.image = createCircularImage(systemName: "info.circle.fill", backgroundColor: .systemBlue)
+        infoAction.backgroundColor = .systemBackground
+
+        var actions = [deleteAction, infoAction]
         
-        deleteAction.image = createCircularTrashImage()
-        deleteAction.backgroundColor = UIColor(red: 0.11, green: 0.45, blue: 0.98, alpha: 1.0)
-        
-        let configuration = UISwipeActionsConfiguration(actions: [deleteAction])
+        if !isCompleted {
+            let completeAction = UIContextualAction(style: .normal, title: nil) { [weak self] _, _, completion in
+                self?.markAppointmentComplete(at: indexPath)
+                completion(true)
+            }
+            completeAction.image = createCircularImage(systemName: "checkmark.circle.fill", backgroundColor: .systemGreen)
+            completeAction.backgroundColor = .systemBackground
+            actions.append(completeAction)
+        }
+
+        let configuration = UISwipeActionsConfiguration(actions: actions)
         configuration.performsFirstActionWithFullSwipe = false
         return configuration
     }
     
-    func createCircularTrashImage() -> UIImage {
+    // MARK: - Mark as Complete
+    private func markAppointmentComplete(at indexPath: IndexPath) {
+        let appt = filteredAppointments[indexPath.section]
+        guard let id = appt.id else { return }
+        
+        Task {
+            do {
+                struct StatusUpdate: Encodable {
+                    let status: String
+                }
+                let payload = StatusUpdate(status: "completed")
+                
+                try await supabase.from("appointments")
+                    .update(payload)
+                    .eq("id", value: id)
+                    .execute()
+                
+                await MainActor.run {
+                    self.fetchAppointments()
+                }
+            } catch {
+                await MainActor.run {
+                    let alert = UIAlertController(title: "Error", message: error.localizedDescription, preferredStyle: .alert)
+                    alert.addAction(UIAlertAction(title: "OK", style: .default))
+                    self.present(alert, animated: true)
+                }
+            }
+        }
+    }
+    
+    // MARK: - Open Edit/Reschedule Modal
+    private func openEditAppointment(at indexPath: IndexPath) {
+        let appt = filteredAppointments[indexPath.section]
+        
+        let editVC = EditAppointmentViewController()
+        editVC.appointment = appt
+        editVC.delegate = self
+        
+        let nav = UINavigationController(rootViewController: editVC)
+        nav.modalPresentationStyle = .pageSheet
+        
+        if let sheet = nav.sheetPresentationController {
+            sheet.detents = [.large()]
+            sheet.prefersGrabberVisible = true
+            sheet.preferredCornerRadius = 26
+        }
+        
+        present(nav, animated: true)
+    }
+
+    func createCircularImage(systemName: String, backgroundColor: UIColor) -> UIImage {
         let diameter: CGFloat = 50
         let renderer = UIGraphicsImageRenderer(size: CGSize(width: diameter, height: diameter))
         
         return renderer.image { context in
             let rect = CGRect(x: 0, y: 0, width: diameter, height: diameter)
-            UIColor.systemRed.setFill()
+            backgroundColor.setFill()
             context.cgContext.fillEllipse(in: rect)
-            
-            let config = UIImage.SymbolConfiguration(pointSize: 24, weight: .medium)
-            if let trashImage = UIImage(systemName: "trash.fill", withConfiguration: config)?
+
+            let config = UIImage.SymbolConfiguration(pointSize: 22, weight: .medium)
+            if let icon = UIImage(systemName: systemName, withConfiguration: config)?
                 .withTintColor(.white, renderingMode: .alwaysOriginal) {
-                
-                let imageSize = trashImage.size
+
+                let imageSize = icon.size
                 let x = (diameter - imageSize.width) / 2
                 let y = (diameter - imageSize.height) / 2
-                trashImage.draw(at: CGPoint(x: x, y: y))
+                icon.draw(at: CGPoint(x: x, y: y))
             }
         }
     }
@@ -314,7 +417,6 @@ class AppointmentViewController: UIViewController,
                                       preferredStyle: .alert)
         
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in completion(false) })
-        
         alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
             self?.deleteAppointment(at: indexPath)
             completion(true)
@@ -329,33 +431,33 @@ class AppointmentViewController: UIViewController,
         gradient.frame = view.bounds
         gradient.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         view.insertSubview(gradient, at: 0)
-        
+
         view.addSubview(segmentedControl)
         
-        customCalendar = OTCalendarView()
-        customCalendar.delegate = self
+        // ✅ Add your custom calendar directly (no container needed, it handles its own background)
         view.addSubview(customCalendar)
+        customCalendar.delegate = self
         
         tableView.delegate = self
         tableView.dataSource = self
         view.addSubview(tableView)
-        
-        customCalendar.translatesAutoresizingMaskIntoConstraints = false
+
         tableView.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
-            // ✅ native segmented control attached to safe area
             segmentedControl.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
             segmentedControl.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             segmentedControl.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             segmentedControl.heightAnchor.constraint(equalToConstant: 32),
             
+            // ✅ Your custom calendar layout.
+            // Fixed height to ~340 so your UICollectionView grid has enough space for 6 rows
             customCalendar.topAnchor.constraint(equalTo: segmentedControl.bottomAnchor, constant: 16),
             customCalendar.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             customCalendar.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            customCalendar.heightAnchor.constraint(equalToConstant: 320),
+            customCalendar.heightAnchor.constraint(equalToConstant: 340),
             
-            tableView.topAnchor.constraint(equalTo: customCalendar.bottomAnchor, constant: 10),
+            tableView.topAnchor.constraint(equalTo: customCalendar.bottomAnchor, constant: 16),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)

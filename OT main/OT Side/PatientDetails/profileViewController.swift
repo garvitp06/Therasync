@@ -35,6 +35,7 @@ class ProfileViewController: UIViewController {
         ("Patient detail", "person.text.rectangle"),
         ("Assessment", "clipboard"),
         ("Assignment", "doc.text"),
+        ("Assessment Progress", "chart.line.uptrend.xyaxis"),
         ("Progress", "chart.bar"),
         ("Notes", "note.text")
     ]
@@ -206,6 +207,12 @@ extension ProfileViewController: UITableViewDelegate, UITableViewDataSource {
             assignmentVC.patientID = self.patientData?.patientID
             assignmentVC.hidesBottomBarWhenPushed = true
             navigationController?.pushViewController(assignmentVC, animated: true)
+            
+        case "Assessment Progress":
+            let progressVC = AssessmentProgressViewController()
+            progressVC.patient = self.patientData
+            progressVC.hidesBottomBarWhenPushed = true
+            navigationController?.pushViewController(progressVC, animated: true)
             
         case "Progress":
             let progressVC = PatientProgressViewController()

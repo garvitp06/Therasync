@@ -163,24 +163,13 @@ final class AssessmentList: UIViewController, UITableViewDataSource, UITableView
         var vc: UIViewController?
         
         switch name {
+        // ── DYNAMIC assessments: always re-asked directly ──
         case "ADOS":
             let a = ADOSAssessmentViewController()
             a.patientID = self.patientID
             vc = a
-        case "Birth History":
-            let a = BirthHistoryViewController()
-            a.patientID = self.patientID
-            vc = a
         case "Sensory Profile":
             let a = SensoryProfileViewController()
-            a.patientID = self.patientID
-            vc = a
-        case "School Complaints":
-            let a = SchoolComplaintsViewController()
-            a.patientID = self.patientID
-            vc = a
-        case "Medical History":
-            let a = MedicalHistoryViewController()
             a.patientID = self.patientID
             vc = a
         case "Cognitive Skills":
@@ -195,21 +184,71 @@ final class AssessmentList: UIViewController, UITableViewDataSource, UITableView
             let a = FineMotorSkillsViewController()
             a.patientID = self.patientID
             vc = a
+
+        // ── STATIC assessments: route through carry-forward ──
+        case "Birth History":
+            let cf = AssessmentCarryForwardViewController()
+            cf.patientID = self.patientID
+            cf.assessmentType = name
+            cf.formVCFactory = { [weak self] in
+                let a = BirthHistoryViewController()
+                a.patientID = self?.patientID
+                return a
+            }
+            vc = cf
+        case "Medical History":
+            let cf = AssessmentCarryForwardViewController()
+            cf.patientID = self.patientID
+            cf.assessmentType = name
+            cf.formVCFactory = { [weak self] in
+                let a = MedicalHistoryViewController()
+                a.patientID = self?.patientID
+                return a
+            }
+            vc = cf
+        case "School Complaints":
+            let cf = AssessmentCarryForwardViewController()
+            cf.patientID = self.patientID
+            cf.assessmentType = name
+            cf.formVCFactory = { [weak self] in
+                let a = SchoolComplaintsViewController()
+                a.patientID = self?.patientID
+                return a
+            }
+            vc = cf
         case "Language & Communication", "Social Milestones", "Self-Care Milestones":
-            let a = DevelopmentalHistoryViewController()
-            a.patientID = self.patientID
-            a.subSection = name
-            vc = a
+            let cf = AssessmentCarryForwardViewController()
+            cf.patientID = self.patientID
+            cf.assessmentType = name
+            cf.formVCFactory = { [weak self] in
+                let a = DevelopmentalHistoryViewController()
+                a.patientID = self?.patientID
+                a.subSection = name
+                return a
+            }
+            vc = cf
         case "Feeding", "Dressing", "Bathing & Hygiene", "Toileting", "Sleep":
-            let a = DailyLivingViewController()
-            a.patientID = self.patientID
-            a.subSection = name
-            vc = a
+            let cf = AssessmentCarryForwardViewController()
+            cf.patientID = self.patientID
+            cf.assessmentType = name
+            cf.formVCFactory = { [weak self] in
+                let a = DailyLivingViewController()
+                a.patientID = self?.patientID
+                a.subSection = name
+                return a
+            }
+            vc = cf
         case "Family History", "Social & Environmental":
-            let a = FamilyEnvironmentViewController()
-            a.patientID = self.patientID
-            a.subSection = name
-            vc = a
+            let cf = AssessmentCarryForwardViewController()
+            cf.patientID = self.patientID
+            cf.assessmentType = name
+            cf.formVCFactory = { [weak self] in
+                let a = FamilyEnvironmentViewController()
+                a.patientID = self?.patientID
+                a.subSection = name
+                return a
+            }
+            vc = cf
         default:
             break
         }

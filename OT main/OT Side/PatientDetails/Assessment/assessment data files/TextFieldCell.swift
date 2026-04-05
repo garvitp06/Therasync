@@ -13,7 +13,7 @@ final class TextFieldCell: UITableViewCell, UITextFieldDelegate {
     private let cellContainer: UIView = {
         let v = UIView()
         v.translatesAutoresizingMaskIntoConstraints = false
-        v.backgroundColor = .white
+        v.backgroundColor = .systemBackground
         v.layer.masksToBounds = true
         return v
     }()

@@ -28,9 +28,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
     }
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Register "false" as the default for Dark Mode
         FirebaseApp.configure()
-        UserDefaults.standard.register(defaults: ["Dark Mode": false])
         return true
     }
 

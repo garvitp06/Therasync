@@ -55,13 +55,10 @@ class GameListViewController: UIViewController, UITableViewDelegate, UITableView
         navigationController?.navigationBar.prefersLargeTitles = false
         navigationItem.largeTitleDisplayMode = .never
         
-        let isDark = UserDefaults.standard.bool(forKey: "Dark Mode")
-        let color: UIColor = isDark ? .white : .black
-        
         let appearance = UINavigationBarAppearance()
         appearance.configureWithTransparentBackground()
         appearance.titleTextAttributes = [
-            .foregroundColor: color,
+            .foregroundColor: UIColor.label,
             .font: UIFont.systemFont(ofSize: 17, weight: .semibold)
         ]
         
@@ -72,7 +69,7 @@ class GameListViewController: UIViewController, UITableViewDelegate, UITableView
                                     style: .plain,
                                     target: self,
                                     action: #selector(handleBack))
-        backBtn.tintColor = color
+        backBtn.tintColor = .label
         navigationItem.leftBarButtonItem = backBtn
     }
 

@@ -11,7 +11,7 @@ final class AssessmentList: UIViewController, UITableViewDataSource, UITableView
     // MARK: - UI Components
     private let cardView: UIView = {
         let v = UIView()
-        v.backgroundColor = .white
+        v.backgroundColor = .systemBackground
         v.layer.cornerRadius = 20
         v.layer.masksToBounds = true
         v.translatesAutoresizingMaskIntoConstraints = false
@@ -97,7 +97,7 @@ final class AssessmentList: UIViewController, UITableViewDataSource, UITableView
         tableView.dataSource = self
         tableView.delegate = self
         
-        tableView.backgroundColor = .white
+        tableView.backgroundColor = .systemBackground
         tableView.tableFooterView = UIView()
         tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
         
@@ -140,12 +140,12 @@ final class AssessmentList: UIViewController, UITableViewDataSource, UITableView
         
         // Check local state (which mirrors Manager state)
         if visitedAssessments.contains(name) {
-            config.textProperties.color = .systemGray
+            config.textProperties.color = .secondaryLabel
             config.image = UIImage(systemName: "checkmark.circle.fill")
             config.imageProperties.tintColor = .systemGreen
             cell.accessoryType = .none
         } else {
-            config.textProperties.color = .black
+            config.textProperties.color = .label
             config.image = UIImage(systemName: "circle")
             config.imageProperties.tintColor = .systemBlue
             cell.accessoryType = .disclosureIndicator

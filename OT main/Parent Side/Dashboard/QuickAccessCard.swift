@@ -5,10 +5,10 @@ final class QuickAccessCard: UIControl {
     init(title: String, count: String?, systemIcon: String, color: UIColor) {
         super.init(frame: .zero)
         
-        // Use the custom 'darker' helper to adjust background for Dark Mode
+        // Use the native traitCollection to adjust background for Dark Mode
         self.backgroundColor = UIColor { trait in
-            let isManualDark = UserDefaults.standard.bool(forKey: "Dark Mode")
-            return isManualDark ? color.darker(by: 20) : color
+            let isDark = trait.userInterfaceStyle == .dark
+            return isDark ? color.darker(by: 20) : color
         }
         
         layer.cornerRadius = 20

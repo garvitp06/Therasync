@@ -26,7 +26,7 @@ class NotesViewController: UIViewController {
     
     private lazy var tableView: UITableView = {
         let tv = UITableView()
-        tv.backgroundColor = UIColor(red: 0.95, green: 0.95, blue: 0.97, alpha: 1.0)
+        tv.backgroundColor = .systemGroupedBackground
         tv.separatorStyle = .none
         tv.register(NoteCell.self, forCellReuseIdentifier: NoteCell.identifier)
         tv.translatesAutoresizingMaskIntoConstraints = false
@@ -44,7 +44,7 @@ class NotesViewController: UIViewController {
         let label = UILabel()
         label.text = "Add your first note"
         label.font = .systemFont(ofSize: 18, weight: .medium)
-        label.textColor = .gray
+        label.textColor = .secondaryLabel
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -64,18 +64,18 @@ class NotesViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = UIColor(red: 0.95, green: 0.95, blue: 0.97, alpha: 1.0)
+        view.backgroundColor = .systemGroupedBackground
         title = "Notes"
         if let navBar = navigationController?.navigationBar {
             if #available(iOS 13.0, *) {
                 let appearance = UINavigationBarAppearance()
                 appearance.configureWithDefaultBackground()
-                appearance.titleTextAttributes = [.foregroundColor: UIColor.black]
-                appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.black]
+                appearance.titleTextAttributes = [.foregroundColor: UIColor.label]
+                appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.label]
                 navBar.standardAppearance = appearance
                 navBar.scrollEdgeAppearance = appearance
             } else {
-                navBar.titleTextAttributes = [.foregroundColor: UIColor.black]
+                navBar.titleTextAttributes = [.foregroundColor: UIColor.label]
             }
         }
         setupNavBar()
@@ -295,12 +295,12 @@ extension NotesViewController: UITableViewDelegate, UITableViewDataSource {
     }
     private func showToast(message: String) {
         let toastContainer = UIView()
-        toastContainer.backgroundColor = UIColor.black.withAlphaComponent(0.8)
+        toastContainer.backgroundColor = .secondarySystemBackground
         toastContainer.layer.cornerRadius = 20
         toastContainer.translatesAutoresizingMaskIntoConstraints = false
         
         let label = UILabel()
-        label.textColor = .white
+        label.textColor = .label
         label.text = message
         label.font = .systemFont(ofSize: 14, weight: .medium)
         label.textAlignment = .center

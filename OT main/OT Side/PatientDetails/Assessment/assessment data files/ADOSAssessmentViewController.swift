@@ -24,9 +24,9 @@ final class ADOSAssessmentViewController: UIViewController {
         return pv
     }()
     
-    private let questionContainer: UIView = { let v = UIView(); v.translatesAutoresizingMaskIntoConstraints = false; v.backgroundColor = .white; v.layer.cornerRadius = 18; return v }()
-    private let questionLabel: UILabel = { let l = UILabel(); l.translatesAutoresizingMaskIntoConstraints = false; l.numberOfLines = 0; l.font = .systemFont(ofSize: 18); l.textColor = .black; return l }()
-    private let cardContainerView: UIView = { let v = UIView(); v.translatesAutoresizingMaskIntoConstraints = false; v.backgroundColor = .white; v.layer.cornerRadius = 18; return v }()
+    private let questionContainer: UIView = { let v = UIView(); v.translatesAutoresizingMaskIntoConstraints = false; v.backgroundColor = .systemBackground; v.layer.cornerRadius = 18; return v }()
+    private let questionLabel: UILabel = { let l = UILabel(); l.translatesAutoresizingMaskIntoConstraints = false; l.numberOfLines = 0; l.font = .systemFont(ofSize: 18); l.textColor = .label; return l }()
+    private let cardContainerView: UIView = { let v = UIView(); v.translatesAutoresizingMaskIntoConstraints = false; v.backgroundColor = .systemBackground; v.layer.cornerRadius = 18; return v }()
     private let optionsTableView: UITableView = { let tv = UITableView(frame: .zero, style: .plain); tv.translatesAutoresizingMaskIntoConstraints = false; tv.backgroundColor = .clear; tv.separatorStyle = .none; return tv }()
     private let nextButton: UIButton = {
         let b = UIButton(type: .system)

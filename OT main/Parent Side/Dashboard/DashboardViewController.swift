@@ -12,11 +12,11 @@ final class DashboardViewController: UIViewController {
         iv.clipsToBounds = true
         iv.layer.cornerRadius = 22
         iv.layer.borderWidth = 2
-        iv.layer.borderColor = UIColor.white.withAlphaComponent(0.8).cgColor
+        iv.layer.borderColor = UIColor.systemBackground.withAlphaComponent(0.8).cgColor
         let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .light)
         iv.image = UIImage(systemName: "person.circle.fill", withConfiguration: config)
-        iv.tintColor = UIColor.white.withAlphaComponent(0.6)
-        iv.backgroundColor = UIColor.white.withAlphaComponent(0.15)
+        iv.tintColor = UIColor.systemBackground.withAlphaComponent(0.6)
+        iv.backgroundColor = UIColor.systemBackground.withAlphaComponent(0.15)
         return iv
     }()
 

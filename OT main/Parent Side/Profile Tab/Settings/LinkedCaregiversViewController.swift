@@ -173,7 +173,7 @@ class LinkedCaregiversViewController: UIViewController, UITableViewDelegate, UIT
     private func showToast(message: String) {
         let toastLabel = UILabel()
         // Toast stays dark with white text for high contrast visibility
-        toastLabel.backgroundColor = UIColor.black.withAlphaComponent(0.8)
+        toastLabel.backgroundColor = UIColor.label.withAlphaComponent(0.8)
         toastLabel.textColor = .white
         toastLabel.textAlignment = .center
         toastLabel.font = .systemFont(ofSize: 14, weight: .medium)

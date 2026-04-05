@@ -16,7 +16,7 @@ class ReportCell: UITableViewCell {
     // MARK: - UI Components
     private let containerView: UIView = {
         let v = UIView()
-        v.backgroundColor = .white.withAlphaComponent(0.9)
+        v.backgroundColor = .systemBackground.withAlphaComponent(0.9)
         v.layer.cornerRadius = 16
         v.translatesAutoresizingMaskIntoConstraints = false
         return v
@@ -42,7 +42,7 @@ class ReportCell: UITableViewCell {
     let dateLabel: UILabel = {
         let l = UILabel()
         l.font = .systemFont(ofSize: 16, weight: .bold)
-        l.textColor = .black
+        l.textColor = .label
         l.translatesAutoresizingMaskIntoConstraints = false
         return l
     }()
@@ -50,7 +50,7 @@ class ReportCell: UITableViewCell {
     let summaryLabel: UILabel = {
         let l = UILabel()
         l.font = .systemFont(ofSize: 13, weight: .regular)
-        l.textColor = .darkGray
+        l.textColor = .secondaryLabel
         l.numberOfLines = 1
         l.translatesAutoresizingMaskIntoConstraints = false
         return l

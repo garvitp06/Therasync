@@ -62,8 +62,8 @@ class MazeGameViewController: UIViewController {
     private func setupNavigationBar() {
         let appearance = UINavigationBarAppearance()
         appearance.configureWithTransparentBackground()
-        appearance.titleTextAttributes = [.foregroundColor: UIColor.black, .font: UIFont.boldSystemFont(ofSize: 20)]
-        navigationController?.navigationBar.tintColor = .black
+        appearance.titleTextAttributes = [.foregroundColor: UIColor.label, .font: UIFont.boldSystemFont(ofSize: 20)]
+        navigationController?.navigationBar.tintColor = .label
         navigationController?.navigationBar.standardAppearance = appearance
         navigationController?.navigationBar.scrollEdgeAppearance = appearance
         navigationController?.navigationBar.compactAppearance = appearance
@@ -111,7 +111,7 @@ class MazeGameViewController: UIViewController {
     private func setupOverlayUI() {
         overlayView.frame = view.bounds
         overlayView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        overlayView.backgroundColor = UIColor.black.withAlphaComponent(0.0)
+        overlayView.backgroundColor = UIColor.label.withAlphaComponent(0.0)
         overlayView.alpha = 0
         overlayView.isUserInteractionEnabled = false
         view.addSubview(overlayView)
@@ -129,7 +129,7 @@ class MazeGameViewController: UIViewController {
         resultLabel.translatesAutoresizingMaskIntoConstraints = false
         resultLabel.font = UIFont.systemFont(ofSize: 40, weight: .bold)
         resultLabel.textAlignment = .center
-        resultLabel.textColor = .black
+        resultLabel.textColor = .label
         overlayView.addSubview(resultLabel)
         
         playAgainButton.translatesAutoresizingMaskIntoConstraints = false
@@ -431,12 +431,12 @@ class MazeGameViewController: UIViewController {
             overlayView.backgroundColor = UIColor.systemGreen.withAlphaComponent(0.8)
             resultLabel.text = "Yummy Carrot!"
             resultIcon.image = UIImage(systemName: "hand.thumbsup.fill")
-            resultIcon.tintColor = .black
+            resultIcon.tintColor = .label
         } else {
             overlayView.backgroundColor = UIColor.systemRed.withAlphaComponent(0.8)
             resultLabel.text = "Lost the Carrot!"
             resultIcon.image = UIImage(systemName: "xmark")
-            resultIcon.tintColor = .black
+            resultIcon.tintColor = .label
         }
         playAgainButton.isHidden = false
         resultIcon.transform = CGAffineTransform(scaleX: 0.1, y: 0.1)

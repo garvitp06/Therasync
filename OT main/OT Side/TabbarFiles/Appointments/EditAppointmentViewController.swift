@@ -20,7 +20,7 @@ class EditAppointmentViewController: UIViewController {
     
     private let inputContainer: UIView = {
         let v = UIView()
-        v.backgroundColor = .white
+        v.backgroundColor = .systemBackground
         v.layer.cornerRadius = 26
         return v
     }()
@@ -58,7 +58,7 @@ class EditAppointmentViewController: UIViewController {
     
     private let dateTimeContainer: UIView = {
         let v = UIView()
-        v.backgroundColor = .white
+        v.backgroundColor = .systemBackground
         v.layer.cornerRadius = 26
         return v
     }()
@@ -115,7 +115,7 @@ class EditAppointmentViewController: UIViewController {
         b.setTitle("Save Changes", for: .normal)
         b.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
         b.setTitleColor(.systemBlue, for: .normal)
-        b.backgroundColor = .white
+        b.backgroundColor = .systemBackground
         b.layer.cornerRadius = 26
         b.layer.borderWidth = 1
         b.layer.borderColor = UIColor.systemBlue.cgColor

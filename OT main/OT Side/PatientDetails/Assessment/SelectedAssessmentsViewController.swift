@@ -34,7 +34,7 @@ final class SelectedAssessmentsViewController: UIViewController {
     private let cardView: UIView = {
         let v = UIView()
         v.translatesAutoresizingMaskIntoConstraints = false
-        v.backgroundColor = .white
+        v.backgroundColor = .systemBackground
         v.layer.cornerRadius = 18
         v.layer.masksToBounds = true
         return v
@@ -43,7 +43,7 @@ final class SelectedAssessmentsViewController: UIViewController {
     private let tableView: UITableView = {
         let tv = UITableView(frame: .zero, style: .plain)
         tv.translatesAutoresizingMaskIntoConstraints = false
-        tv.backgroundColor = .white
+        tv.backgroundColor = .systemBackground
         tv.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
         tv.tableFooterView = UIView() // Removes extra separators below content
         tv.alwaysBounceVertical = false // Prevents bounce when fitting exactly
@@ -241,12 +241,12 @@ extension SelectedAssessmentsViewController: UITableViewDataSource, UITableViewD
         cfg.textProperties.font = .systemFont(ofSize: 16, weight: .medium)
 
         if visited.contains(name) {
-            cfg.textProperties.color = .systemGray
+            cfg.textProperties.color = .secondaryLabel
             cfg.image = UIImage(systemName: "checkmark.circle.fill")
             cfg.imageProperties.tintColor = .systemGreen
             cell.accessoryType = .none
         } else {
-            cfg.textProperties.color = .black
+            cfg.textProperties.color = .label
             cfg.image = UIImage(systemName: "circle")
             cfg.imageProperties.tintColor = .systemBlue
             cell.accessoryType = .disclosureIndicator

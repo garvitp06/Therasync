@@ -48,7 +48,7 @@ class AssignmentCell: UITableViewCell {
     }
 
     private func setupCell() {
-        backgroundColor = .white
+        backgroundColor = .systemBackground
         selectionStyle = .default
         
         contentView.addSubview(titleLabel)

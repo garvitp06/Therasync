@@ -56,7 +56,7 @@ final class ReportsViewController: UIViewController {
             let l = UILabel()
             l.text = "No reports available yet."
             // Changed from .white to .black
-            l.textColor = .black
+            l.textColor = .label
             l.font = .systemFont(ofSize: 18, weight: .medium)
             l.textAlignment = .center
             l.numberOfLines = 0
@@ -82,12 +82,12 @@ final class ReportsViewController: UIViewController {
         // Transparent nav bar so gradient shows through
         let appearance = UINavigationBarAppearance()
         appearance.configureWithTransparentBackground()
-        appearance.titleTextAttributes = [.foregroundColor: UIColor.black]
-        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.black]
+        appearance.titleTextAttributes = [.foregroundColor: UIColor.label]
+        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.label]
         navigationController?.navigationBar.standardAppearance = appearance
         navigationController?.navigationBar.scrollEdgeAppearance = appearance
         navigationController?.navigationBar.compactAppearance = appearance
-        navigationController?.navigationBar.tintColor = .black
+        navigationController?.navigationBar.tintColor = .label
 
         // Prevent auto-scroll jump when large title kicks in
         tableView.setContentOffset(.zero, animated: false)
@@ -332,7 +332,7 @@ class ParentReportsCell: UITableViewCell {
         let v = UIView()
         v.backgroundColor = .systemBackground
         v.layer.cornerRadius = 26
-        v.layer.shadowColor = UIColor.black.cgColor
+        v.layer.shadowColor = UIColor.label.cgColor
         v.layer.shadowOpacity = 0.06
         v.layer.shadowOffset = CGSize(width: 0, height: 2)
         v.layer.shadowRadius = 8
@@ -360,7 +360,7 @@ class ParentReportsCell: UITableViewCell {
     private let dateLabel: UILabel = {
         let l = UILabel()
         l.font = .systemFont(ofSize: 16, weight: .bold)
-        l.textColor = .black
+        l.textColor = .label
         l.translatesAutoresizingMaskIntoConstraints = false
         return l
     }()
@@ -368,7 +368,7 @@ class ParentReportsCell: UITableViewCell {
     private let summaryLabel: UILabel = {
         let l = UILabel()
         l.font = .systemFont(ofSize: 14, weight: .regular)
-        l.textColor = .darkGray
+        l.textColor = .secondaryLabel
         l.numberOfLines = 2
         l.translatesAutoresizingMaskIntoConstraints = false
         return l

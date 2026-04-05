@@ -107,7 +107,7 @@ class ParentNotesViewController: UIViewController {
         
         // Set Title to BLACK
         appearance.titleTextAttributes = [
-            .foregroundColor: UIColor.black,
+            .foregroundColor: UIColor.label,
             .font: UIFont.systemFont(ofSize: 17, weight: .semibold)
         ]
         

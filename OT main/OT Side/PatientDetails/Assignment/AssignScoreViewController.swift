@@ -32,7 +32,7 @@ class AssignScoreViewController: UIViewController {
     
     private let scoreContainer: UIView = {
         let view = UIView()
-        view.backgroundColor = .white.withAlphaComponent(0.9)
+        view.backgroundColor = .systemBackground.withAlphaComponent(0.9)
         view.layer.cornerRadius = 16
         return view
     }()
@@ -41,7 +41,7 @@ class AssignScoreViewController: UIViewController {
         let label = UILabel()
         label.text = "Total Score (0-10)"
         label.font = .systemFont(ofSize: 18, weight: .semibold)
-        label.textColor = .black
+        label.textColor = .label
         return label
     }()
     
@@ -66,8 +66,8 @@ class AssignScoreViewController: UIViewController {
     private let feedbackTextView: UITextView = {
         let tv = UITextView()
         tv.font = .systemFont(ofSize: 16)
-        tv.backgroundColor = .white.withAlphaComponent(0.9)
-        tv.textColor = .black
+        tv.backgroundColor = .systemBackground.withAlphaComponent(0.9)
+        tv.textColor = .label
         tv.layer.cornerRadius = 16
         tv.textContainerInset = UIEdgeInsets(top: 16, left: 12, bottom: 16, right: 12)
         tv.translatesAutoresizingMaskIntoConstraints = false
@@ -139,7 +139,7 @@ class AssignScoreViewController: UIViewController {
         let image = UIImage(systemName: "chevron.backward", withConfiguration: config)
         backButton.setImage(image, for: .normal)
         backButton.tintColor = .white
-        backButton.backgroundColor = UIColor.black.withAlphaComponent(0.2) // Subtle circle bg
+        backButton.backgroundColor = UIColor.label.withAlphaComponent(0.2) // Subtle circle bg
         backButton.layer.cornerRadius = 18
         backButton.addTarget(self, action: #selector(backButtonTapped), for: .touchUpInside)
         

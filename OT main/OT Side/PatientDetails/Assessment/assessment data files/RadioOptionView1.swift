@@ -55,7 +55,7 @@ class RadioOptionView1: UIView {
         // Styling
         titleLabel.text = text
         titleLabel.font = .systemFont(ofSize: 16, weight: .regular)
-        titleLabel.textColor = .black
+        titleLabel.textColor = .label
         titleLabel.numberOfLines = 0
         
         separatorLine.backgroundColor = UIColor.systemGray5

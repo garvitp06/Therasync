@@ -32,7 +32,7 @@ class StudentProfileViewController: UIViewController {
         iv.contentMode = .scaleAspectFill
         iv.clipsToBounds = true
         iv.layer.borderWidth = 3
-        iv.layer.borderColor = UIColor.white.cgColor
+        iv.layer.borderColor = UIColor.systemBackground.cgColor
         return iv
     }()
 
@@ -41,14 +41,14 @@ class StudentProfileViewController: UIViewController {
         label.translatesAutoresizingMaskIntoConstraints = false
         label.text = "Loading..."
         label.font = .systemFont(ofSize: 22, weight: .bold)
-        label.textColor = .black
+        label.textColor = .label
         label.textAlignment = .center
         return label
     }()
 
     private let activityIndicator: UIActivityIndicatorView = {
         let spinner = UIActivityIndicatorView(style: .medium)
-        spinner.color = .black
+        spinner.color = .label
         spinner.hidesWhenStopped = true
         spinner.translatesAutoresizingMaskIntoConstraints = false
         return spinner
@@ -84,12 +84,12 @@ class StudentProfileViewController: UIViewController {
     private func applyNavBarAppearance() {
         let appearance = UINavigationBarAppearance()
         appearance.configureWithTransparentBackground()
-        appearance.titleTextAttributes = [.foregroundColor: UIColor.black]
-        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.black]
+        appearance.titleTextAttributes = [.foregroundColor: UIColor.label]
+        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.label]
         navigationController?.navigationBar.standardAppearance = appearance
         navigationController?.navigationBar.scrollEdgeAppearance = appearance
         navigationController?.navigationBar.compactAppearance = appearance
-        navigationController?.navigationBar.tintColor = .black
+        navigationController?.navigationBar.tintColor = .label
     }
 
     // MARK: - Table Setup
@@ -341,11 +341,11 @@ class StudentProfileViewController: UIViewController {
 
     private func showToast(message: String) {
         let toast = UIView()
-        toast.backgroundColor = UIColor.black.withAlphaComponent(0.8)
+        toast.backgroundColor = UIColor.label.withAlphaComponent(0.8)
         toast.layer.cornerRadius = 20
         toast.translatesAutoresizingMaskIntoConstraints = false
         let label = UILabel()
-        label.textColor = .white; label.text = message
+        label.textColor = .systemBackground; label.text = message
         label.font = .systemFont(ofSize: 14, weight: .medium)
         label.textAlignment = .center; label.translatesAutoresizingMaskIntoConstraints = false
         toast.addSubview(label); view.addSubview(toast)
@@ -386,7 +386,7 @@ extension StudentProfileViewController: UITableViewDataSource, UITableViewDelega
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell(style: .default, reuseIdentifier: "cell")
-        cell.backgroundColor = .white
+        cell.backgroundColor = .systemBackground
 
         let title: String
         let isDestructive: Bool
@@ -411,7 +411,7 @@ extension StudentProfileViewController: UITableViewDataSource, UITableViewDelega
 
         cell.textLabel?.text = title
         cell.textLabel?.font = .systemFont(ofSize: 17)
-        cell.textLabel?.textColor = isDestructive ? .systemRed : .black
+        cell.textLabel?.textColor = isDestructive ? .systemRed : .label
         cell.textLabel?.textAlignment = isDestructive ? .center : .natural
         cell.accessoryType = showChevron ? .disclosureIndicator : .none
         cell.selectionStyle = .default

@@ -57,7 +57,7 @@ class AssignmentParentViewController: UIViewController, UITableViewDelegate, UIT
     private let noAssignmentsLabel: UILabel = {
         let label = UILabel()
         label.text = "No assignments added yet."
-        label.textColor = .darkGray
+        label.textColor = .secondaryLabel
         label.font = .systemFont(ofSize: 18, weight: .medium)
         label.textAlignment = .center
         label.isHidden = true
@@ -227,7 +227,7 @@ class AssignmentParentViewController: UIViewController, UITableViewDelegate, UIT
             }
             
             cell.contentConfiguration = config
-            cell.backgroundColor = .white
+            cell.backgroundColor = .systemBackground
             cell.layer.cornerRadius = 10
             cell.clipsToBounds = true
             return cell

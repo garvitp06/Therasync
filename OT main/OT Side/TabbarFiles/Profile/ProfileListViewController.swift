@@ -219,7 +219,7 @@ extension ProfileListViewController: UITableViewDataSource, UITableViewDelegate 
         
         if indexPath.section == 0 {
             cell.textLabel?.text = regularItems[indexPath.row]
-            cell.textLabel?.textColor = .black
+            cell.textLabel?.textColor = .label
             cell.accessoryType = .disclosureIndicator
         } else {
             cell.textLabel?.text = actionItems[indexPath.row]
@@ -228,7 +228,7 @@ extension ProfileListViewController: UITableViewDataSource, UITableViewDelegate 
             cell.textLabel?.textAlignment = .center
         }
         
-        cell.backgroundColor = .white
+        cell.backgroundColor = .systemBackground
         return cell
     }
     

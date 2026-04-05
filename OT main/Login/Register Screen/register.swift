@@ -65,7 +65,7 @@ class register: UIViewController {
         let label = UILabel()
         label.text = text
         label.font = UIFont.systemFont(ofSize: 15, weight: .semibold)
-        label.textColor = UIColor(white: 0.4, alpha: 1.0)
+        label.textColor = .secondaryLabel
         return label
     }
     
@@ -102,7 +102,7 @@ class register: UIViewController {
     
     lazy var basicDetailsCard: UIView = {
         let card = UIView()
-        card.backgroundColor = .white
+        card.backgroundColor = .secondarySystemGroupedBackground
         card.layer.cornerRadius = 35
         card.translatesAutoresizingMaskIntoConstraints = false
         return card
@@ -110,7 +110,7 @@ class register: UIViewController {
     
     lazy var professionalDetailsCard: UIView = {
         let card = UIView()
-        card.backgroundColor = .white
+        card.backgroundColor = .secondarySystemGroupedBackground
         card.layer.cornerRadius = 35
         card.translatesAutoresizingMaskIntoConstraints = false
         return card
@@ -118,7 +118,7 @@ class register: UIViewController {
     
     lazy var emailCard: UIView = {
         let card = UIView()
-        card.backgroundColor = .white
+        card.backgroundColor = .secondarySystemGroupedBackground
         card.layer.cornerRadius = 35
         card.translatesAutoresizingMaskIntoConstraints = false
         return card
@@ -418,7 +418,7 @@ class register: UIViewController {
     
     func updateBackground(animated: Bool) {
         let newTopColor: UIColor = (segmentedControl.selectedSegmentIndex == 0) ? blueTopColor : yellowTopColor
-        let titleColor: UIColor = (segmentedControl.selectedSegmentIndex == 0) ? .white : .black
+        let titleColor: UIColor = (segmentedControl.selectedSegmentIndex == 0) ? .white : .label
         
         if animated {
             UIView.transition(with: gradientBG, duration: 0.3, options: .transitionCrossDissolve, animations: {

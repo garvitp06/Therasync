@@ -32,7 +32,7 @@ class AssignmentViewController: UIViewController, QLPreviewControllerDataSource 
     // --- NEW: Score Display Section ---
     private let scoreResultContainer: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor(red: 0.9, green: 0.98, blue: 0.9, alpha: 1.0) // Light Green
+        view.backgroundColor = UIColor.systemGreen.withAlphaComponent(0.15) // Dynamic subtle green
         view.layer.cornerRadius = 12
         view.layer.borderWidth = 1
         view.layer.borderColor = UIColor.systemGreen.cgColor
@@ -51,7 +51,7 @@ class AssignmentViewController: UIViewController, QLPreviewControllerDataSource 
     private let remarksLabel: UILabel = {
         let l = UILabel()
         l.font = .systemFont(ofSize: 16, weight: .regular)
-        l.textColor = .darkGray
+        l.textColor = .secondaryLabel
         l.numberOfLines = 0
         l.textAlignment = .center
         return l
@@ -167,7 +167,7 @@ class AssignmentViewController: UIViewController, QLPreviewControllerDataSource 
             
             for (index, urlString) in urls.enumerated() {
                 var config = UIButton.Configuration.filled()
-                config.baseBackgroundColor = .white
+                config.baseBackgroundColor = .secondarySystemBackground
                 config.baseForegroundColor = .systemBlue
                 config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16)
                 config.cornerStyle = .medium
@@ -321,11 +321,11 @@ class AssignmentViewController: UIViewController, QLPreviewControllerDataSource 
         titleLabel.text = title
         titleLabel.numberOfLines = 0
         titleLabel.font = .systemFont(ofSize: 16, weight: .semibold)
-        titleLabel.textColor = .darkGray
+        titleLabel.textColor = .secondaryLabel
         
         let textField = UITextField()
         textField.placeholder = placeholder
-        textField.backgroundColor = .white
+        textField.backgroundColor = .systemBackground
         textField.font = .systemFont(ofSize: 16)
         textField.layer.cornerRadius = 16
         textField.heightAnchor.constraint(equalToConstant: 50).isActive = true

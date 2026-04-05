@@ -23,9 +23,9 @@ class ProfileViewController: UIViewController {
         iv.image = UIImage(systemName: "person.circle.fill", withConfiguration: config)
         iv.tintColor = .systemGray4
         iv.contentMode = .scaleAspectFill
-        iv.backgroundColor = .white
+        iv.backgroundColor = .systemBackground
         iv.clipsToBounds = true
-        iv.layer.borderColor = UIColor.white.cgColor
+        iv.layer.borderColor = UIColor.systemBackground.cgColor
         iv.layer.borderWidth = 3.0
         iv.translatesAutoresizingMaskIntoConstraints = false
         return iv
@@ -60,6 +60,13 @@ class ProfileViewController: UIViewController {
         super.viewWillAppear(animated)
         setupNavigationBarAppearance()
         populateHeaderData() // Refresh in case data was updated in sub views
+    }
+    
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        if traitCollection.hasDifferentColorAppearance(comparedTo: previousTraitCollection) {
+            profileImageView.layer.borderColor = UIColor.systemBackground.resolvedColor(with: traitCollection).cgColor
+        }
     }
     
     private func setupNavigationBarAppearance() {

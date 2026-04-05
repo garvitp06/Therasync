@@ -38,7 +38,7 @@ class PatientDifficultiesViewController: UIViewController {
     
     let questionContainer: UIView = {
         let v = UIView()
-        v.backgroundColor = .white
+        v.backgroundColor = .systemBackground
         v.layer.cornerRadius = 25
         v.translatesAutoresizingMaskIntoConstraints = false
         return v
@@ -47,7 +47,7 @@ class PatientDifficultiesViewController: UIViewController {
     let questionLabel: UILabel = {
         let l = UILabel()
         l.font = .systemFont(ofSize: 18, weight: .medium)
-        l.textColor = .black
+        l.textColor = .label
         l.numberOfLines = 0
         l.translatesAutoresizingMaskIntoConstraints = false
         return l
@@ -55,7 +55,7 @@ class PatientDifficultiesViewController: UIViewController {
     
     let optionsContainer: UIView = {
         let v = UIView()
-        v.backgroundColor = .white
+        v.backgroundColor = .systemBackground
         v.layer.cornerRadius = 25
         v.clipsToBounds = true
         v.translatesAutoresizingMaskIntoConstraints = false

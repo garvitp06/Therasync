@@ -73,7 +73,7 @@ class FineMotorSkillsViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        NotificationCenter.default.addObserver(self, selector: #selector(handleAIUpdate), name: NSNotification.Name("AI_Assessment_Updated"), object: nil)
         // RESTORE SESSION
         if let pid = patientID {
             let allAnswers = AssessmentSessionManager.shared.getTestAnswers(for: pid)
@@ -114,7 +114,22 @@ class FineMotorSkillsViewController: UIViewController {
         back.tintColor = .black
         navigationItem.leftBarButtonItem = back
     }
-    
+    @objc private func handleAIUpdate() {
+        guard let pid = patientID else { return }
+        let allAnswers = AssessmentSessionManager.shared.getTestAnswers(for: pid)
+        if let saved = allAnswers["Fine Motor Skills"] as? [Int: Int] {
+            for (idx, optIdx) in saved {
+                if idx < questions.count {
+                    questions[idx].selectedOptionIndex = optIdx
+                }
+            }
+            
+            // Refresh your UI.
+            // For ADOS, Fine/Gross Motor, it's optionsTableView.reloadData()
+            // For Cognitive, it might be recreating the optionsStack
+            optionsTableView.reloadData()
+        }
+    }
     private func setupUI() {
         view.addSubview(backgroundGradient)
         view.addSubview(progressView)
@@ -288,6 +303,8 @@ extension FineMotorSkillsViewController: UITableViewDataSource, UITableViewDeleg
         
         // SAVE SESSION
         if let pid = patientID {
+            let key = "FineMotor_Q\(questions[currentQuestionIndex].id)"
+            AssessmentSessionManager.shared.lockField(for: pid, key: key)
             let allAnswers = AssessmentSessionManager.shared.getTestAnswers(for: pid)
             var savedMap = (allAnswers["Fine Motor Skills"] as? [Int: Int]) ?? [:]
             savedMap[currentQuestionIndex] = indexPath.row

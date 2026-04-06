@@ -32,7 +32,7 @@ class MedicalHistoryViewController: UIViewController, UITableViewDataSource, UIT
         MedicalCondition(name: "Asthma", isActive: false),
         MedicalCondition(name: "Diabetes", isActive: false),
         MedicalCondition(name: "Heart Disease", isActive: false),
-        MedicalCondition(name: "Dental Treatment History", isActive: false)
+        MedicalCondition(name: "Dental Tre  atment History", isActive: false)
     ]
     var otherConditionText: String = ""
 
@@ -94,6 +94,8 @@ class MedicalHistoryViewController: UIViewController, UITableViewDataSource, UIT
         setupNavBar()
         setupUI()
         
+        NotificationCenter.default.addObserver(self, selector: #selector(handleAIUpdate), name: NSNotification.Name("AI_Assessment_Updated"), object: nil)
+        
         let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
         tap.cancelsTouchesInView = false
         view.addGestureRecognizer(tap)
@@ -108,7 +110,9 @@ class MedicalHistoryViewController: UIViewController, UITableViewDataSource, UIT
             fetchExistingData()
         }
     }
-    
+    @objc private func handleAIUpdate() {
+        restoreFromSession() // You already wrote this helper method!
+    }
     @objc func dismissKeyboard() { view.endEditing(true) }
     
     // MARK: - Data Management
@@ -270,28 +274,48 @@ class MedicalHistoryViewController: UIViewController, UITableViewDataSource, UIT
     
     func numberOfSections(in tableView: UITableView) -> Int { 2 }
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int { return section == 0 ? conditions.count : 1 }
+    
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        if indexPath.section == 0 {
-            let cell = tableView.dequeueReusableCell(withIdentifier: "MedicalConditionCell", for: indexPath) as! MedicalConditionCell
-            cell.configure(with: conditions[indexPath.row])
-            return cell
-        } else {
-            let cell = tableView.dequeueReusableCell(withIdentifier: "OtherConditionCell", for: indexPath) as! OtherConditionCell
-            cell.setText(otherConditionText)
-            cell.onTextChange = { [weak self] text in // Fixed: Explicit type provided by cell definition below
-                self?.otherConditionText = text
-                self?.updateSession()
+            if indexPath.section == 0 {
+                let cell = tableView.dequeueReusableCell(withIdentifier: "MedicalConditionCell", for: indexPath) as! MedicalConditionCell
+                cell.configure(with: conditions[indexPath.row])
+                return cell
+            } else {
+                let cell = tableView.dequeueReusableCell(withIdentifier: "OtherConditionCell", for: indexPath) as! OtherConditionCell
+                cell.setText(otherConditionText)
+                
+                cell.onTextChange = { [weak self] text in
+                    guard let self = self, let pid = self.patientID else { return }
+                    
+                    // 1. Update text
+                    self.otherConditionText = text
+                    
+                    // 2. Lock the field for AI
+                    AssessmentSessionManager.shared.lockField(for: pid, key: "MedicalHistory_OtherNotes")
+                    
+                    // 3. Save to session
+                    self.updateSession()
+                }
+                return cell
             }
-            return cell
         }
-    }
+    
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        if indexPath.section == 0 {
-            conditions[indexPath.row].isActive.toggle()
-            updateSession()
-            tableView.reloadRows(at: [indexPath], with: .none)
+            if indexPath.section == 0 {
+                // 1. Lock the field for AI
+                if let pid = patientID {
+                    // Strip spaces for a clean key
+                    let cleanName = conditions[indexPath.row].name.replacingOccurrences(of: " ", with: "")
+                    let key = "MedicalHistory_\(cleanName)"
+                    AssessmentSessionManager.shared.lockField(for: pid, key: key)
+                }
+                
+                // 2. Toggle and save
+                conditions[indexPath.row].isActive.toggle()
+                updateSession()
+                tableView.reloadRows(at: [indexPath], with: .none)
+            }
         }
-    }
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat { return indexPath.section == 0 ? 55 : 80 }
 }
 

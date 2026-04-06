@@ -71,6 +71,8 @@ final class SchoolComplaintsViewController: UIViewController, UITableViewDataSou
         setupNavBar()
         setupUI()
         
+        NotificationCenter.default.addObserver(self, selector: #selector(handleAIUpdate), name: NSNotification.Name("AI_Assessment_Updated"), object: nil)
+        
         let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
         tap.cancelsTouchesInView = false
         view.addGestureRecognizer(tap)
@@ -78,6 +80,15 @@ final class SchoolComplaintsViewController: UIViewController, UITableViewDataSou
         loadData()
     }
     
+    @objc private func handleAIUpdate() {
+            guard let pid = patientID else { return }
+            
+            let session = AssessmentSessionManager.shared.getSchoolComplaints(for: pid)
+            if session.didFetch {
+                applyDictionaryToValues(session.data)
+                tableView.reloadData()
+            }
+        }
     @objc func dismissKeyboard() { view.endEditing(true) }
     
     // MARK: - Data Management
@@ -242,21 +253,28 @@ final class SchoolComplaintsViewController: UIViewController, UITableViewDataSou
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int { fields.count }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "SchoolComplaintCell", for: indexPath) as! SchoolComplaintCell
-        cell.configure(title: fields[indexPath.row], value: values[indexPath.row])
-        
-        // Update Local & Manager immediately
-        cell.onTextChange = { [weak self] txt in
-            guard let self = self else { return }
-            self.values[indexPath.row] = txt
+            let cell = tableView.dequeueReusableCell(withIdentifier: "SchoolComplaintCell", for: indexPath) as! SchoolComplaintCell
+            let fieldName = fields[indexPath.row]
             
-            if let pid = self.patientID {
-                AssessmentSessionManager.shared.updateSchoolComplaints(for: pid, data: self.getCurrentDictionary(), didFetch: true)
+            cell.configure(title: fieldName, value: values[indexPath.row])
+            
+            // Update Local & Manager immediately
+            cell.onTextChange = { [weak self] txt in
+                guard let self = self else { return }
+                self.values[indexPath.row] = txt
+                
+                if let pid = self.patientID {
+                    // 1. LOCK THE FIELD for AI
+                    let shortQuestion = String(fieldName.prefix(15)).replacingOccurrences(of: " ", with: "")
+                    let lockKey = "SchoolComplaints_\(shortQuestion)"
+                    AssessmentSessionManager.shared.lockField(for: pid, key: lockKey)
+                    
+                    // 2. Save to Session Manager
+                    AssessmentSessionManager.shared.updateSchoolComplaints(for: pid, data: self.getCurrentDictionary(), didFetch: true)
+                }
             }
+            return cell
         }
-        return cell
-    }
-    
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 85
     }

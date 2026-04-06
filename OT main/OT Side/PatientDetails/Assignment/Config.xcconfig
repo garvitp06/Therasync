@@ -2,8 +2,12 @@
 //  Config.xcconfig
 //  OT main
 //
-//  Created by Garvit Pareek on 06/04/2026.
+//  Created by Alishri Poddar on 06/04/26.
 //
 
 // Configuration settings file format documentation can be found at:
 // https://developer.apple.com/documentation/xcode/adding-a-build-configuration-file-to-your-project
+
+// ⚠️  DO NOT commit real keys here. Add your keys locally and keep Config.xcconfig in .gitignore.
+ANTHROPIC_API_KEY=YOUR_ANTHROPIC_KEY_HERE
+GEMINI_API_KEY=AIzaSyDvwmhKPyVB_i-aJjyWNLwl1EqYf7t8cUg

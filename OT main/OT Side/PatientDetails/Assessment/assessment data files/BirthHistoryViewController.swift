@@ -151,16 +151,21 @@ final class BirthHistoryViewController: UIViewController {
                     .eq("assessment_type", value: "Birth History")
                     .order("created_at", ascending: false)
                     .limit(1)
-                    .single()
                     .execute()
                 
-                let decoded = try JSONDecoder().decode(HistoryData.self, from: response.data)
-                self.existingRecordID = decoded.id
+                let decoded = try JSONDecoder().decode([HistoryData].self, from: response.data)
+                guard let first = decoded.first else {
+                    await MainActor.run {
+                        AssessmentSessionManager.shared.updateBirthHistory(for: pid, data: [:], didFetch: true)
+                    }
+                    return
+                }
+                self.existingRecordID = first.id
                 
                 await MainActor.run {
-                    self.applyDictionary(decoded.assessment_data)
+                    self.applyDictionary(first.assessment_data)
                     self.tableView.reloadData()
-                    AssessmentSessionManager.shared.updateBirthHistory(for: pid, data: decoded.assessment_data, didFetch: true)
+                    AssessmentSessionManager.shared.updateBirthHistory(for: pid, data: first.assessment_data, didFetch: true)
                 }
             } catch {
                 print("Birth History fetch: \(error)")

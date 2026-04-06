@@ -74,6 +74,9 @@ final class AssessmentList: UIViewController, UITableViewDataSource, UITableView
     deinit {
         tableView.removeObserver(self, forKeyPath: "contentSize")
         NotificationCenter.default.removeObserver(self)
+        
+        // Ensure AI stops listening when the assessment screen sequence is closed and we come back
+        AIAssistManager.shared.stopListening()
     }
     
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
@@ -184,6 +187,10 @@ final class AssessmentList: UIViewController, UITableViewDataSource, UITableView
             let a = FineMotorSkillsViewController()
             a.patientID = self.patientID
             vc = a
+        case "Patient Difficulties":
+            let a = PatientDifficultiesViewController()
+            a.patientID = self.patientID
+            vc = a
 
         // ── STATIC assessments: route through carry-forward ──
         case "Birth History":
@@ -282,6 +289,7 @@ final class AssessmentList: UIViewController, UITableViewDataSource, UITableView
         if let pid = patientID {
             AssessmentSessionManager.shared.markAsSubmitted(for: pid)
         }
+        AIAssistManager.shared.stopListening()
         navigationController?.popToRootViewController(animated: true)
     }
 }

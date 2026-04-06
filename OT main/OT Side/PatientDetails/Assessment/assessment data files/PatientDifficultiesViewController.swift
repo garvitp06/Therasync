@@ -127,17 +127,25 @@ class PatientDifficultiesViewController: UIViewController {
     }
 
     @objc private func handleAIUpdate() {
-            guard let pid = patientID else { return }
-            let allAnswers = AssessmentSessionManager.shared.getTestAnswers(for: pid)
-            
-            if let saved = allAnswers["Patient Difficulties"] as? [Int: Int] {
-                // Because userAnswers is a dictionary in this file, we update it directly
+        guard let pid = patientID else { return }
+        let allAnswers = AssessmentSessionManager.shared.getTestAnswers(for: pid)
+        
+        if let saved = allAnswers["Patient Difficulties"] as? [Int: Int] {
+            var updatedAny = false
+            for (idx, optIdx) in saved {
+                if self.userAnswers[idx] != optIdx {
+                    self.currentQuestionIndex = idx
+                    updatedAny = true
+                }
+            }
+            if updatedAny {
                 self.userAnswers = saved
-                
-                // Re-draw the stack view for the current question
                 loadQuestion(at: currentQuestionIndex)
+            } else {
+                self.userAnswers = saved
             }
         }
+    }
     
     func setupUI() {
         view.addSubview(progressBar)

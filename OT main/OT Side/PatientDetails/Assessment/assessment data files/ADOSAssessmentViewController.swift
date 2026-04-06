@@ -72,15 +72,25 @@ final class ADOSAssessmentViewController: UIViewController {
         // NSKeyValueObservation automatically cleans up
     }
     @objc private func handleAIUpdate() {
-            guard let pid = patientID else { return }
-            let allAnswers = AssessmentSessionManager.shared.getTestAnswers(for: pid)
-            
-            if let saved = allAnswers["ADOS"] as? [Int: Int] {
-                // Just replace the local dictionary with the updated one from the AI
+        guard let pid = patientID else { return }
+        let allAnswers = AssessmentSessionManager.shared.getTestAnswers(for: pid)
+        
+        if let saved = allAnswers["ADOS"] as? [Int: Int] {
+            var updatedAny = false
+            for (idx, optIdx) in saved {
+                if self.selectedAnswers[idx] != optIdx {
+                    self.currentIndex = idx
+                    updatedAny = true
+                }
+            }
+            if updatedAny {
                 self.selectedAnswers = saved
-                optionsTableView.reloadData()
+                loadQuestion(animated: true)
+            } else {
+                self.selectedAnswers = saved
             }
         }
+    }
     private func setupUI() {
         view.addSubview(backgroundGradient)
         view.addSubview(progressView)

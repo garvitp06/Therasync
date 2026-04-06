@@ -73,21 +73,25 @@ class CognitiveSkillsViewController: UIViewController {
     }
 
     @objc private func handleAIUpdate() {
-            guard let pid = patientID else { return }
-            let allAnswers = AssessmentSessionManager.shared.getTestAnswers(for: pid)
-            
-            if let saved = allAnswers["Cognitive Skills"] as? [Int: Int] {
-                for (idx, optIdx) in saved {
-                    if idx < questions.count {
-                        questions[idx].selectedOptionIndex = optIdx
+        guard let pid = patientID else { return }
+        let allAnswers = AssessmentSessionManager.shared.getTestAnswers(for: pid)
+        
+        if let saved = allAnswers["Cognitive Skills"] as? [Int: Int] {
+            var updatedAny = false
+            for (idx, optIdx) in saved {
+                if idx < questions.count {
+                    if questions[idx].selectedOptionIndex != optIdx {
+                        currentQuestionIndex = idx
+                        updatedAny = true
                     }
+                    questions[idx].selectedOptionIndex = optIdx
                 }
-                
-                // Because this screen uses a StackView, we just reload the current question
-                // to visually refresh the radio buttons on screen.
+            }
+            if updatedAny {
                 loadQuestion(at: currentQuestionIndex)
             }
         }
+    }
     
     func setupUI() {
         view.addSubview(gradientBackground); view.addSubview(progressBar); view.addSubview(questionContainer); questionContainer.addSubview(questionLabel); view.addSubview(optionsContainer); optionsContainer.addSubview(optionsStack); view.addSubview(nextButton)

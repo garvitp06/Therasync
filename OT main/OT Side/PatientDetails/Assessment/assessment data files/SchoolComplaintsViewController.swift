@@ -115,29 +115,31 @@ final class SchoolComplaintsViewController: UIViewController, UITableViewDataSou
                 // Fetch Latest
                 let response = try await supabase
                     .from("assessments")
-                    .select("id, assessment_data") // FIX 2: Request the ID column
+                    .select("id, assessment_data")
                     .eq("patient_id", value: pid)
                     .eq("assessment_type", value: "School Complaints")
                     .order("created_at", ascending: false)
                     .limit(1)
-                    .single()
                     .execute()
                 
-                // FIX 3: Update struct to decode the ID
                 struct ComplaintData: Decodable {
                     let id: Int
                     let assessment_data: [String: String]
                 }
                 
-                let decoded = try JSONDecoder().decode(ComplaintData.self, from: response.data)
-                self.existingRecordID = decoded.id // FIX 4: Store the ID
-                let fetchedMap = decoded.assessment_data
+                let decoded = try JSONDecoder().decode([ComplaintData].self, from: response.data)
+                guard let first = decoded.first else {
+                    await MainActor.run {
+                        AssessmentSessionManager.shared.updateSchoolComplaints(for: pid, data: [:], didFetch: true)
+                    }
+                    return
+                }
+                self.existingRecordID = first.id
+                let fetchedMap = first.assessment_data
                 
                 await MainActor.run {
                     self.applyDictionaryToValues(fetchedMap)
                     self.tableView.reloadData()
-                    
-                    // Update Manager
                     AssessmentSessionManager.shared.updateSchoolComplaints(for: pid, data: fetchedMap, didFetch: true)
                 }
             } catch {

@@ -89,6 +89,7 @@ final class DevelopmentalHistoryViewController: UIViewController {
         setupNavBar()
         setupUI()
         fetchData()
+        NotificationCenter.default.addObserver(self, selector: #selector(handleAIUpdate), name: NSNotification.Name("AI_Assessment_Updated"), object: nil)
 
         let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKB))
         tap.cancelsTouchesInView = false
@@ -149,14 +150,20 @@ final class DevelopmentalHistoryViewController: UIViewController {
                         struct R: Decodable { let id: Int; let assessment_data: [String: String] }
                         let res = try await supabase.from("assessments").select("id, assessment_data")
                             .eq("patient_id", value: pid).eq("assessment_type", value: subSection)
-                            .order("created_at", ascending: false).limit(1).single().execute()
+                            .order("created_at", ascending: false).limit(1).execute()
                         
-                        let decoded = try JSONDecoder().decode(R.self, from: res.data)
-                        self.existingRecordID = decoded.id
+                        let decoded = try JSONDecoder().decode([R].self, from: res.data)
+                        guard let first = decoded.first else {
+                            await MainActor.run {
+                                AssessmentSessionManager.shared.updateSubSectionData(for: pid, subSection: self.subSection, data: [:], didFetch: true)
+                            }
+                            return
+                        }
+                        self.existingRecordID = first.id
                         
                         await MainActor.run {
                             for (i, f) in self.fields.enumerated() {
-                                if let v = decoded.assessment_data[f] { self.values[i] = v }
+                                if let v = first.assessment_data[f] { self.values[i] = v }
                             }
                             self.tableView.reloadData()
                             

@@ -210,16 +210,27 @@ class SensoryProfileViewController: UIViewController {
         guard let pid = patientID else { return }
         let allAnswers = AssessmentSessionManager.shared.getTestAnswers(for: pid)
         
-        // 1. Pull the nested dictionary for Sensory Profile
         if let saved = allAnswers["Sensory Profile"] as? [Int: [Int: Int]] {
+            // Find which sections got new answers (to auto-expand them)
+            let previouslyAnsweredSections = Set(self.answers.keys)
             
-            // 2. Overwrite local answers with the updated ones from AI
+            // Overwrite local answers
             self.answers = saved
             
-            // 3. Update the progress label
-            self.updateProgress()
+            // Auto-expand any section that just received a new AI answer
+            for sIdx in saved.keys where !previouslyAnsweredSections.contains(sIdx) {
+                expandedSections.insert(sIdx)
+            }
+            // Also expand sections where a specific question just got answered
+            for (sIdx, qMap) in saved {
+                if let prevSSection = self.answers[sIdx] {
+                    for qIdx in qMap.keys where prevSSection[qIdx] == nil {
+                        expandedSections.insert(sIdx)
+                    }
+                }
+            }
             
-            // 4. Reload the table view
+            self.updateProgress()
             self.tableView.reloadData()
         }
     }
@@ -240,13 +251,13 @@ class SensoryProfileViewController: UIViewController {
                     .eq("assessment_type", value: "Sensory Profile")
                     .order("created_at", ascending: false)
                     .limit(1)
-                    .single()
                     .execute()
 
-                let decoded = try JSONDecoder().decode(FetchResult.self, from: response.data)
-                self.existingRecordID = decoded.id
+                let decoded = try JSONDecoder().decode([FetchResult].self, from: response.data)
+                guard let first = decoded.first else { return }
+                self.existingRecordID = first.id
                 await MainActor.run {
-                    self.restoreAnswers(from: decoded.assessment_data)
+                    self.restoreAnswers(from: first.assessment_data)
                     self.tableView.reloadData()
                     self.updateProgress()
                 }

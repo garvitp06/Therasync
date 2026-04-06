@@ -123,16 +123,19 @@ class GrossMotorSkillsViewController: UIViewController {
         guard let pid = patientID else { return }
         let allAnswers = AssessmentSessionManager.shared.getTestAnswers(for: pid)
         if let saved = allAnswers["Gross Motor Skills"] as? [Int: Int] {
+            var updatedAny = false
             for (idx, optIdx) in saved {
                 if idx < questions.count {
+                    if questions[idx].selectedOptionIndex != optIdx {
+                        currentQuestionIndex = idx
+                        updatedAny = true
+                    }
                     questions[idx].selectedOptionIndex = optIdx
                 }
             }
-            
-            // Refresh your UI.
-            // For ADOS, Fine/Gross Motor, it's optionsTableView.reloadData()
-            // For Cognitive, it might be recreating the optionsStack
-            optionsTableView.reloadData()
+            if updatedAny {
+                loadQuestion(at: currentQuestionIndex)
+            }
         }
     }
     private func setupUI() {

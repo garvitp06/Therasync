@@ -44,7 +44,7 @@ class RadioOptionView: UIControl {
     private let separator: UIView = {
         let v = UIView()
         v.translatesAutoresizingMaskIntoConstraints = false
-        v.backgroundColor = UIColor(white: 0.9, alpha: 1.0)
+        v.backgroundColor = .separator
         v.isUserInteractionEnabled = false
         return v
     }()
@@ -73,7 +73,7 @@ class RadioOptionView: UIControl {
 
     // MARK: - Setup (Your exact constraints adapted for UIView)
     private func setupViews() {
-        self.backgroundColor = .white // Background for the row
+        self.backgroundColor = .systemBackground // Background for the row
         
         addSubview(outerCircle)
         outerCircle.addSubview(innerDot)
@@ -122,6 +122,13 @@ class RadioOptionView: UIControl {
             UIView.animate(withDuration: 0.18, animations: changes)
         } else {
             changes()
+        }
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        if traitCollection.hasDifferentColorAppearance(comparedTo: previousTraitCollection) {
+            outerCircle.layer.borderColor = (isOn ? UIColor.systemBlue : UIColor.systemGray4).resolvedColor(with: traitCollection).cgColor
         }
     }
 

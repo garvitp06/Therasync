@@ -97,15 +97,15 @@ class AssignmentDetailViewController: UIViewController, UIImagePickerControllerD
             let label = UILabel()
             label.text = "\(index + 1). \(question)"
             label.font = .systemFont(ofSize: 16, weight: .semibold)
-            label.textColor = .black // Ensure visible on gradient
+            label.textColor = .label // Ensure visible on gradient
             label.numberOfLines = 0
             
             // Input Container (White Box)
             let inputContainer = UIView()
-            inputContainer.backgroundColor = .white
+            inputContainer.backgroundColor = .systemBackground
             inputContainer.layer.cornerRadius = 12
             // Shadow for depth
-            inputContainer.layer.shadowColor = UIColor.black.cgColor
+            inputContainer.layer.shadowColor = UIColor.label.cgColor
             inputContainer.layer.shadowOpacity = 0.05
             inputContainer.layer.shadowOffset = CGSize(width: 0, height: 2)
             inputContainer.layer.shadowRadius = 4
@@ -141,7 +141,7 @@ class AssignmentDetailViewController: UIViewController, UIImagePickerControllerD
                 let field = questionFields[index]
                 field.text = answer
                 field.isEnabled = false // Disable editing after submission
-                field.textColor = .darkGray
+                field.textColor = .secondaryLabel
                 field.backgroundColor = .systemGray6 // Visual cue that it's read-only
             }
         }

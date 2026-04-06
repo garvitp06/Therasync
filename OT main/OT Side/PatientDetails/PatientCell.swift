@@ -17,7 +17,7 @@ final class PatientCell: UITableViewCell {
     private let nameLabel: UILabel = {
         let l = UILabel()
         l.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
-        l.textColor = .black
+        l.textColor = .label
         l.translatesAutoresizingMaskIntoConstraints = false
         return l
     }()
@@ -43,7 +43,7 @@ final class PatientCell: UITableViewCell {
         setupViews()
         setupConstraints()
         selectionStyle = .none
-        backgroundColor = .white
+        backgroundColor = .systemBackground
         accessoryType = .disclosureIndicator
     }
 

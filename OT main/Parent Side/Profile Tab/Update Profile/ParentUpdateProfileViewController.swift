@@ -36,7 +36,7 @@ class ParentUpdateProfileViewController: UIViewController, UIImagePickerControll
         iv.layer.cornerRadius = 50
         iv.layer.masksToBounds = true
         iv.layer.borderWidth = 3
-        iv.layer.borderColor = UIColor.white.cgColor
+        iv.layer.borderColor = UIColor.systemBackground.cgColor
         return iv
     }()
     private let changePhotoButton: UIButton = {
@@ -294,7 +294,7 @@ class ParentUpdateProfileViewController: UIViewController, UIImagePickerControll
     private func createCard(rows: [(String, UITextField)]) -> UIView {
         let card = UIView()
         card.translatesAutoresizingMaskIntoConstraints = false
-        card.backgroundColor = .white
+        card.backgroundColor = .systemBackground
         card.layer.cornerRadius = 20
         card.layer.masksToBounds = true
         var previousBottom = card.topAnchor

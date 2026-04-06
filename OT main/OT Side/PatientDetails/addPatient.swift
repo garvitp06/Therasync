@@ -38,7 +38,7 @@ class addPatient: UIViewController {
         iv.clipsToBounds = true
         iv.isUserInteractionEnabled = true
         iv.translatesAutoresizingMaskIntoConstraints = false
-        iv.backgroundColor = .white
+        iv.backgroundColor = .systemBackground
         return iv
     }()
 

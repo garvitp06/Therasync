@@ -26,7 +26,7 @@ final class SchoolComplaintsViewController: UIViewController, UITableViewDataSou
     private let cardView: UIView = {
         let v = UIView()
         v.translatesAutoresizingMaskIntoConstraints = false
-        v.backgroundColor = .white
+        v.backgroundColor = .systemBackground
         v.layer.cornerRadius = 24
         // Drop Shadow
         v.layer.shadowColor = UIColor.black.cgColor
@@ -50,10 +50,10 @@ final class SchoolComplaintsViewController: UIViewController, UITableViewDataSou
         b.translatesAutoresizingMaskIntoConstraints = false
         b.setTitle("Done", for: .normal)
         b.titleLabel?.font = .systemFont(ofSize: 18, weight: .bold)
-        b.backgroundColor = UIColor(red: 0.0, green: 0.48, blue: 1.0, alpha: 1.0)
+        b.backgroundColor = UIColor.systemBlue
         b.setTitleColor(.white, for: .normal)
         b.layer.cornerRadius = 25
-        b.layer.shadowColor = UIColor.blue.withAlphaComponent(0.3).cgColor
+        b.layer.shadowColor = UIColor.systemBlue.withAlphaComponent(0.3).cgColor
         b.layer.shadowOffset = CGSize(width: 0, height: 4)
         b.layer.shadowOpacity = 0.3
         b.layer.shadowRadius = 5
@@ -287,7 +287,7 @@ class SchoolComplaintCell: UITableViewCell, UITextFieldDelegate {
         let tf = UITextField()
         tf.translatesAutoresizingMaskIntoConstraints = false
         tf.font = .systemFont(ofSize: 16)
-        tf.textColor = .black
+        tf.textColor = .label
         tf.borderStyle = .none
         return tf
     }()

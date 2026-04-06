@@ -28,7 +28,7 @@ class OTSettingsViewController: UIViewController {
             case .schedule:
                 return ["Unavailability"]
             case .sensory:
-                return ["Notification Settings", "Dark Mode", "Global Haptics"]
+                return ["Notification Settings", "Global Haptics"]
             case .support:
                 return ["Report Technical Issue"]
             }
@@ -53,17 +53,12 @@ class OTSettingsViewController: UIViewController {
         return tv
     }()
     
-    // Track local state for this session only
-    private var isDarkModeEnabled: Bool = false
 
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         setupLayout()
         applyOTNavigationStyling(title: "Settings")
-        
-        // Always force Light Mode on initial launch
-        applyTheme(isDark: false)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -73,22 +68,6 @@ class OTSettingsViewController: UIViewController {
         tableView.reloadData()
     }
     
-    private func applyTheme(isDark: Bool) {
-        let style: UIUserInterfaceStyle = isDark ? .dark : .light
-        
-        // Update local variable
-        self.isDarkModeEnabled = isDark
-        
-        // Apply to this screen
-        overrideUserInterfaceStyle = style
-        
-        // Apply to the whole app window so other screens update immediately
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
-            windowScene.windows.forEach { window in
-                window.overrideUserInterfaceStyle = style
-            }
-        }
-    }
 
     private func setupLayout() {
         view.addSubview(backgroundView)
@@ -108,17 +87,7 @@ class OTSettingsViewController: UIViewController {
     }
     
     // MARK: - Actions
-    @objc func toggleDarkMode(_ sender: UISwitch) {
-        // Just apply visually, do not save to UserDefaults
-        if let windowScene = view.window?.windowScene {
-            windowScene.windows.forEach { window in
-                UIView.transition(with: window, duration: 0.3, options: .transitionCrossDissolve, animations: {
-                    self.applyTheme(isDark: sender.isOn)
-                }, completion: nil)
-            }
-        }
-    }
-    
+
     @objc func toggleGlobalHaptics(_ sender: UISwitch) { }
 }
 
@@ -175,16 +144,7 @@ extension OTSettingsViewController: UITableViewDataSource, UITableViewDelegate {
         cell.accessoryView = nil
         cell.selectionStyle = .default
 
-        if rowTitle == "Dark Mode" {
-            cell.accessoryType = .none
-            cell.selectionStyle = .none
-            let sw = UISwitch()
-            // Use local variable instead of UserDefaults
-            sw.isOn = self.isDarkModeEnabled
-            sw.addTarget(self, action: #selector(toggleDarkMode(_:)), for: .valueChanged)
-            cell.accessoryView = sw
-            
-        } else if rowTitle == "Global Haptics" {
+        if rowTitle == "Global Haptics" {
             cell.accessoryType = .none
             cell.selectionStyle = .none
             let sw = UISwitch()
@@ -204,7 +164,7 @@ extension OTSettingsViewController: UITableViewDataSource, UITableViewDelegate {
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let rowTitle = SettingsSection.allCases[indexPath.section].rows[indexPath.row]
-        if rowTitle == "Dark Mode" || rowTitle == "Global Haptics" { return }
+        if rowTitle == "Global Haptics" { return }
         
         tableView.deselectRow(at: indexPath, animated: true)
         

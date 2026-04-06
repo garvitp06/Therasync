@@ -17,8 +17,8 @@ final class ParentConditionViewController: UIViewController {
         tv.isEditable = false
         tv.alwaysBounceVertical = true
         tv.font = .systemFont(ofSize: 16, weight: .regular)
-        tv.backgroundColor = .white
-        tv.textColor = .darkGray 
+        tv.backgroundColor = .systemBackground
+        tv.textColor = .secondaryLabel 
         tv.textAlignment = .justified
         tv.layoutManager.hyphenationFactor = 1.0
         tv.showsVerticalScrollIndicator = true
@@ -63,9 +63,9 @@ final class ParentConditionViewController: UIViewController {
         
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = .white
+        appearance.backgroundColor = .systemBackground
         appearance.titleTextAttributes = [
-            .foregroundColor: UIColor.black,
+            .foregroundColor: UIColor.label,
             .font: UIFont.systemFont(ofSize: 17, weight: .semibold)
         ]
         
@@ -77,7 +77,7 @@ final class ParentConditionViewController: UIViewController {
                                  style: .plain,
                                  target: self,
                                  action: #selector(backTapped))
-        back.tintColor = .black
+        back.tintColor = .label
         navigationItem.leftBarButtonItem = back
     }
 

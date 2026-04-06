@@ -41,10 +41,10 @@ class FineMotorSkillsViewController: UIViewController {
         return pv
     }()
     
-    private let questionContainer: UIView = { let v = UIView(); v.translatesAutoresizingMaskIntoConstraints = false; v.backgroundColor = .white; v.layer.cornerRadius = 18; return v }()
-    private let questionLabel: UILabel = { let l = UILabel(); l.translatesAutoresizingMaskIntoConstraints = false; l.numberOfLines = 0; l.font = .systemFont(ofSize: 18, weight: .medium); l.textColor = .black; return l }()
+    private let questionContainer: UIView = { let v = UIView(); v.translatesAutoresizingMaskIntoConstraints = false; v.backgroundColor = .systemBackground; v.layer.cornerRadius = 18; return v }()
+    private let questionLabel: UILabel = { let l = UILabel(); l.translatesAutoresizingMaskIntoConstraints = false; l.numberOfLines = 0; l.font = .systemFont(ofSize: 18, weight: .medium); l.textColor = .label; return l }()
     
-    private let cardContainerView: UIView = { let v = UIView(); v.translatesAutoresizingMaskIntoConstraints = false; v.backgroundColor = .white; v.layer.cornerRadius = 18; return v }()
+    private let cardContainerView: UIView = { let v = UIView(); v.translatesAutoresizingMaskIntoConstraints = false; v.backgroundColor = .systemBackground; v.layer.cornerRadius = 18; return v }()
     
     private let optionsTableView: UITableView = {
         let tv = UITableView(frame: .zero, style: .plain)
@@ -69,6 +69,7 @@ class FineMotorSkillsViewController: UIViewController {
     }()
 
     private var tableHeightConstraint: NSLayoutConstraint?
+    private var tableObserver: NSKeyValueObservation?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -86,19 +87,17 @@ class FineMotorSkillsViewController: UIViewController {
         setupNavBar()
         setupUI()
         
-        optionsTableView.addObserver(self, forKeyPath: "contentSize", options: .new, context: nil)
+        tableObserver = optionsTableView.observe(\.contentSize, options: .new) { [weak self] _, _ in
+            guard let self = self else { return }
+            self.tableHeightConstraint?.constant = self.optionsTableView.contentSize.height
+            self.view.layoutIfNeeded()
+        }
+        
         loadQuestion(at: currentQuestionIndex)
     }
     
     deinit {
-        optionsTableView.removeObserver(self, forKeyPath: "contentSize")
-    }
-    
-    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
-        if keyPath == "contentSize" {
-            tableHeightConstraint?.constant = optionsTableView.contentSize.height
-            view.layoutIfNeeded()
-        }
+        // NSKeyValueObservation automatically cleans up
     }
     
     override func loadView() {

@@ -22,9 +22,9 @@ class PatientDetailFormViewController: UIViewController, PHPickerViewControllerD
         iv.image = UIImage(systemName: "person.circle.fill", withConfiguration: config)
         iv.tintColor = .systemGray4
         iv.contentMode = .scaleAspectFill
-        iv.backgroundColor = .white
+        iv.backgroundColor = .systemBackground
         iv.clipsToBounds = true
-        iv.layer.borderColor = UIColor.white.cgColor
+        iv.layer.borderColor = UIColor.systemBackground.cgColor
         iv.layer.borderWidth = 3.0
         iv.translatesAutoresizingMaskIntoConstraints = false
         return iv
@@ -135,6 +135,13 @@ class PatientDetailFormViewController: UIViewController, PHPickerViewControllerD
         profileImageView.layer.cornerRadius = profileImageView.bounds.width / 2
     }
     
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        if traitCollection.hasDifferentColorAppearance(comparedTo: previousTraitCollection) {
+            profileImageView.layer.borderColor = UIColor.systemBackground.resolvedColor(with: traitCollection).cgColor
+        }
+    }
+    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         setupNavigationBarAppearance()
@@ -184,9 +191,9 @@ class PatientDetailFormViewController: UIViewController, PHPickerViewControllerD
             field.borderStyle = .none
             
             if isEditingMode {
-                field.textColor = .black
+                field.textColor = .label
             } else {
-                field.textColor = .systemGray
+                field.textColor = .secondaryLabel
             }
         }
         
@@ -198,7 +205,7 @@ class PatientDetailFormViewController: UIViewController, PHPickerViewControllerD
                 }
         // Parent Contact ALWAYS read-only
         parentContactField.isUserInteractionEnabled = false
-        parentContactField.textColor = .systemGray
+        parentContactField.textColor = .secondaryLabel
         
         profileImageView.isUserInteractionEnabled = isEditingMode
             
@@ -537,7 +544,7 @@ class PatientDetailFormViewController: UIViewController, PHPickerViewControllerD
         let textField = UITextField()
         textField.placeholder = placeholder
         textField.font = .systemFont(ofSize: 16)
-        textField.textColor = .systemGray
+        textField.textColor = .secondaryLabel
         textField.borderStyle = .none
         textField.isUserInteractionEnabled = false
         textField.translatesAutoresizingMaskIntoConstraints = false
@@ -548,7 +555,7 @@ class PatientDetailFormViewController: UIViewController, PHPickerViewControllerD
     
     func createCardView(with fields: [UIView]) -> UIView {
         let card = UIView()
-        card.backgroundColor = .white
+        card.backgroundColor = .systemBackground
         card.layer.cornerRadius = 16
         card.clipsToBounds = true
         card.translatesAutoresizingMaskIntoConstraints = false
@@ -564,7 +571,7 @@ class PatientDetailFormViewController: UIViewController, PHPickerViewControllerD
             stackView.addArrangedSubview(field)
             if index < fields.count - 1 {
                 let separator = UIView()
-                separator.backgroundColor = UIColor.lightGray.withAlphaComponent(0.3)
+                separator.backgroundColor = .separator
                 separator.translatesAutoresizingMaskIntoConstraints = false
                 separator.heightAnchor.constraint(equalToConstant: 1).isActive = true
                 stackView.addArrangedSubview(separator)

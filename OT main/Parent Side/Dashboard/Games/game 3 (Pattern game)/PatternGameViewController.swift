@@ -39,7 +39,7 @@ class PatternGameViewController: UIViewController {
         let lbl = UILabel()
         lbl.text = "Level 1"
         lbl.font = .systemFont(ofSize: 18, weight: .semibold)
-        lbl.textColor = .darkGray
+        lbl.textColor = .secondaryLabel
         lbl.textAlignment = .center
         lbl.translatesAutoresizingMaskIntoConstraints = false
         return lbl
@@ -49,7 +49,7 @@ class PatternGameViewController: UIViewController {
         let lbl = UILabel()
         lbl.text = "Complete the pattern!"
         lbl.font = .systemFont(ofSize: 28, weight: .bold)
-        lbl.textColor = .black
+        lbl.textColor = .label
         lbl.textAlignment = .center
         lbl.translatesAutoresizingMaskIntoConstraints = false
         return lbl
@@ -273,7 +273,7 @@ class PatternGameViewController: UIViewController {
         lbl.font = .systemFont(ofSize: 40, weight: .bold)
         lbl.textColor = .lightGray
         lbl.textAlignment = .center
-        lbl.backgroundColor = UIColor.white.withAlphaComponent(0.5)
+        lbl.backgroundColor = UIColor.systemBackground.withAlphaComponent(0.5)
         lbl.layer.cornerRadius = 15
         lbl.layer.borderWidth = 2
         lbl.layer.borderColor = UIColor.lightGray.cgColor
@@ -286,9 +286,9 @@ class PatternGameViewController: UIViewController {
         let config = UIImage.SymbolConfiguration(pointSize: 50, weight: .bold)
         btn.setImage(UIImage(systemName: item.type.rawValue, withConfiguration: config), for: .normal)
         btn.tintColor = item.color
-        btn.backgroundColor = .white
+        btn.backgroundColor = .systemBackground
         btn.layer.cornerRadius = 20
-        btn.layer.shadowColor = UIColor.black.cgColor
+        btn.layer.shadowColor = UIColor.label.cgColor
         btn.layer.shadowOpacity = 0.1
         btn.layer.shadowOffset = CGSize(width: 0, height: 4)
         btn.layer.shadowRadius = 6
@@ -304,10 +304,10 @@ class PatternGameViewController: UIViewController {
     private func setupNavigationBar() {
         let appearance = UINavigationBarAppearance()
         appearance.configureWithTransparentBackground()
-        appearance.titleTextAttributes = [.foregroundColor: UIColor.black, .font: UIFont.boldSystemFont(ofSize: 20)]
+        appearance.titleTextAttributes = [.foregroundColor: UIColor.label, .font: UIFont.boldSystemFont(ofSize: 20)]
         title = "Sequenco"
         
-        navigationController?.navigationBar.tintColor = .black
+        navigationController?.navigationBar.tintColor = .label
         navigationController?.navigationBar.standardAppearance = appearance
         navigationController?.navigationBar.scrollEdgeAppearance = appearance
         navigationController?.navigationBar.compactAppearance = appearance
@@ -363,7 +363,7 @@ class PatternGameViewController: UIViewController {
     private func setupOverlayUI() {
         overlayView.frame = view.bounds
         overlayView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        overlayView.backgroundColor = UIColor.black.withAlphaComponent(0.0)
+        overlayView.backgroundColor = UIColor.label.withAlphaComponent(0.0)
         overlayView.alpha = 0
         overlayView.isUserInteractionEnabled = false
         view.addSubview(overlayView)
@@ -377,7 +377,7 @@ class PatternGameViewController: UIViewController {
         resultLabel.translatesAutoresizingMaskIntoConstraints = false
         resultLabel.font = UIFont.systemFont(ofSize: 32, weight: .bold)
         resultLabel.textAlignment = .center
-        resultLabel.textColor = .black
+        resultLabel.textColor = .label
         overlayView.addSubview(resultLabel)
         
         // Stars Stack

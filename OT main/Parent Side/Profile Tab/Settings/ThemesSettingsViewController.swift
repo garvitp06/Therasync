@@ -110,7 +110,7 @@ extension UIColor {
     // 1. All text that should be Black (Light) or White (Dark)
     static var dynamicLabel: UIColor {
         return UIColor { trait in
-            return UserDefaults.standard.bool(forKey: "Dark Mode") ? .white : .black
+            return trait.userInterfaceStyle == .dark ? .white : .black
         }
     }
     
@@ -119,19 +119,19 @@ extension UIColor {
             return UIColor { trait in
                 // When Dark Mode is ON, use the official iOS 'Secondary System Grouped' grey
                 // In Light Mode, we use pure White.
-                return UserDefaults.standard.bool(forKey: "Dark Mode")
+                return trait.userInterfaceStyle == .dark
                     ? .secondarySystemGroupedBackground
                     : .white
             }
         }
     static var dynamicSeparator: UIColor {
             return UIColor { trait in
-                return UserDefaults.standard.bool(forKey: "Dark Mode") ? .darkGray : .systemGray5
+                return trait.userInterfaceStyle == .dark ? .darkGray : .systemGray5
             }
         }
     static var dynamicPlaceholder: UIColor {
             return UIColor { trait in
-                return UserDefaults.standard.bool(forKey: "Dark Mode") ? .lightGray : .systemGray
+                return trait.userInterfaceStyle == .dark ? .lightGray : .systemGray
             }
         }
 }

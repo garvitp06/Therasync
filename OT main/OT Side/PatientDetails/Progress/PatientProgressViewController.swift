@@ -156,7 +156,7 @@ extension PatientProgressViewController: UITableViewDataSource, UITableViewDeleg
         }
         guard let cell = cell else { return UITableViewCell() }
         
-        cell.backgroundColor = .white
+        cell.backgroundColor = .systemBackground
         cell.layer.cornerRadius = 14
         cell.clipsToBounds = true
         cell.selectionStyle = .none
@@ -166,7 +166,7 @@ extension PatientProgressViewController: UITableViewDataSource, UITableViewDeleg
         formatter.dateStyle = .medium
         cell.textLabel?.text = formatter.string(from: report.date)
         cell.textLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
-        cell.textLabel?.textColor = .black
+        cell.textLabel?.textColor = .label
         
         // Summary
         let assessmentNames = report.assessments.map { $0.assessment_type }.joined(separator: ", ")

@@ -21,7 +21,7 @@ class ChatDetailViewController: UIViewController, UITableViewDataSource, UITable
     // MARK: - UI Components
     private let tableView: UITableView = {
         let tv = UITableView()
-        tv.backgroundColor = .white // Match background
+        tv.backgroundColor = .systemBackground // Match background
         tv.separatorStyle = .none
         tv.allowsSelection = false
         tv.keyboardDismissMode = .interactive
@@ -41,7 +41,7 @@ class ChatDetailViewController: UIViewController, UITableViewDataSource, UITable
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
+        view.backgroundColor = .systemBackground
         setupUI()
         // REMOVED: setupKeyboardObservers() - No longer needed!
         
@@ -221,7 +221,7 @@ class OTIncomingMessageCell: UITableViewCell {
     }()
     private let label: UILabel = {
         let l = UILabel()
-        l.textColor = .black
+        l.textColor = .label
         l.numberOfLines = 0
         l.translatesAutoresizingMaskIntoConstraints = false
         return l
@@ -293,7 +293,7 @@ class DateSeparatorCell: UITableViewCell {
     private let dateLabel: UILabel = {
         let l = UILabel()
         l.font = .systemFont(ofSize: 11, weight: .medium)
-        l.textColor = .darkGray
+        l.textColor = .secondaryLabel
         l.textAlignment = .center
         l.translatesAutoresizingMaskIntoConstraints = false
         return l

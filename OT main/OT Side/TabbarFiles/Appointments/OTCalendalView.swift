@@ -30,7 +30,7 @@ class OTCalendarView: UIView, UICollectionViewDelegate, UICollectionViewDataSour
     private let monthLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 17, weight: .semibold)
-        label.textColor = .black
+        label.textColor = .label
         label.text = "April 2025"
         return label
     }()
@@ -89,7 +89,7 @@ class OTCalendarView: UIView, UICollectionViewDelegate, UICollectionViewDataSour
     }
     
     private func setupView() {
-        backgroundColor = .white
+        backgroundColor = .systemBackground
         layer.cornerRadius = 24
         layer.masksToBounds = true
         
@@ -301,6 +301,13 @@ class CalendarDayCell: UICollectionViewCell {
     
     required init?(coder: NSCoder) { fatalError() }
     
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        if traitCollection.hasDifferentColorAppearance(comparedTo: previousTraitCollection) {
+            todayRing.layer.borderColor = UIColor.systemBlue.resolvedColor(with: traitCollection).cgColor
+        }
+    }
+    
     func configure(isToday: Bool, isSelected: Bool, hasAppointment: Bool) {
         // Toggle Views
         todayRing.isHidden = !isToday
@@ -318,7 +325,7 @@ class CalendarDayCell: UICollectionViewCell {
             label.font = .systemFont(ofSize: 16, weight: .regular)
         } else {
             // Normal Day
-            label.textColor = .black
+            label.textColor = .label
             label.font = .systemFont(ofSize: 16, weight: .regular)
         }
     }

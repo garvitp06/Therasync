@@ -92,19 +92,26 @@ class PatientDifficultiesViewController: UIViewController {
     }
 
     override func viewDidLoad() {
-        super.viewDidLoad()
-        
-        // LOAD SESSION
-        if let pid = patientID {
-            let allAnswers = AssessmentSessionManager.shared.getTestAnswers(for: pid)
-            if let saved = allAnswers["Patient Difficulties"] as? [Int: Int] {
-                userAnswers = saved
+            super.viewDidLoad()
+            
+            NotificationCenter.default.addObserver(self, selector: #selector(handleAIUpdate), name: NSNotification.Name("AI_Assessment_Updated"), object: nil)
+            
+            // LOAD SESSION
+            if let pid = patientID {
+                let allAnswers = AssessmentSessionManager.shared.getTestAnswers(for: pid)
+                if let saved = allAnswers["Patient Difficulties"] as? [Int: Int] {
+                    userAnswers = saved
+                }
             }
+            
+            setupNavBar()
+            setupUI() // This now handles both standard UI and the Simulator button
+            loadQuestion(at: currentQuestionIndex)
         }
-        
-        setupNavBar()
-        setupUI()
-        loadQuestion(at: currentQuestionIndex)
+    
+    @objc func triggerSimulatorAI() {
+        // This mimics the parent saying the child is right-handed
+        AIAssistManager.shared.simulateSpeech(text: "He usually uses his right hand for everything.")
     }
     
     func setupNavBar() {
@@ -118,9 +125,29 @@ class PatientDifficultiesViewController: UIViewController {
         back.tintColor = .black
         navigationItem.leftBarButtonItem = back
     }
+
+    @objc private func handleAIUpdate() {
+        guard let pid = patientID else { return }
+        let allAnswers = AssessmentSessionManager.shared.getTestAnswers(for: pid)
+        
+        if let saved = allAnswers["Patient Difficulties"] as? [Int: Int] {
+            var updatedAny = false
+            for (idx, optIdx) in saved {
+                if self.userAnswers[idx] != optIdx {
+                    self.currentQuestionIndex = idx
+                    updatedAny = true
+                }
+            }
+            if updatedAny {
+                self.userAnswers = saved
+                loadQuestion(at: currentQuestionIndex)
+            } else {
+                self.userAnswers = saved
+            }
+        }
+    }
     
     func setupUI() {
-        // Add Subviews (Note: self.view is already the GradientView from loadView)
         view.addSubview(progressBar)
         view.addSubview(questionContainer)
         questionContainer.addSubview(questionLabel)
@@ -132,45 +159,62 @@ class PatientDifficultiesViewController: UIViewController {
         
         let safe = view.safeAreaLayoutGuide
         
-        // Setup Constraints (Matching Fine Motor Skills exactly)
         NSLayoutConstraint.activate([
-            // Progress Bar (Top 13, Height 4, Side 20)
+            // 1. Progress Bar at the top
             progressBar.topAnchor.constraint(equalTo: safe.topAnchor, constant: 13),
             progressBar.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             progressBar.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             progressBar.heightAnchor.constraint(equalToConstant: 4),
             
-            // Question Container
+            // 2. Question Container - BELOW Progress Bar
             questionContainer.topAnchor.constraint(equalTo: progressBar.bottomAnchor, constant: 30),
             questionContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             questionContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            questionContainer.heightAnchor.constraint(greaterThanOrEqualToConstant: 60),
             
-            // Question Label
+            // Question Label Padding inside its container
             questionLabel.topAnchor.constraint(equalTo: questionContainer.topAnchor, constant: 20),
             questionLabel.bottomAnchor.constraint(equalTo: questionContainer.bottomAnchor, constant: -20),
             questionLabel.leadingAnchor.constraint(equalTo: questionContainer.leadingAnchor, constant: 20),
             questionLabel.trailingAnchor.constraint(equalTo: questionContainer.trailingAnchor, constant: -20),
             
-            // Options Container
+            // 3. Options Container - BELOW Question Container
             optionsContainer.topAnchor.constraint(equalTo: questionContainer.bottomAnchor, constant: 20),
             optionsContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             optionsContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             
-            // Stack View
+            // Stack View inside Options Container
             optionsStackView.topAnchor.constraint(equalTo: optionsContainer.topAnchor),
             optionsStackView.bottomAnchor.constraint(equalTo: optionsContainer.bottomAnchor),
             optionsStackView.leadingAnchor.constraint(equalTo: optionsContainer.leadingAnchor),
             optionsStackView.trailingAnchor.constraint(equalTo: optionsContainer.trailingAnchor),
             
-            // Next Button
+            // 4. Next Button at the bottom
             nextButton.bottomAnchor.constraint(equalTo: safe.bottomAnchor, constant: -20),
             nextButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             nextButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             nextButton.heightAnchor.constraint(equalToConstant: 55)
         ])
-    }
 
+        // Simulator Debug Button logic
+        #if targetEnvironment(simulator)
+        let testButton = UIButton(type: .system)
+        testButton.setTitle("🪄 Test AI: 'Right Hand'", for: .normal)
+        testButton.backgroundColor = .systemPurple
+        testButton.setTitleColor(.white, for: .normal)
+        testButton.layer.cornerRadius = 10
+        testButton.translatesAutoresizingMaskIntoConstraints = false
+        
+        view.addSubview(testButton)
+        testButton.addTarget(self, action: #selector(triggerSimulatorAI), for: .touchUpInside)
+
+        NSLayoutConstraint.activate([
+            testButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            testButton.bottomAnchor.constraint(equalTo: nextButton.topAnchor, constant: -20),
+            testButton.widthAnchor.constraint(equalToConstant: 200),
+            testButton.heightAnchor.constraint(equalToConstant: 44)
+        ])
+        #endif
+    }
     func loadQuestion(at index: Int) {
         let q = questions[index]
         
@@ -204,13 +248,18 @@ class PatientDifficultiesViewController: UIViewController {
 
     @objc func optionSelected(_ sender: RadioOptionView) {
         optionsStackView.arrangedSubviews.forEach { ($0 as? RadioOptionView)?.isOn = ($0 == sender) }
-        
         userAnswers[currentQuestionIndex] = sender.tag
         
-        // SAVE SESSION
+        // --- NEW: AI LOCK & SAVE ---
         if let pid = patientID {
+            // 1. Lock the field
+            let key = "PatientDifficulties_Q\(questions[currentQuestionIndex].id)"
+            AssessmentSessionManager.shared.lockField(for: pid, key: key)
+            
+            // 2. Your existing save logic
             AssessmentSessionManager.shared.updateTestAnswer(for: pid, key: "Patient Difficulties", value: userAnswers)
         }
+        // ---------------------------
         
         nextButton.isEnabled = true
         nextButton.alpha = 1.0

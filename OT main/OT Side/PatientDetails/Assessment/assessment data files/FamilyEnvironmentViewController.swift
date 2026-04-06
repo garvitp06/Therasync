@@ -79,6 +79,8 @@ final class FamilyEnvironmentViewController: UIViewController {
         setupNavBar()
         setupUI()
         fetchData()
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(handleAIUpdate), name: NSNotification.Name("AI_Assessment_Updated"), object: nil)
 
         let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKB))
         tap.cancelsTouchesInView = false
@@ -122,25 +124,69 @@ final class FamilyEnvironmentViewController: UIViewController {
 
     // MARK: - Data
     private func fetchData() {
-        guard let pid = patientID else { return }
-        Task {
-            do {
-                struct R: Decodable { let id: Int; let assessment_data: [String: String] }
-                let res = try await supabase.from("assessments").select("id, assessment_data")
-                    .eq("patient_id", value: pid).eq("assessment_type", value: subSection)
-                    .order("created_at", ascending: false).limit(1).single().execute()
-                let decoded = try JSONDecoder().decode(R.self, from: res.data)
-                self.existingRecordID = decoded.id
-                await MainActor.run {
-                    for (i, f) in self.fields.enumerated() {
-                        if let v = decoded.assessment_data[f] { self.values[i] = v }
-                    }
-                    self.tableView.reloadData()
+            guard let pid = patientID else { return }
+            
+            // 1. Check Session Manager First
+            let session = AssessmentSessionManager.shared.getSubSectionData(for: pid, subSection: self.subSection)
+            
+            if session.didFetch {
+                for (i, f) in self.fields.enumerated() {
+                    if let v = session.data[f] { self.values[i] = v }
                 }
-            } catch { print("FamilyEnv fetch: \(error)") }
+                self.tableView.reloadData()
+            } else {
+                // 2. Fetch from Supabase
+                Task {
+                    do {
+                        struct R: Decodable { let id: Int; let assessment_data: [String: String] }
+                        let res = try await supabase.from("assessments").select("id, assessment_data")
+                            .eq("patient_id", value: pid).eq("assessment_type", value: subSection)
+                            .order("created_at", ascending: false).limit(1).execute()
+                        
+                        let decoded = try JSONDecoder().decode([R].self, from: res.data)
+                        guard let first = decoded.first else {
+                            await MainActor.run {
+                                AssessmentSessionManager.shared.updateSubSectionData(for: pid, subSection: self.subSection, data: [:], didFetch: true)
+                            }
+                            return
+                        }
+                        self.existingRecordID = first.id
+                        
+                        await MainActor.run {
+                            for (i, f) in self.fields.enumerated() {
+                                if let v = first.assessment_data[f] { self.values[i] = v }
+                            }
+                            self.tableView.reloadData()
+                            
+                            // Save to session manager
+                            let currentDict = Dictionary(uniqueKeysWithValues: zip(self.fields, self.values))
+                            AssessmentSessionManager.shared.updateSubSectionData(for: pid, subSection: self.subSection, data: currentDict, didFetch: true)
+                        }
+                    } catch {
+                        print("FamilyEnv fetch: \(error)")
+                        await MainActor.run {
+                            AssessmentSessionManager.shared.updateSubSectionData(for: pid, subSection: self.subSection, data: [:], didFetch: true)
+                        }
+                    }
+                }
+            }
         }
-    }
-
+    
+    @objc private func handleAIUpdate() {
+            guard let pid = patientID else { return }
+            
+            // Grab the latest data that the AI might have changed in the background
+            let session = AssessmentSessionManager.shared.getSubSectionData(for: pid, subSection: self.subSection)
+            
+            if session.didFetch {
+                for (i, f) in self.fields.enumerated() {
+                    if let v = session.data[f] { self.values[i] = v }
+                }
+                // Refresh the screen so the user sees the AI's changes instantly
+                self.tableView.reloadData()
+            }
+        }
+    
     @objc private func save() {
         guard let pid = patientID else { return }
         doneButton.isEnabled = false; doneButton.setTitle("", for: .normal); buttonSpinner.startAnimating()
@@ -172,11 +218,29 @@ final class FamilyEnvironmentViewController: UIViewController {
 extension FamilyEnvironmentViewController: UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int { fields.count }
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: VoiceTextInputCell.reuseID, for: indexPath) as! VoiceTextInputCell
-        cell.configure(title: fields[indexPath.row], value: values[indexPath.row])
-        cell.onTextChange = { [weak self] txt in self?.values[indexPath.row] = txt }
-        return cell
-    }
+            let cell = tableView.dequeueReusableCell(withIdentifier: VoiceTextInputCell.reuseID, for: indexPath) as! VoiceTextInputCell
+            
+            let fieldName = fields[indexPath.row]
+            cell.configure(title: fieldName, value: values[indexPath.row])
+            
+            cell.onTextChange = { [weak self] txt in
+                guard let self = self, let pid = self.patientID else { return }
+                
+                // 1. Update the local array
+                self.values[indexPath.row] = txt
+                
+                // 2. LOCK THE FIELD for AI (Make a clean key)
+                let shortQuestion = String(fieldName.prefix(15)).replacingOccurrences(of: " ", with: "")
+                let lockKey = "\(self.subSection)_\(shortQuestion)"
+                AssessmentSessionManager.shared.lockField(for: pid, key: lockKey)
+                
+                // 3. Save to Session Manager
+                let currentDict = Dictionary(uniqueKeysWithValues: zip(self.fields, self.values))
+                AssessmentSessionManager.shared.updateSubSectionData(for: pid, subSection: self.subSection, data: currentDict, didFetch: true)
+            }
+            
+            return cell
+        }
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat { return UITableView.automaticDimension }
     func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat { return 85 }
 }

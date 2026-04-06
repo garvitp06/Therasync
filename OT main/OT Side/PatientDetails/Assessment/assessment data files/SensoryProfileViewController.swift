@@ -143,6 +143,7 @@ class SensoryProfileViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        NotificationCenter.default.addObserver(self, selector: #selector(handleAIUpdate), name: NSNotification.Name("AI_Assessment_Updated"), object: nil)
         title = "Sensory Profile"
         setupNavBar()
         setupUI()
@@ -205,6 +206,35 @@ class SensoryProfileViewController: UIViewController {
         progressLabel.text = "\(answered) / \(total) questions answered"
     }
 
+    @objc private func handleAIUpdate() {
+        guard let pid = patientID else { return }
+        let allAnswers = AssessmentSessionManager.shared.getTestAnswers(for: pid)
+        
+        if let saved = allAnswers["Sensory Profile"] as? [Int: [Int: Int]] {
+            // Find which sections got new answers (to auto-expand them)
+            let previouslyAnsweredSections = Set(self.answers.keys)
+            
+            // Overwrite local answers
+            self.answers = saved
+            
+            // Auto-expand any section that just received a new AI answer
+            for sIdx in saved.keys where !previouslyAnsweredSections.contains(sIdx) {
+                expandedSections.insert(sIdx)
+            }
+            // Also expand sections where a specific question just got answered
+            for (sIdx, qMap) in saved {
+                if let prevSSection = self.answers[sIdx] {
+                    for qIdx in qMap.keys where prevSSection[qIdx] == nil {
+                        expandedSections.insert(sIdx)
+                    }
+                }
+            }
+            
+            self.updateProgress()
+            self.tableView.reloadData()
+        }
+    }
+
     // MARK: - Data
     private func fetchExistingData() {
         guard let pid = patientID else { return }
@@ -221,13 +251,13 @@ class SensoryProfileViewController: UIViewController {
                     .eq("assessment_type", value: "Sensory Profile")
                     .order("created_at", ascending: false)
                     .limit(1)
-                    .single()
                     .execute()
 
-                let decoded = try JSONDecoder().decode(FetchResult.self, from: response.data)
-                self.existingRecordID = decoded.id
+                let decoded = try JSONDecoder().decode([FetchResult].self, from: response.data)
+                guard let first = decoded.first else { return }
+                self.existingRecordID = first.id
                 await MainActor.run {
-                    self.restoreAnswers(from: decoded.assessment_data)
+                    self.restoreAnswers(from: first.assessment_data)
                     self.tableView.reloadData()
                     self.updateProgress()
                 }
@@ -335,11 +365,28 @@ extension SensoryProfileViewController: UITableViewDataSource, UITableViewDelega
         let selectedIdx = answers[indexPath.section]?[indexPath.row]
 
         cell.configure(question: question, options: options, selectedIndex: selectedIdx)
+        
         cell.onOptionSelected = { [weak self] optionIndex in
             guard let self = self else { return }
+            
+            // Save the answer locally
             if self.answers[indexPath.section] == nil { self.answers[indexPath.section] = [:] }
             self.answers[indexPath.section]?[indexPath.row] = optionIndex
+            
+            if let pid = self.patientID {
+                // Lock field for AI
+                let sectionTitle = self.sensoryData[indexPath.section].title
+                let shortQuestion = String(question.prefix(20)).replacingOccurrences(of: " ", with: "")
+                let key = "SensoryProfile_\(sectionTitle)_\(shortQuestion)"
+                
+                AssessmentSessionManager.shared.lockField(for: pid, key: key)
+                
+                // Save to Session Manager so AI respects it
+                AssessmentSessionManager.shared.updateTestAnswer(for: pid, key: "Sensory Profile", value: self.answers)
+            }
+            
             self.updateProgress()
+            
             // Reload the section header to update count
             if let headerView = tableView.headerView(forSection: indexPath.section) as? SensorySectionHeader {
                 let answeredCount = self.sensoryData[indexPath.section].questions.indices.filter { self.answers[indexPath.section]?[$0] != nil }.count

@@ -44,7 +44,7 @@ class CognitiveSkillsViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        NotificationCenter.default.addObserver(self, selector: #selector(handleAIUpdate), name: NSNotification.Name("AI_Assessment_Updated"), object: nil)
         // RESTORE SESSION (UPDATED FOR PATIENT ID)
         if let pid = patientID {
             let allAnswers = AssessmentSessionManager.shared.getTestAnswers(for: pid)
@@ -70,6 +70,27 @@ class CognitiveSkillsViewController: UIViewController {
         let back = UIBarButtonItem(image: UIImage(systemName: "chevron.left"), style: .plain, target: self, action: #selector(backTapped))
         back.tintColor = .black
         navigationItem.leftBarButtonItem = back
+    }
+
+    @objc private func handleAIUpdate() {
+        guard let pid = patientID else { return }
+        let allAnswers = AssessmentSessionManager.shared.getTestAnswers(for: pid)
+        
+        if let saved = allAnswers["Cognitive Skills"] as? [Int: Int] {
+            var updatedAny = false
+            for (idx, optIdx) in saved {
+                if idx < questions.count {
+                    if questions[idx].selectedOptionIndex != optIdx {
+                        currentQuestionIndex = idx
+                        updatedAny = true
+                    }
+                    questions[idx].selectedOptionIndex = optIdx
+                }
+            }
+            if updatedAny {
+                loadQuestion(at: currentQuestionIndex)
+            }
+        }
     }
     
     func setupUI() {
@@ -125,14 +146,19 @@ class CognitiveSkillsViewController: UIViewController {
         optionsStack.arrangedSubviews.forEach { ($0 as? RadioOptionView)?.isOn = ($0 == sender) }
         questions[currentQuestionIndex].selectedOptionIndex = sender.tag
         
-        // SAVE SESSION (UPDATED FOR PATIENT ID)
+        // --- NEW: AI LOCK & SAVE ---
         if let pid = patientID {
+            // 1. Lock the field
+            let key = "CognitiveSkills_Q\(questions[currentQuestionIndex].id)"
+            AssessmentSessionManager.shared.lockField(for: pid, key: key)
+            
+            // 2. Your existing save logic
             let allAnswers = AssessmentSessionManager.shared.getTestAnswers(for: pid)
             var savedMap = (allAnswers["Cognitive Skills"] as? [Int: Int]) ?? [:]
             savedMap[currentQuestionIndex] = sender.tag
-            
             AssessmentSessionManager.shared.updateTestAnswer(for: pid, key: "Cognitive Skills", value: savedMap)
         }
+        // ---------------------------
         
         nextButton.isEnabled = true; nextButton.alpha = 1.0
     }

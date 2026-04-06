@@ -1,15 +1,15 @@
 import UIKit
 
 class AssessmentListViewController: UIViewController {
-
+    
     var patientID: String?
-
+    
     // MARK: - Section Data
     private struct AssessmentSection {
         let title: String
         let items: [String]
     }
-
+    
     private let sections: [AssessmentSection] = [
         AssessmentSection(title: "History", items: [
             "Birth History",
@@ -28,7 +28,8 @@ class AssessmentListViewController: UIViewController {
         AssessmentSection(title: "Developmental", items: [
             "Language & Communication",
             "Social Milestones",
-            "Self-Care Milestones"
+            "Self-Care Milestones",
+            "Patient Difficulties"
         ]),
         AssessmentSection(title: "Daily Living", items: [
             "Feeding",
@@ -42,7 +43,7 @@ class AssessmentListViewController: UIViewController {
             "Social & Environmental"
         ])
     ]
-
+    
     // MARK: - UI Components
     private let tableView: UITableView = {
         let tv = UITableView(frame: .zero, style: .insetGrouped)
@@ -50,7 +51,7 @@ class AssessmentListViewController: UIViewController {
         tv.backgroundColor = .clear
         return tv
     }()
-
+    
     private let beginButton: UIButton = {
         let b = UIButton(type: .system)
         b.translatesAutoresizingMaskIntoConstraints = false
@@ -62,12 +63,12 @@ class AssessmentListViewController: UIViewController {
         b.layer.masksToBounds = true
         return b
     }()
-
+    
     // MARK: - Lifecycle
     override func loadView() {
         self.view = GradientView()
     }
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupNavigationBar()
@@ -75,12 +76,12 @@ class AssessmentListViewController: UIViewController {
         setupLayout()
         beginButton.addTarget(self, action: #selector(didTapBeginButton), for: .touchUpInside)
     }
-
+    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         tableView.reloadData() // Refresh checkmarks from session
     }
-
+    
     // MARK: - Navigation Bar
     private func setupNavigationBar() {
         title = "Assessment List"
@@ -93,7 +94,7 @@ class AssessmentListViewController: UIViewController {
         navigationController?.navigationBar.scrollEdgeAppearance = appearance
         navigationController?.navigationBar.tintColor = .white
     }
-
+    
     // MARK: - UI Setup
     private func setupViews() {
         view.addSubview(tableView)
@@ -102,7 +103,7 @@ class AssessmentListViewController: UIViewController {
         tableView.delegate = self
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "AssessmentCell")
     }
-
+    
     private func setupLayout() {
         let safeArea = view.safeAreaLayoutGuide
         NSLayoutConstraint.activate([
@@ -110,32 +111,52 @@ class AssessmentListViewController: UIViewController {
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: beginButton.topAnchor, constant: -10),
-
+            
             beginButton.leadingAnchor.constraint(equalTo: safeArea.leadingAnchor, constant: 16),
             beginButton.trailingAnchor.constraint(equalTo: safeArea.trailingAnchor, constant: -16),
             beginButton.bottomAnchor.constraint(equalTo: safeArea.bottomAnchor, constant: -10),
             beginButton.heightAnchor.constraint(equalToConstant: 50)
         ])
     }
-
+    
     // MARK: - Actions
     @objc private func didTapBeginButton() {
-        guard let pid = patientID else { return }
-
-        let currentSelection = AssessmentSessionManager.shared.getSelectedAssessments(for: pid)
-
-        if currentSelection.isEmpty {
-            let alert = UIAlertController(title: "No Selection", message: "Please select at least one assessment.", preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            guard let pid = patientID else { return }
+            
+            let currentSelection = AssessmentSessionManager.shared.getSelectedAssessments(for: pid)
+            
+            if currentSelection.isEmpty {
+                let alert = UIAlertController(title: "No Selection", message: "Please select at least one assessment.", preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "OK", style: .default))
+                present(alert, animated: true)
+                return
+            }
+            
+            let alert = UIAlertController(title: "Enable AI Assist?",
+                                          message: "AI Assist will listen to your session locally on this device and automatically fill out assessment fields based on your conversation. You can manually override any field.",
+                                          preferredStyle: .alert)
+            
+            alert.addAction(UIAlertAction(title: "No, standard mode", style: .cancel) { [weak self] _ in
+                // Pass the selection here
+                self?.navigateToSelectedAssessments(with: currentSelection)
+            })
+            
+            alert.addAction(UIAlertAction(title: "Yes, enable AI", style: .default) { [weak self] _ in
+                AIAssistManager.shared.startListening(for: pid)
+                // Pass the selection here too
+                self?.navigateToSelectedAssessments(with: currentSelection)
+            })
+            
             present(alert, animated: true)
-            return
         }
-
-        let nextVC = AssessmentList()
-        nextVC.assessmentsToDisplay = Array(currentSelection).sorted()
-        nextVC.patientID = self.patientID
-        navigationController?.pushViewController(nextVC, animated: true)
-    }
+        
+        // Accept the selection as a parameter here (assuming it's a Set<String> based on your earlier code)
+        private func navigateToSelectedAssessments(with selection: Set<String>) {
+            let nextVC = AssessmentList()
+            nextVC.assessmentsToDisplay = Array(selection).sorted()
+            nextVC.patientID = self.patientID
+            navigationController?.pushViewController(nextVC, animated: true)
+        }
 }
 
 // MARK: - UITableViewDataSource & Delegate
@@ -202,3 +223,4 @@ extension AssessmentListViewController: UITableViewDataSource, UITableViewDelega
         tableView.reloadRows(at: [indexPath], with: .automatic)
     }
 }
+    

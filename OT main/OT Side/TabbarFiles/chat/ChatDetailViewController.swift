@@ -213,7 +213,7 @@ class ChatDetailViewController: UIViewController, UITableViewDataSource, UITable
 class OTIncomingMessageCell: UITableViewCell {
     private let bubbleView: UIView = {
         let v = UIView()
-        v.backgroundColor = UIColor(white: 0.9, alpha: 1)
+        v.backgroundColor = .secondarySystemFill
         v.layer.cornerRadius = 16
         v.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMaxYCorner, .layerMaxXMinYCorner]
         v.translatesAutoresizingMaskIntoConstraints = false
@@ -285,7 +285,7 @@ class OTOutgoingMessageCell: UITableViewCell {
 class DateSeparatorCell: UITableViewCell {
     private let containerView: UIView = {
         let v = UIView()
-        v.backgroundColor = UIColor(white: 0.9, alpha: 1)
+        v.backgroundColor = .tertiarySystemFill
         v.layer.cornerRadius = 8
         v.translatesAutoresizingMaskIntoConstraints = false
         return v

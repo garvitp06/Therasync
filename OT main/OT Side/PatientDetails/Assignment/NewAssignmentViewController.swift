@@ -4,6 +4,35 @@ import UniformTypeIdentifiers
 import Supabase
 import Storage
 
+// MARK: - Assessment Summary Model
+// Uses raw JSONSerialization to avoid Codable issues with mixed-type assessment_data
+private struct AssessmentSummary {
+    let assessment_type: String
+    let assessment_data: [String: Any]
+    
+    /// Parse directly from the raw Supabase JSON response array
+    static func decodeArray(from data: Data) -> [AssessmentSummary] {
+        guard let raw = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
+            print("⚠️ AssessmentSummary: Could not parse response as array")
+            return []
+        }
+        return raw.compactMap { dict in
+            guard let type = dict["assessment_type"] as? String,
+                  let dataField = dict["assessment_data"] as? [String: Any] else { return nil }
+            return AssessmentSummary(assessment_type: type, assessment_data: dataField)
+        }
+    }
+}
+
+// MARK: - AI Recommendation State
+private enum AIRecommendationState {
+    case idle
+    case loading
+    case loaded(questions: [String])
+    case noData        // Patient has no assessments yet
+    case failed(String)
+}
+
 protocol NewAssignmentDelegate: AnyObject {
     func didCreateAssignment()
 }
@@ -12,11 +41,14 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate, UITextF
     
     // MARK: - Properties
     var patientID: String?
+    var patientName: String?          // Optional: pass patient name for better UX
     weak var delegate: NewAssignmentDelegate?
     private let maxAttachmentLimit = 5
     
     private var questionTextFields: [UITextField] = []
     private var localAttachmentURLs: [URL] = []
+    private var aiRecommendationState: AIRecommendationState = .idle
+    private var suggestedQuestions: [String] = []
     
     // MARK: - UI Components
     private let scrollView: UIScrollView = {
@@ -75,6 +107,136 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate, UITextF
     private let typePicker = UIPickerView()
     private let typeOptions = ["Quiz", "Video Submission"]
     
+    // MARK: - AI Suggestions Card
+    private let aiSuggestionsCard: UIView = {
+        let v = UIView()
+        v.backgroundColor = .white
+        v.layer.cornerRadius = 20
+        v.layer.shadowColor = UIColor.systemBlue.cgColor
+        v.layer.shadowOpacity = 0.12
+        v.layer.shadowOffset = CGSize(width: 0, height: 4)
+        v.layer.shadowRadius = 12
+        v.isHidden = true
+        v.clipsToBounds = false
+        return v
+    }()
+    
+    private let aiCardHeader: UIView = {
+        let v = UIView()
+        v.translatesAutoresizingMaskIntoConstraints = false
+        v.layer.cornerRadius = 20
+        v.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+        v.clipsToBounds = true
+        return v
+    }()
+    
+    private let aiCardGradient: CAGradientLayer = {
+        let g = CAGradientLayer()
+        g.colors = [
+            UIColor(red: 0.29, green: 0.46, blue: 1.0, alpha: 1).cgColor,
+            UIColor(red: 0.54, green: 0.28, blue: 0.97, alpha: 1).cgColor
+        ]
+        g.startPoint = CGPoint(x: 0, y: 0)
+        g.endPoint = CGPoint(x: 1, y: 1)
+        return g
+    }()
+    
+    private let aiSparkIcon: UIImageView = {
+        let iv = UIImageView(image: UIImage(systemName: "sparkles"))
+        iv.tintColor = .white
+        iv.contentMode = .scaleAspectFit
+        iv.translatesAutoresizingMaskIntoConstraints = false
+        iv.widthAnchor.constraint(equalToConstant: 22).isActive = true
+        iv.heightAnchor.constraint(equalToConstant: 22).isActive = true
+        return iv
+    }()
+    
+    private let aiHeaderTitleLabel: UILabel = {
+        let l = UILabel()
+        l.text = "AI Suggested Questions"
+        l.font = .systemFont(ofSize: 15, weight: .bold)
+        l.textColor = .white
+        l.translatesAutoresizingMaskIntoConstraints = false
+        return l
+    }()
+    
+    private let aiHeaderSubtitleLabel: UILabel = {
+        let l = UILabel()
+        l.text = "Based on patient's assessment reports"
+        l.font = .systemFont(ofSize: 12, weight: .regular)
+        l.textColor = UIColor.white.withAlphaComponent(0.8)
+        l.translatesAutoresizingMaskIntoConstraints = false
+        return l
+    }()
+    
+    private let aiRefreshButton: UIButton = {
+        let b = UIButton(type: .system)
+        b.setImage(UIImage(systemName: "arrow.clockwise"), for: .normal)
+        b.tintColor = .white
+        b.translatesAutoresizingMaskIntoConstraints = false
+        b.widthAnchor.constraint(equalToConstant: 32).isActive = true
+        b.heightAnchor.constraint(equalToConstant: 32).isActive = true
+        return b
+    }()
+    
+    private let aiBodyView: UIView = {
+        let v = UIView()
+        v.translatesAutoresizingMaskIntoConstraints = false
+        v.backgroundColor = .white
+        v.layer.cornerRadius = 20
+        v.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
+        return v
+    }()
+    
+    private let aiLoadingStack: UIStackView = {
+        let s = UIStackView()
+        s.axis = .vertical
+        s.alignment = .center
+        s.spacing = 10
+        s.translatesAutoresizingMaskIntoConstraints = false
+        s.isHidden = true
+        return s
+    }()
+    
+    private let aiLoadingSpinner: UIActivityIndicatorView = {
+        let s = UIActivityIndicatorView(style: .medium)
+        s.color = .systemBlue
+        s.hidesWhenStopped = true
+        s.translatesAutoresizingMaskIntoConstraints = false
+        return s
+    }()
+    
+    private let aiLoadingLabel: UILabel = {
+        let l = UILabel()
+        l.text = "Analysing patient's reports..."
+        l.font = .systemFont(ofSize: 14)
+        l.textColor = .systemGray
+        l.textAlignment = .center
+        l.translatesAutoresizingMaskIntoConstraints = false
+        return l
+    }()
+    
+    private let aiQuestionsStack: UIStackView = {
+        let s = UIStackView()
+        s.axis = .vertical
+        s.spacing = 0
+        s.translatesAutoresizingMaskIntoConstraints = false
+        s.isHidden = true
+        return s
+    }()
+    
+    private let aiErrorLabel: UILabel = {
+        let l = UILabel()
+        l.font = .systemFont(ofSize: 14)
+        l.textColor = .systemRed
+        l.textAlignment = .center
+        l.numberOfLines = 0
+        l.translatesAutoresizingMaskIntoConstraints = false
+        l.isHidden = true
+        return l
+    }()
+    
+    // MARK: - Manual Questions Section
     private let questionsStack: UIStackView = {
         let stack = UIStackView()
         stack.axis = .vertical
@@ -131,6 +293,16 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate, UITextF
         setupInteractions()
         typeTextField.delegate = self
         instructionTextView.delegate = self
+        
+        // Fetch patient assessments on load
+        if let pid = patientID {
+            fetchPatientAssessments(for: pid)
+        }
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        aiCardGradient.frame = aiCardHeader.bounds
     }
 
     private func setupNavBar() {
@@ -144,6 +316,7 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate, UITextF
         scrollView.addSubview(contentView)
         contentView.addSubview(mainStack)
         
+        // Type picker container
         let typeContainer = UIView()
         typeContainer.backgroundColor = .systemBackground
         typeContainer.layer.cornerRadius = 25
@@ -153,17 +326,19 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate, UITextF
         let chevronIcon = UIImageView(image: UIImage(systemName: "chevron.right"))
         chevronIcon.tintColor = .systemGray2
         chevronIcon.contentMode = .scaleAspectFit
-
         let rightView = UIView(frame: CGRect(x: 0, y: 0, width: 40, height: 20))
         chevronIcon.frame = CGRect(x: 0, y: 0, width: 20, height: 20)
         rightView.addSubview(chevronIcon)
-
         typeTextField.rightView = rightView
         typeTextField.rightViewMode = .always
+        
+        // Build AI Suggestions Card
+        setupAISuggestionsCard()
         
         mainStack.addArrangedSubview(titleTextField)
         mainStack.addArrangedSubview(instructionTextView)
         mainStack.addArrangedSubview(typeContainer)
+        mainStack.addArrangedSubview(aiSuggestionsCard)    // <-- AI card here
         mainStack.addArrangedSubview(questionsStack)
         mainStack.addArrangedSubview(addQuestionButton)
         mainStack.addArrangedSubview(attachmentButton)
@@ -188,6 +363,233 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate, UITextF
             typeTextField.trailingAnchor.constraint(equalTo: typeContainer.trailingAnchor, constant: -8),
             typeTextField.centerYAnchor.constraint(equalTo: typeContainer.centerYAnchor)
         ])
+    }
+    
+    // MARK: - AI Card Setup
+    private func setupAISuggestionsCard() {
+        aiSuggestionsCard.translatesAutoresizingMaskIntoConstraints = false
+        
+        // --- Header ---
+        aiCardHeader.layer.insertSublayer(aiCardGradient, at: 0)
+        
+        let headerTextStack = UIStackView(arrangedSubviews: [aiHeaderTitleLabel, aiHeaderSubtitleLabel])
+        headerTextStack.axis = .vertical
+        headerTextStack.spacing = 2
+        headerTextStack.translatesAutoresizingMaskIntoConstraints = false
+        
+        let headerRow = UIStackView(arrangedSubviews: [aiSparkIcon, headerTextStack, aiRefreshButton])
+        headerRow.axis = .horizontal
+        headerRow.spacing = 10
+        headerRow.alignment = .center
+        headerRow.translatesAutoresizingMaskIntoConstraints = false
+        
+        aiCardHeader.addSubview(headerRow)
+        
+        // --- Loading ---
+        aiLoadingStack.addArrangedSubview(aiLoadingSpinner)
+        aiLoadingStack.addArrangedSubview(aiLoadingLabel)
+        
+        // --- Body ---
+        aiBodyView.addSubview(aiLoadingStack)
+        aiBodyView.addSubview(aiQuestionsStack)
+        aiBodyView.addSubview(aiErrorLabel)
+        
+        // --- Assemble Card ---
+        aiSuggestionsCard.addSubview(aiCardHeader)
+        aiSuggestionsCard.addSubview(aiBodyView)
+        
+        NSLayoutConstraint.activate([
+            aiCardHeader.topAnchor.constraint(equalTo: aiSuggestionsCard.topAnchor),
+            aiCardHeader.leadingAnchor.constraint(equalTo: aiSuggestionsCard.leadingAnchor),
+            aiCardHeader.trailingAnchor.constraint(equalTo: aiSuggestionsCard.trailingAnchor),
+            aiCardHeader.heightAnchor.constraint(equalToConstant: 64),
+            
+            headerRow.leadingAnchor.constraint(equalTo: aiCardHeader.leadingAnchor, constant: 16),
+            headerRow.trailingAnchor.constraint(equalTo: aiCardHeader.trailingAnchor, constant: -16),
+            headerRow.centerYAnchor.constraint(equalTo: aiCardHeader.centerYAnchor),
+            
+            aiBodyView.topAnchor.constraint(equalTo: aiCardHeader.bottomAnchor),
+            aiBodyView.leadingAnchor.constraint(equalTo: aiSuggestionsCard.leadingAnchor),
+            aiBodyView.trailingAnchor.constraint(equalTo: aiSuggestionsCard.trailingAnchor),
+            aiBodyView.bottomAnchor.constraint(equalTo: aiSuggestionsCard.bottomAnchor),
+            
+            aiLoadingStack.centerXAnchor.constraint(equalTo: aiBodyView.centerXAnchor),
+            aiLoadingStack.topAnchor.constraint(equalTo: aiBodyView.topAnchor, constant: 20),
+            aiLoadingStack.bottomAnchor.constraint(equalTo: aiBodyView.bottomAnchor, constant: -20),
+            
+            aiQuestionsStack.topAnchor.constraint(equalTo: aiBodyView.topAnchor),
+            aiQuestionsStack.leadingAnchor.constraint(equalTo: aiBodyView.leadingAnchor),
+            aiQuestionsStack.trailingAnchor.constraint(equalTo: aiBodyView.trailingAnchor),
+            aiQuestionsStack.bottomAnchor.constraint(equalTo: aiBodyView.bottomAnchor),
+            
+            aiErrorLabel.centerXAnchor.constraint(equalTo: aiBodyView.centerXAnchor),
+            aiErrorLabel.topAnchor.constraint(equalTo: aiBodyView.topAnchor, constant: 20),
+            aiErrorLabel.bottomAnchor.constraint(equalTo: aiBodyView.bottomAnchor, constant: -20),
+            aiErrorLabel.leadingAnchor.constraint(equalTo: aiBodyView.leadingAnchor, constant: 16),
+            aiErrorLabel.trailingAnchor.constraint(equalTo: aiBodyView.trailingAnchor, constant: -16),
+        ])
+        
+        aiRefreshButton.addTarget(self, action: #selector(didTapRefreshAI), for: .touchUpInside)
+    }
+    
+    // MARK: - AI Card State Rendering
+    private func renderAIState(_ state: AIRecommendationState) {
+        // Only show card when Quiz is selected
+        let isQuiz = typeTextField.text == "Quiz"
+        
+        switch state {
+        case .idle, .noData:
+            // No assessments: card stays hidden entirely
+            aiSuggestionsCard.isHidden = true
+            
+        case .loading:
+            if isQuiz {
+                aiSuggestionsCard.isHidden = false
+                aiLoadingStack.isHidden = false
+                aiQuestionsStack.isHidden = true
+                aiErrorLabel.isHidden = true
+                aiLoadingSpinner.startAnimating()
+                aiRefreshButton.isEnabled = false
+            }
+            
+        case .loaded(let questions):
+            if isQuiz {
+                aiSuggestionsCard.isHidden = false
+                aiLoadingStack.isHidden = true
+                aiErrorLabel.isHidden = true
+                aiLoadingSpinner.stopAnimating()
+                aiRefreshButton.isEnabled = true
+                
+                // Clear and rebuild question rows
+                aiQuestionsStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+                aiQuestionsStack.isHidden = false
+                
+                for (i, q) in questions.enumerated() {
+                    let row = buildAISuggestionRow(question: q, isLast: i == questions.count - 1)
+                    aiQuestionsStack.addArrangedSubview(row)
+                }
+            }
+            
+        case .failed(let msg):
+            if isQuiz {
+                aiSuggestionsCard.isHidden = false
+                aiLoadingStack.isHidden = true
+                aiQuestionsStack.isHidden = true
+                aiLoadingSpinner.stopAnimating()
+                aiRefreshButton.isEnabled = true
+                aiErrorLabel.isHidden = false
+                aiErrorLabel.text = "⚠️ \(msg)"
+            }
+        }
+        
+        // Animate layout update
+        UIView.animate(withDuration: 0.3) {
+            self.view.layoutIfNeeded()
+        }
+    }
+    
+    private func buildAISuggestionRow(question: String, isLast: Bool) -> UIView {
+        let container = UIView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+        container.backgroundColor = .white
+        
+        let label = UILabel()
+        label.text = question
+        label.font = .systemFont(ofSize: 14.5, weight: .regular)
+        label.textColor = UIColor(white: 0.2, alpha: 1)
+        label.numberOfLines = 0
+        label.translatesAutoresizingMaskIntoConstraints = false
+        
+        let addBtn = UIButton(type: .system)
+        addBtn.setImage(UIImage(systemName: "plus.circle.fill"), for: .normal)
+        addBtn.tintColor = .systemBlue
+        addBtn.translatesAutoresizingMaskIntoConstraints = false
+        addBtn.widthAnchor.constraint(equalToConstant: 28).isActive = true
+        addBtn.heightAnchor.constraint(equalToConstant: 28).isActive = true
+        
+        // Pass question text via closure
+        addBtn.addAction(UIAction { [weak self] _ in
+            self?.addSuggestedQuestionToQuiz(question)
+            // Visual feedback: dim the row
+            UIView.animate(withDuration: 0.2) {
+                container.alpha = 0.4
+                addBtn.isEnabled = false
+            }
+        }, for: .touchUpInside)
+        
+        container.addSubview(label)
+        container.addSubview(addBtn)
+        
+        NSLayoutConstraint.activate([
+            addBtn.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -14),
+            addBtn.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            addBtn.topAnchor.constraint(greaterThanOrEqualTo: container.topAnchor, constant: 14),
+            addBtn.bottomAnchor.constraint(lessThanOrEqualTo: container.bottomAnchor, constant: -14),
+            
+            label.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 16),
+            label.trailingAnchor.constraint(equalTo: addBtn.leadingAnchor, constant: -8),
+            label.topAnchor.constraint(equalTo: container.topAnchor, constant: 14),
+            label.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -14),
+        ])
+        
+        if !isLast {
+            let sep = UIView()
+            sep.backgroundColor = UIColor.systemGray5
+            sep.translatesAutoresizingMaskIntoConstraints = false
+            container.addSubview(sep)
+            NSLayoutConstraint.activate([
+                sep.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 16),
+                sep.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -16),
+                sep.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+                sep.heightAnchor.constraint(equalToConstant: 0.5)
+            ])
+        }
+        
+        return container
+    }
+    
+    private func addSuggestedQuestionToQuiz(_ question: String) {
+        // Ensure questions are visible
+        questionsStack.isHidden = false
+        addQuestionButton.isHidden = false
+        
+        let container = UIStackView()
+        container.axis = .horizontal
+        container.spacing = 10
+        container.alignment = .center
+
+        let tf = UITextField()
+        tf.text = question
+        tf.backgroundColor = .white
+        tf.layer.cornerRadius = 20
+        tf.heightAnchor.constraint(equalToConstant: 45).isActive = true
+        tf.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: 45))
+        tf.leftViewMode = .always
+        
+        let deleteBtn = UIButton(type: .system)
+        deleteBtn.setImage(UIImage(systemName: "minus.circle.fill"), for: .normal)
+        deleteBtn.tintColor = .systemRed
+        
+        deleteBtn.addAction(UIAction(handler: { [weak self, weak container] _ in
+            self?.confirmDeletion(title: "Delete Question", message: "Are you sure you want to remove this question?") {
+                guard let container = container else { return }
+                if let index = self?.questionTextFields.firstIndex(of: tf) {
+                    self?.questionTextFields.remove(at: index)
+                }
+                container.removeFromSuperview()
+            }
+        }), for: .touchUpInside)
+
+        container.addArrangedSubview(tf)
+        container.addArrangedSubview(deleteBtn)
+        
+        questionTextFields.append(tf)
+        questionsStack.addArrangedSubview(container)
+        
+        // Scroll to newly added question
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            self?.scrollView.scrollToBottom(animated: true)
+        }
     }
 
     private func setupPickers() {
@@ -221,6 +623,9 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate, UITextF
         questionsStack.isHidden = !isQuiz
         addQuestionButton.isHidden = !isQuiz
         view.endEditing(true)
+        
+        // Show/hide AI card based on current state when Quiz is selected
+        renderAIState(aiRecommendationState)
     }
 
     @objc private func didTapAddQuestion() {
@@ -258,6 +663,11 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate, UITextF
         questionsStack.addArrangedSubview(container)
     }
 
+    @objc private func didTapRefreshAI() {
+        guard let pid = patientID else { return }
+        fetchPatientAssessments(for: pid)
+    }
+
     @objc private func didTapAttachments() {
         let alert = UIAlertController(title: "Add Attachment", message: "You can select multiple files.", preferredStyle: .actionSheet)
         alert.addAction(UIAlertAction(title: "Photos or Videos", style: .default, handler: { _ in self.showPhotoPicker() }))
@@ -268,7 +678,7 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate, UITextF
 
     private func showPhotoPicker() {
         var config = PHPickerConfiguration()
-        config.selectionLimit = 0 // 0 means multiple selection
+        config.selectionLimit = 0
         config.filter = .any(of: [.images, .videos])
         let picker = PHPickerViewController(configuration: config)
         picker.delegate = self
@@ -276,9 +686,7 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate, UITextF
     }
     
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-        if textField == typeTextField {
-            return false // This disables the keyboard typing
-        }
+        if textField == typeTextField { return false }
         return true
     }
     
@@ -331,12 +739,8 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate, UITextF
                 }
             } catch {
                 await MainActor.run {
-                    // Reset UI
                     self.navigationItem.rightBarButtonItem = UIBarButtonItem(image: UIImage(systemName: "checkmark"), style: .done, target: self, action: #selector(self.didTapSave))
                     self.view.isUserInteractionEnabled = true
-                    
-                    // Show exact error reason
-                    print("❌ Save Error: \(error)")
                     let alert = UIAlertController(title: "Upload Failed", message: error.localizedDescription, preferredStyle: .alert)
                     alert.addAction(UIAlertAction(title: "OK", style: .default))
                     self.present(alert, animated: true)
@@ -346,7 +750,6 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate, UITextF
     }
 
     // MARK: - Safe Filename Helper
-    /// Removes ALL characters that aren't letters, numbers, dashes, underscores, or periods.
     private func sanitizeFileName(_ fileName: String) -> String {
         let allowedCharacters = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: ".-_"))
         return fileName.components(separatedBy: allowedCharacters.inverted).joined(separator: "_")
@@ -355,10 +758,7 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate, UITextF
     private func uploadAttachments() async throws -> [String] {
         var urls: [String] = []
         for localUrl in localAttachmentURLs {
-            // Because we already sanitized the filename when copying it to the temp directory,
-            // localUrl.lastPathComponent is guaranteed to be Supabase-safe.
             let fileName = localUrl.lastPathComponent
-            
             let data = try Data(contentsOf: localUrl)
             try await supabase.storage.from("assignment-attachments").upload(path: fileName, file: data, options: FileOptions(contentType: "application/octet-stream"))
             let publicUrl = try supabase.storage.from("assignment-attachments").getPublicURL(path: fileName)
@@ -396,7 +796,6 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate, UITextF
         deleteBtn.setImage(UIImage(systemName: "xmark.circle.fill"), for: .normal)
         deleteBtn.tintColor = .systemGray2
         deleteBtn.translatesAutoresizingMaskIntoConstraints = false
-        
         deleteBtn.setContentHuggingPriority(.required, for: .horizontal)
         deleteBtn.setContentCompressionResistancePriority(.required, for: .horizontal)
         
@@ -405,19 +804,16 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate, UITextF
             icon.centerYAnchor.constraint(equalTo: card.centerYAnchor),
             icon.widthAnchor.constraint(equalToConstant: 24),
             icon.heightAnchor.constraint(equalToConstant: 24),
-            
             label.leadingAnchor.constraint(equalTo: icon.trailingAnchor, constant: 10),
             label.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -12),
             label.topAnchor.constraint(equalTo: card.topAnchor, constant: 8),
             label.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -8),
-            
             deleteBtn.widthAnchor.constraint(equalToConstant: 30),
             deleteBtn.heightAnchor.constraint(equalToConstant: 30)
         ])
         
         container.addArrangedSubview(card)
         container.addArrangedSubview(deleteBtn)
-        
         attachmentsStack.addArrangedSubview(container)
         localAttachmentURLs.append(url)
         
@@ -426,13 +822,10 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate, UITextF
                 if let index = self?.localAttachmentURLs.firstIndex(where: { $0.absoluteString == url.absoluteString }) {
                     self?.localAttachmentURLs.remove(at: index)
                 }
-                
                 UIView.animate(withDuration: 0.2, animations: {
                     container?.alpha = 0
                     container?.isHidden = true
-                }) { _ in
-                    container?.removeFromSuperview()
-                }
+                }) { _ in container?.removeFromSuperview() }
             }
         }), for: .touchUpInside)
     }
@@ -445,6 +838,177 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate, UITextF
     }
 }
 
+// MARK: - AI Integration
+extension NewAssignmentViewController {
+    
+    /// Step 1: Fetch all assessment records for this patient from Supabase
+    private func fetchPatientAssessments(for patientID: String) {
+        aiRecommendationState = .loading
+        renderAIState(.loading)
+        
+        Task {
+            do {
+                let response = try await supabase
+                    .from("assessments")
+                    .select("assessment_type, assessment_data, created_at")
+                    .eq("patient_id", value: patientID)
+                    .order("created_at", ascending: false)
+                    .execute()
+                
+                // Use our custom JSONSerialization-based parser
+                // to safely handle mixed-type assessment_data values
+                let assessments = AssessmentSummary.decodeArray(from: response.data)
+                print("✅ Fetched \(assessments.count) assessment(s) for patient \(patientID)")
+                
+                if assessments.isEmpty {
+                    await MainActor.run {
+                        self.aiRecommendationState = .noData
+                        self.renderAIState(.noData)
+                    }
+                } else {
+                    let summaryText = buildAssessmentSummary(from: assessments)
+                    print("📋 Summary built (\(summaryText.count) chars)")
+                    await generateAIQuestions(from: summaryText)
+                }
+            } catch {
+                print("❌ Supabase fetch error: \(error)")
+                await MainActor.run {
+                    self.aiRecommendationState = .failed("Could not load assessment data.")
+                    self.renderAIState(self.aiRecommendationState)
+                }
+            }
+        }
+    }
+    
+    /// Converts raw assessment records into a compact text block for the AI prompt
+    private func buildAssessmentSummary(from assessments: [AssessmentSummary]) -> String {
+        var lines: [String] = ["Patient Assessment Summary:"]
+        var seen = Set<String>()
+        
+        for a in assessments {
+            if seen.contains(a.assessment_type) { continue }
+            seen.insert(a.assessment_type)
+            lines.append("\n[\(a.assessment_type)]")
+            
+            for (key, value) in a.assessment_data {
+                // Safely convert any value type to String
+                let v: String
+                if let s = value as? String { v = s }
+                else if let n = value as? NSNumber { v = n.stringValue }
+                else { v = "\(value)" }
+                
+                guard !v.isEmpty, v != "<null>" else { continue }
+                let truncated = v.count > 100 ? String(v.prefix(100)) + "…" : v
+                lines.append("  \(key): \(truncated)")
+            }
+        }
+        return lines.joined(separator: "\n")
+    }
+    
+    /// Step 2: Call the Gemini API and parse out recommended questions
+    private func generateAIQuestions(from summary: String) async {
+        // ── Guard: API key must be present ───────────────────────────
+        let apiKey = APIConfig.geminiAPIKey
+        guard !apiKey.isEmpty else {
+            print("❌ API key is empty — add GEMINI_API_KEY to Info.plist")
+            await MainActor.run {
+                self.aiRecommendationState = .failed("API key not configured.\nAdd your key to Info.plist.")
+                self.renderAIState(self.aiRecommendationState)
+            }
+            return
+        }
+        
+        let systemPrompt = """
+        You are an expert Occupational Therapist (OT) assistant. You will receive a summary of a patient's assessment data. Your job is to suggest 6 concise, clinically relevant quiz questions that an OT can assign to this patient to track their progress. Questions must be specific to the patient's documented difficulties and strengths. Return ONLY a valid JSON array of 6 strings.
+        """
+        
+        let userMessage = """
+        Based on the following patient assessment data, suggest 6 targeted quiz questions for an occupational therapy assignment:
+
+        \(summary)
+        """
+        
+        // Build the Gemini API Request Body
+        let body: [String: Any] = [
+            "systemInstruction": [
+                "parts": [["text": systemPrompt]]
+            ],
+            "contents": [
+                ["parts": [["text": userMessage]]]
+            ],
+            "generationConfig": [
+                "responseMimeType": "application/json"
+            ]
+        ]
+        
+        do {
+            // Using the current free gemini-2.5-flash model
+            guard let url = URL(string: "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=\(apiKey)") else {
+                throw URLError(.badURL)
+            }
+            
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.timeoutInterval = 30
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = try JSONSerialization.data(withJSONObject: body)
+            
+            print("📡 Calling Gemini API...")
+            let (data, httpResponse) = try await URLSession.shared.data(for: request)
+            
+            // ── Check HTTP status ─────────────────────────────────────
+            if let http = httpResponse as? HTTPURLResponse {
+                print("📡 Gemini API status: \(http.statusCode)")
+                if http.statusCode != 200 {
+                    let errBody = String(data: data, encoding: .utf8) ?? "no body"
+                    print("❌ Gemini API error body: \(errBody)")
+                    let msg = "API error (\(http.statusCode)).\nTap ↺ to retry."
+                    
+                    await MainActor.run {
+                        self.aiRecommendationState = .failed(msg)
+                        self.renderAIState(self.aiRecommendationState)
+                    }
+                    return
+                }
+            }
+            
+            // ── Parse Gemini response ────────────────────────────────────────
+            guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let candidates = json["candidates"] as? [[String: Any]],
+                  let firstCandidate = candidates.first,
+                  let content = firstCandidate["content"] as? [String: Any],
+                  let parts = content["parts"] as? [[String: Any]],
+                  let firstPart = parts.first,
+                  let rawText = firstPart["text"] as? String else {
+                print("❌ Could not parse Gemini response JSON")
+                throw NSError(domain: "AIError", code: -1)
+            }
+            
+            print("📝 Gemini raw response: \(rawText)")
+            
+            guard let jsonData = rawText.data(using: .utf8),
+                  let questions = try? JSONDecoder().decode([String].self, from: jsonData),
+                  !questions.isEmpty else {
+                print("❌ Could not parse questions array from response")
+                throw NSError(domain: "AIError", code: -2)
+            }
+            
+            print("✅ Got \(questions.count) AI questions")
+            await MainActor.run {
+                self.aiRecommendationState = .loaded(questions: questions)
+                self.renderAIState(self.aiRecommendationState)
+            }
+            
+        } catch {
+            print("❌ generateAIQuestions error: \(error)")
+            await MainActor.run {
+                self.aiRecommendationState = .failed("Failed to generate suggestions.\nTap ↺ to retry.")
+                self.renderAIState(self.aiRecommendationState)
+            }
+        }
+    }
+}
+
 // MARK: - Delegates
 extension NewAssignmentViewController: UIPickerViewDelegate, UIPickerViewDataSource, PHPickerViewControllerDelegate, UIDocumentPickerDelegate {
     func numberOfComponents(in pickerView: UIPickerView) -> Int { 1 }
@@ -453,76 +1017,62 @@ extension NewAssignmentViewController: UIPickerViewDelegate, UIPickerViewDataSou
     
     func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
         picker.dismiss(animated: true)
-        
         let remainingSlots = maxAttachmentLimit - localAttachmentURLs.count
-        if results.count > remainingSlots {
-            showLimitAlert()
-            return
-        }
+        if results.count > remainingSlots { showLimitAlert(); return }
 
         for result in results {
             result.itemProvider.loadFileRepresentation(forTypeIdentifier: UTType.item.identifier) { [weak self] (url, error) in
                 guard let self = self, let localUrl = url else { return }
-                
-                // Scrub the original file name of any weird characters/spaces BEFORE saving
                 let safeOriginalName = self.sanitizeFileName(localUrl.lastPathComponent)
                 let uniqueFileName = UUID().uuidString + "_" + safeOriginalName
                 let tempUrl = FileManager.default.temporaryDirectory.appendingPathComponent(uniqueFileName)
-                
                 do {
-                    if FileManager.default.fileExists(atPath: tempUrl.path) {
-                        try FileManager.default.removeItem(at: tempUrl)
-                    }
+                    if FileManager.default.fileExists(atPath: tempUrl.path) { try FileManager.default.removeItem(at: tempUrl) }
                     try FileManager.default.copyItem(at: localUrl, to: tempUrl)
-                    DispatchQueue.main.async {
-                        self.addAttachmentRow(name: localUrl.lastPathComponent, iconName: "photo.fill", url: tempUrl)
-                    }
-                } catch {
-                    print("Error copying file to temporary directory: \(error)")
-                }
+                    DispatchQueue.main.async { self.addAttachmentRow(name: localUrl.lastPathComponent, iconName: "photo.fill", url: tempUrl) }
+                } catch { print("Error copying file: \(error)") }
             }
         }
     }
     
     private func showLimitAlert() {
-        let alert = UIAlertController(
-            title: "Limit Exceeded",
-            message: "You can only add up to \(maxAttachmentLimit) attachments per assignment.",
-            preferredStyle: .alert
-        )
+        let alert = UIAlertController(title: "Limit Exceeded", message: "You can only add up to \(maxAttachmentLimit) attachments per assignment.", preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
     }
     
     func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
         let remainingSlots = maxAttachmentLimit - localAttachmentURLs.count
-        if urls.count > remainingSlots {
-            showLimitAlert()
-            return
-        }
-
+        if urls.count > remainingSlots { showLimitAlert(); return }
         for url in urls {
             let hasAccess = url.startAccessingSecurityScopedResource()
-            defer {
-                if hasAccess {
-                    url.stopAccessingSecurityScopedResource()
-                }
-            }
-            
-            // Scrub the original file name of any weird characters/spaces BEFORE saving
+            defer { if hasAccess { url.stopAccessingSecurityScopedResource() } }
             let safeOriginalName = self.sanitizeFileName(url.lastPathComponent)
             let uniqueFileName = UUID().uuidString + "_" + safeOriginalName
             let tempUrl = FileManager.default.temporaryDirectory.appendingPathComponent(uniqueFileName)
-            
             do {
-                if FileManager.default.fileExists(atPath: tempUrl.path) {
-                    try FileManager.default.removeItem(at: tempUrl)
-                }
+                if FileManager.default.fileExists(atPath: tempUrl.path) { try FileManager.default.removeItem(at: tempUrl) }
                 try FileManager.default.copyItem(at: url, to: tempUrl)
                 addAttachmentRow(name: url.lastPathComponent, iconName: "doc.fill", url: tempUrl)
-            } catch {
-                print("Error copying document to temporary directory: \(error)")
-            }
+            } catch { print("Error copying document: \(error)") }
         }
     }
+}
+
+// MARK: - UIScrollView Helper
+private extension UIScrollView {
+    func scrollToBottom(animated: Bool) {
+        let bottom = CGPoint(x: 0, y: max(0, contentSize.height - bounds.height + contentInset.bottom))
+        setContentOffset(bottom, animated: animated)
+    }
+}
+
+// MARK: - API Config
+// ⚠️ IMPORTANT: Never hard-code your API key in production.
+// Move this to a .xcconfig / secrets file, or better yet, proxy through your backend.
+enum APIConfig {
+    static let geminiAPIKey: String = {
+        // Read from Info.plist: add GEMINI_API_KEY to your .xcconfig and Info.plist
+        Bundle.main.object(forInfoDictionaryKey: "GEMINI_API_KEY") as? String ?? ""
+    }()
 }

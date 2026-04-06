@@ -46,7 +46,7 @@ final class ADOSAssessmentViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        NotificationCenter.default.addObserver(self, selector: #selector(handleAIUpdate), name: NSNotification.Name("AI_Assessment_Updated"), object: nil)
         // LOAD SESSION
         if let pid = patientID {
             // FIX: Use the new helper method to get answers safely
@@ -71,7 +71,26 @@ final class ADOSAssessmentViewController: UIViewController {
     deinit {
         // NSKeyValueObservation automatically cleans up
     }
-
+    @objc private func handleAIUpdate() {
+        guard let pid = patientID else { return }
+        let allAnswers = AssessmentSessionManager.shared.getTestAnswers(for: pid)
+        
+        if let saved = allAnswers["ADOS"] as? [Int: Int] {
+            var updatedAny = false
+            for (idx, optIdx) in saved {
+                if self.selectedAnswers[idx] != optIdx {
+                    self.currentIndex = idx
+                    updatedAny = true
+                }
+            }
+            if updatedAny {
+                self.selectedAnswers = saved
+                loadQuestion(animated: true)
+            } else {
+                self.selectedAnswers = saved
+            }
+        }
+    }
     private func setupUI() {
         view.addSubview(backgroundGradient)
         view.addSubview(progressView)
@@ -248,16 +267,20 @@ extension ADOSAssessmentViewController: UITableViewDataSource, UITableViewDelega
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        selectedAnswers[currentIndex] = indexPath.row
-        
-        // SAVE SESSION
-        if let pid = patientID {
-            // FIX: Use the new helper method to save answers safely
-            AssessmentSessionManager.shared.updateTestAnswer(for: pid, key: "ADOS", value: selectedAnswers)
+            selectedAnswers[currentIndex] = indexPath.row
+            
+            // SAVE SESSION AND LOCK FOR AI
+            if let pid = patientID {
+                // 1. Lock the field using the correct array and index names
+                let key = "ADOS_Q\(ADOSData.questions[currentIndex].id)"
+                AssessmentSessionManager.shared.lockField(for: pid, key: key)
+                
+                // 2. Save the updated dictionary to the session manager
+                AssessmentSessionManager.shared.updateTestAnswer(for: pid, key: "ADOS", value: selectedAnswers)
+            }
+            
+            tableView.reloadData()
+            nextButton.isEnabled = true
+            nextButton.alpha = 1.0
         }
-        
-        tableView.reloadData()
-        nextButton.isEnabled = true
-        nextButton.alpha = 1.0
-    }
 }

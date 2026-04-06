@@ -205,10 +205,13 @@ final class AssessmentCarryForwardViewController: UIViewController {
                     .eq("assessment_type", value: assessmentType)
                     .order("created_at", ascending: false)
                     .limit(1)
-                    .single()
                     .execute()
 
-                let decoded = try JSONDecoder().decode(AssessmentRecord.self, from: response.data)
+                let decodedArray = try JSONDecoder().decode([AssessmentRecord].self, from: response.data)
+                
+                guard let decoded = decodedArray.first else {
+                    throw NSError(domain: "", code: 404, userInfo: [NSLocalizedDescriptionKey: "No previous record found"])
+                }
 
                 // Parse date
                 let formatter = ISO8601DateFormatter()

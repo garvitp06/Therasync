@@ -3,7 +3,7 @@
 //  OT main
 //
 //  Created by Garvit Pareek on 30/01/2026.
-//
+
 
 import Foundation
 
@@ -26,13 +26,21 @@ class AssessmentSessionManager {
         var medicalNotes: String = ""
         var didFetchMedical: Bool = false
         
-        // NEW: Birth History
+        // Birth History
         var birthHistoryData: [String: String] = [:]
         var didFetchBirthHistory: Bool = false
         
-        // NEW: School Complaints
+        // School Complaints
         var schoolComplaintsData: [String: String] = [:]
         var didFetchSchoolComplaints: Bool = false
+        
+        // NEW: Generic store for all Sub-Section based text forms
+        // (Daily Living, Developmental History, Family & Environment)
+        var subSectionData: [String: [String: String]] = [:]
+        var didFetchSubSection: [String: Bool] = [:]
+        
+        // AI Lock Fields
+        var manuallyEditedFields: Set<String> = []
     }
     
     // MARK: - General Getters
@@ -66,7 +74,7 @@ class AssessmentSessionManager {
         patientSessions[patientID]?.didFetchMedical = didFetch
     }
     
-    // MARK: - Birth History (NEW)
+    // MARK: - Birth History
     func getBirthHistory(for patientID: String) -> (data: [String: String], didFetch: Bool) {
         let session = patientSessions[patientID]
         return (session?.birthHistoryData ?? [:], session?.didFetchBirthHistory ?? false)
@@ -78,7 +86,7 @@ class AssessmentSessionManager {
         patientSessions[patientID]?.didFetchBirthHistory = didFetch
     }
     
-    // MARK: - School Complaints (NEW)
+    // MARK: - School Complaints
     func getSchoolComplaints(for patientID: String) -> (data: [String: String], didFetch: Bool) {
         let session = patientSessions[patientID]
         return (session?.schoolComplaintsData ?? [:], session?.didFetchSchoolComplaints ?? false)
@@ -88,6 +96,21 @@ class AssessmentSessionManager {
         ensureSessionExists(for: patientID)
         patientSessions[patientID]?.schoolComplaintsData = data
         patientSessions[patientID]?.didFetchSchoolComplaints = didFetch
+    }
+    
+    // MARK: - Generic Sub-Section Data (NEW)
+    // Handles: Daily Living, Developmental History, Family & Environment
+    func getSubSectionData(for patientID: String, subSection: String) -> (data: [String: String], didFetch: Bool) {
+        let session = patientSessions[patientID]
+        let data = session?.subSectionData[subSection] ?? [:]
+        let didFetch = session?.didFetchSubSection[subSection] ?? false
+        return (data, didFetch)
+    }
+    
+    func updateSubSectionData(for patientID: String, subSection: String, data: [String: String], didFetch: Bool = true) {
+        ensureSessionExists(for: patientID)
+        patientSessions[patientID]?.subSectionData[subSection] = data
+        patientSessions[patientID]?.didFetchSubSection[subSection] = didFetch
     }
     
     // MARK: - General Setters
@@ -110,6 +133,17 @@ class AssessmentSessionManager {
     func updateTestAnswer(for patientID: String, key: String, value: Any) {
         ensureSessionExists(for: patientID)
         patientSessions[patientID]?.testAnswers[key] = value
+    }
+    
+    // MARK: - AI Lock Management
+    
+    func lockField(for patientID: String, key: String) {
+        ensureSessionExists(for: patientID)
+        patientSessions[patientID]?.manuallyEditedFields.insert(key)
+    }
+
+    func isFieldLocked(for patientID: String, key: String) -> Bool {
+        return patientSessions[patientID]?.manuallyEditedFields.contains(key) ?? false
     }
     
     // MARK: - Helpers

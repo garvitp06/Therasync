@@ -101,6 +101,8 @@ final class BirthHistoryViewController: UIViewController {
         setupUI()
         loadData()
         
+        NotificationCenter.default.addObserver(self, selector: #selector(handleAIUpdate), name: NSNotification.Name("AI_Assessment_Updated"), object: nil)
+        
         let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
         tap.cancelsTouchesInView = false
         view.addGestureRecognizer(tap)
@@ -121,6 +123,19 @@ final class BirthHistoryViewController: UIViewController {
         }
     }
     
+    @objc private func handleAIUpdate() {
+        guard let pid = patientID else { return }
+        
+        // Call the specific getter for this screen
+        // e.g., getBirthHistory, getSchoolComplaints, etc.
+        let session = AssessmentSessionManager.shared.getBirthHistory(for: pid)
+        
+        if session.didFetch {
+            applyDictionary(session.data) // Or applyDictionaryToValues, depending on the file
+            tableView.reloadData()
+        }
+    }
+    
     private func fetchFromSupabase() {
         guard let pid = patientID else { return }
         Task {
@@ -136,16 +151,21 @@ final class BirthHistoryViewController: UIViewController {
                     .eq("assessment_type", value: "Birth History")
                     .order("created_at", ascending: false)
                     .limit(1)
-                    .single()
                     .execute()
                 
-                let decoded = try JSONDecoder().decode(HistoryData.self, from: response.data)
-                self.existingRecordID = decoded.id
+                let decoded = try JSONDecoder().decode([HistoryData].self, from: response.data)
+                guard let first = decoded.first else {
+                    await MainActor.run {
+                        AssessmentSessionManager.shared.updateBirthHistory(for: pid, data: [:], didFetch: true)
+                    }
+                    return
+                }
+                self.existingRecordID = first.id
                 
                 await MainActor.run {
-                    self.applyDictionary(decoded.assessment_data)
+                    self.applyDictionary(first.assessment_data)
                     self.tableView.reloadData()
-                    AssessmentSessionManager.shared.updateBirthHistory(for: pid, data: decoded.assessment_data, didFetch: true)
+                    AssessmentSessionManager.shared.updateBirthHistory(for: pid, data: first.assessment_data, didFetch: true)
                 }
             } catch {
                 print("Birth History fetch: \(error)")
@@ -257,19 +277,31 @@ extension BirthHistoryViewController: UITableViewDataSource, UITableViewDelegate
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: VoiceTextInputCell.reuseID, for: indexPath) as! VoiceTextInputCell
-        let field = sections[indexPath.section].fields[indexPath.row]
-        let idx = flatIndex(section: indexPath.section, row: indexPath.row)
-        cell.configure(title: field, value: values[idx])
-        cell.onTextChange = { [weak self] txt in
-            guard let self = self else { return }
-            self.values[idx] = txt
-            if let pid = self.patientID {
+            let cell = tableView.dequeueReusableCell(withIdentifier: VoiceTextInputCell.reuseID, for: indexPath) as! VoiceTextInputCell
+            
+            let field = sections[indexPath.section].fields[indexPath.row]
+            let idx = flatIndex(section: indexPath.section, row: indexPath.row)
+            
+            cell.configure(title: field, value: values[idx])
+            
+            cell.onTextChange = { [weak self] txt in
+                guard let self = self, let pid = self.patientID else { return }
+                
+                // 1. Update the local array
+                self.values[idx] = txt
+                
+                // 2. LOCK THE FIELD for AI
+                // Create a clean key using the first 15 characters of the field name
+                let shortQuestion = String(field.prefix(15)).replacingOccurrences(of: " ", with: "")
+                let lockKey = "BirthHistory_\(shortQuestion)"
+                AssessmentSessionManager.shared.lockField(for: pid, key: lockKey)
+                
+                // 3. Save to Session Manager
                 AssessmentSessionManager.shared.updateBirthHistory(for: pid, data: self.getCurrentDictionary(), didFetch: true)
             }
+            
+            return cell
         }
-        return cell
-    }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat { return UITableView.automaticDimension }
     func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat { return 85 }

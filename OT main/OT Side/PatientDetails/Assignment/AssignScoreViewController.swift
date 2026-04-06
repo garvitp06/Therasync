@@ -132,25 +132,7 @@ class AssignScoreViewController: UIViewController {
         appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
         navigationController?.navigationBar.standardAppearance = appearance
         navigationController?.navigationBar.scrollEdgeAppearance = appearance
-        
-        // FIX: Clean Back Button Implementation
-        let backButton = UIButton(type: .system)
-        let config = UIImage.SymbolConfiguration(weight: .bold)
-        let image = UIImage(systemName: "chevron.backward", withConfiguration: config)
-        backButton.setImage(image, for: .normal)
-        backButton.tintColor = .white
-        backButton.backgroundColor = UIColor.label.withAlphaComponent(0.2) // Subtle circle bg
-        backButton.layer.cornerRadius = 18
-        backButton.addTarget(self, action: #selector(backButtonTapped), for: .touchUpInside)
-        
-        // Constraints for the button itself
-        backButton.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            backButton.widthAnchor.constraint(equalToConstant: 36),
-            backButton.heightAnchor.constraint(equalToConstant: 36)
-        ])
-        
-        navigationItem.leftBarButtonItem = UIBarButtonItem(customView: backButton)
+        navigationController?.navigationBar.tintColor = .white
     }
 
     private func setupViews() {
@@ -206,10 +188,6 @@ class AssignScoreViewController: UIViewController {
     
     // MARK: - Actions
 
-    @objc private func backButtonTapped() {
-        navigationController?.popViewController(animated: true)
-    }
-    
     @objc private func dismissKeyboard() {
         view.endEditing(true)
     }

@@ -294,7 +294,7 @@ class ParentOutgoingCell: UITableViewCell {
     }()
     private let label: UILabel = {
         let l = UILabel()
-        l.textColor = .label
+        l.textColor = .black
         l.numberOfLines = 0
         return l
     }()
@@ -327,7 +327,7 @@ class ParentOutgoingCell: UITableViewCell {
 class ParentIncomingCell: UITableViewCell {
     private let bubbleView: UIView = {
         let v = UIView()
-        v.backgroundColor = UIColor(white: 0.9, alpha: 1)
+        v.backgroundColor = .secondarySystemFill
         v.layer.cornerRadius = 16
         v.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMaxYCorner, .layerMaxXMinYCorner]
         return v

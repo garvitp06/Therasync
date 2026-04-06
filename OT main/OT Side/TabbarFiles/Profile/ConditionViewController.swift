@@ -11,7 +11,7 @@ final class ConditionViewController: UIViewController {
     // MARK: - UI Components
     private let cardView: UIView = {
         let v = UIView()
-        v.backgroundColor = .white
+        v.backgroundColor = .systemBackground
         v.layer.cornerRadius = 24
         v.layer.shadowColor = UIColor.black.cgColor
         v.layer.shadowOpacity = 0.1
@@ -28,7 +28,7 @@ final class ConditionViewController: UIViewController {
         tv.alwaysBounceVertical = true
         tv.font = .systemFont(ofSize: 16, weight: .regular)
         tv.backgroundColor = .clear
-        tv.textColor = .darkGray 
+        tv.textColor = .secondaryLabel 
         tv.textAlignment = .justified
         tv.layoutManager.hyphenationFactor = 1.0
         tv.showsVerticalScrollIndicator = true

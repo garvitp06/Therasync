@@ -20,13 +20,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             // 1. Initialize the window
             let window = UIWindow(windowScene: windowScene)
             
-            // 2. Check the saved Dark Mode setting
-            // If "Dark Mode" hasn't been set yet, this returns false (Light Mode)
-            let isDarkMode = UserDefaults.standard.bool(forKey: "Dark Mode")
-            
-            // 3. Force the window to follow your app's setting, NOT the system setting
-            window.overrideUserInterfaceStyle = isDarkMode ? .dark : .light
-            
             // 4. Setup your Root View Controller
             let splashVC = SplashViewController()
             window.rootViewController = splashVC

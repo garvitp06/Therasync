@@ -181,7 +181,7 @@ class BubblePopViewController: UIViewController {
         
         bubble.layer.cornerRadius = size / 2
         bubble.layer.borderWidth = 3
-        bubble.layer.borderColor = UIColor.white.cgColor
+        bubble.layer.borderColor = UIColor.systemBackground.cgColor
         bubble.isUserInteractionEnabled = false
         bubble.tag = 0 // Tag 0 means it has NOT been popped
         

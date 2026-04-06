@@ -20,7 +20,7 @@ class ChatCell: UITableViewCell {
     private let nameLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 17, weight: .semibold)
-        label.textColor = .black
+        label.textColor = .label
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -137,7 +137,7 @@ class ChatCell: UITableViewCell {
             unreadCountLabel.text = "\(chat.unreadCount)"
             timeLabel.textColor = UIColor(red: 0.14, green: 0.80, blue: 0.38, alpha: 1.0)
             timeLabel.font = .systemFont(ofSize: 12, weight: .semibold)
-            messageLabel.textColor = .black
+            messageLabel.textColor = .label
         } else {
             unreadBadgeContainer.isHidden = true
             timeLabel.textColor = .systemGray2

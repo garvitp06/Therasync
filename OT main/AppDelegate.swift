@@ -28,9 +28,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
     }
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Register "false" as the default for Dark Mode
         FirebaseApp.configure()
-        UserDefaults.standard.register(defaults: ["Dark Mode": false])
         return true
     }
 
@@ -51,3 +49,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 }
 
+extension UINavigationController: @retroactive UIGestureRecognizerDelegate {
+    open override func viewDidLoad() {
+        super.viewDidLoad()
+        interactivePopGestureRecognizer?.delegate = self
+    }
+
+    public func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        return viewControllers.count > 1
+    }
+}

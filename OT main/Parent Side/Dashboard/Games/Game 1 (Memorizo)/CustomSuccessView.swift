@@ -72,7 +72,7 @@ class CustomSuccessView: UIView {
 
     private func setupView() {
         // Overlay background (darkens the view behind the pop-up)
-        backgroundColor = UIColor.black.withAlphaComponent(0.6)
+        backgroundColor = UIColor.label.withAlphaComponent(0.6)
         translatesAutoresizingMaskIntoConstraints = false
         
         addSubview(containerView)

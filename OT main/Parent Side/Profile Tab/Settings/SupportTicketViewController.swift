@@ -65,7 +65,7 @@ class SupportTicketViewController: UIViewController, PHPickerViewControllerDeleg
     
     private func updateLayerColors() {
         let isDark = UserDefaults.standard.bool(forKey: "Dark Mode")
-        textView.layer.borderColor = isDark ? UIColor.darkGray.cgColor : UIColor.systemGray4.cgColor
+        textView.layer.borderColor = isDark ? UIColor.secondaryLabel.cgColor : UIColor.systemGray4.cgColor
     }
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
         super.traitCollectionDidChange(previousTraitCollection)

@@ -22,18 +22,13 @@ final class TermsViewController: UIViewController {
         let l = UILabel()
         l.text = "Terms & Conditions"
         l.font = .systemFont(ofSize: 20, weight: .bold)
-        l.textColor = .black
+        l.textColor = .label
         l.translatesAutoresizingMaskIntoConstraints = false
         return l
     }()
 
     private let closeButton: UIButton = {
-        let btn = UIButton(type: .system)
-        let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .medium)
-        btn.setImage(UIImage(systemName: "xmark", withConfiguration: config), for: .normal)
-        btn.tintColor = .systemGray
-        btn.backgroundColor = .systemGray6
-        btn.layer.cornerRadius = 15
+        let btn = UIButton(type: .close)
         btn.translatesAutoresizingMaskIntoConstraints = false
         return btn
     }()
@@ -93,9 +88,9 @@ final class TermsViewController: UIViewController {
             divider.isHidden = true
             nav.setNavigationBarHidden(false, animated: animated)
             title = "Terms & Conditions"
-            navigationItem.leftBarButtonItem = UIBarButtonItem(
-                image: UIImage(systemName: "xmark"),
-                style: .plain, target: self, action: #selector(backTapped))
+            navigationItem.rightBarButtonItem = UIBarButtonItem(
+                barButtonSystemItem: .close,
+                target: self, action: #selector(backTapped))
         }
     }
 

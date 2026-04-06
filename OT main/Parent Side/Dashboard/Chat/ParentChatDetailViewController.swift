@@ -31,7 +31,7 @@ class ParentChatDetailViewController: UIViewController, UITableViewDelegate, UIT
     // MARK: - UI Components
     private let tableView: UITableView = {
         let tv = UITableView()
-        tv.backgroundColor = .white
+        tv.backgroundColor = .systemBackground
         tv.separatorStyle = .none
         tv.allowsSelection = false
         tv.keyboardDismissMode = .interactive
@@ -59,7 +59,7 @@ class ParentChatDetailViewController: UIViewController, UITableViewDelegate, UIT
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
+        view.backgroundColor = .systemBackground
         
         tableView.register(ParentIncomingCell.self, forCellReuseIdentifier: "Incoming")
         tableView.register(ParentOutgoingCell.self, forCellReuseIdentifier: "Outgoing")
@@ -94,10 +94,10 @@ class ParentChatDetailViewController: UIViewController, UITableViewDelegate, UIT
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
         appearance.backgroundColor = UIColor(red: 1.00, green: 0.73, blue: 0.20, alpha: 1)
-        appearance.titleTextAttributes = [.foregroundColor: UIColor.black]
+        appearance.titleTextAttributes = [.foregroundColor: UIColor.label]
         navigationController?.navigationBar.standardAppearance = appearance
         navigationController?.navigationBar.scrollEdgeAppearance = appearance
-        navigationController?.navigationBar.tintColor = .black
+        navigationController?.navigationBar.tintColor = .label
         navigationItem.rightBarButtonItem = nil
     }
     
@@ -294,7 +294,7 @@ class ParentOutgoingCell: UITableViewCell {
     }()
     private let label: UILabel = {
         let l = UILabel()
-        l.textColor = .black
+        l.textColor = .label
         l.numberOfLines = 0
         return l
     }()
@@ -334,7 +334,7 @@ class ParentIncomingCell: UITableViewCell {
     }()
     private let label: UILabel = {
         let l = UILabel()
-        l.textColor = .black
+        l.textColor = .label
         l.numberOfLines = 0
         return l
     }()

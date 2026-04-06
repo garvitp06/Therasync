@@ -42,7 +42,7 @@ final class RadioOptionCell: UITableViewCell {
     private let separator: UIView = {
         let v = UIView()
         v.translatesAutoresizingMaskIntoConstraints = false
-        v.backgroundColor = UIColor(white: 0.9, alpha: 1.0)
+        v.backgroundColor = .separator
         return v
     }()
 
@@ -100,6 +100,14 @@ final class RadioOptionCell: UITableViewCell {
             UIView.animate(withDuration: 0.18, animations: changes)
         } else {
             changes()
+        }
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        if traitCollection.hasDifferentColorAppearance(comparedTo: previousTraitCollection) {
+            // Re-evalute border color based on current selection and local trait collection
+            outerCircle.layer.borderColor = (innerDot.isHidden ? UIColor.systemGray4 : UIColor.systemBlue).resolvedColor(with: traitCollection).cgColor
         }
     }
 

@@ -17,7 +17,7 @@ final class ParentAboutUsViewController: UIViewController {
         let view = UIView()
         view.backgroundColor = .dynamicCard
         view.layer.cornerRadius = 24
-        view.layer.shadowColor = UIColor.black.cgColor
+        view.layer.shadowColor = UIColor.label.cgColor
         view.layer.shadowOpacity = 0.12
         view.layer.shadowOffset = CGSize(width: 0, height: 8)
         view.layer.shadowRadius = 15

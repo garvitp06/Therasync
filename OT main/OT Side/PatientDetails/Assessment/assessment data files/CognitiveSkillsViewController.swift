@@ -24,9 +24,9 @@ class CognitiveSkillsViewController: UIViewController {
     // UI Elements
     lazy var gradientBackground: GradientView = { let v = GradientView(); v.translatesAutoresizingMaskIntoConstraints = false; return v }()
     let progressBar: UIProgressView = { let pv = UIProgressView(progressViewStyle: .default); pv.trackTintColor = UIColor.white.withAlphaComponent(0.3); pv.progressTintColor = .white; pv.translatesAutoresizingMaskIntoConstraints = false; return pv }()
-    let questionContainer: UIView = { let v = UIView(); v.backgroundColor = .white; v.layer.cornerRadius = 25; v.translatesAutoresizingMaskIntoConstraints = false; return v }()
-    let questionLabel: UILabel = { let l = UILabel(); l.font = UIFont.systemFont(ofSize: 18, weight: .medium); l.textColor = .black; l.numberOfLines = 0; l.translatesAutoresizingMaskIntoConstraints = false; return l }()
-    let optionsContainer: UIView = { let v = UIView(); v.backgroundColor = .white; v.layer.cornerRadius = 25; v.clipsToBounds = true; v.translatesAutoresizingMaskIntoConstraints = false; return v }()
+    let questionContainer: UIView = { let v = UIView(); v.backgroundColor = .systemBackground; v.layer.cornerRadius = 25; v.translatesAutoresizingMaskIntoConstraints = false; return v }()
+    let questionLabel: UILabel = { let l = UILabel(); l.font = UIFont.systemFont(ofSize: 18, weight: .medium); l.textColor = .label; l.numberOfLines = 0; l.translatesAutoresizingMaskIntoConstraints = false; return l }()
+    let optionsContainer: UIView = { let v = UIView(); v.backgroundColor = .systemBackground; v.layer.cornerRadius = 25; v.clipsToBounds = true; v.translatesAutoresizingMaskIntoConstraints = false; return v }()
     let optionsStack: UIStackView = { let s = UIStackView(); s.axis = .vertical; s.distribution = .fill; s.alignment = .fill; s.translatesAutoresizingMaskIntoConstraints = false; return s }()
     
     let nextButton: UIButton = {

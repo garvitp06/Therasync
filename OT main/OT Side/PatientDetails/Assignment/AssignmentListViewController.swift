@@ -49,7 +49,7 @@ class AssignmentListViewController: UIViewController {
         let tv = UITableView()
         tv.separatorStyle = .none
         tv.layer.cornerRadius = 20
-        tv.backgroundColor = .white
+        tv.backgroundColor = .systemBackground
         tv.translatesAutoresizingMaskIntoConstraints = false
         return tv
     }()

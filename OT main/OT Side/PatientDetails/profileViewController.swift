@@ -23,9 +23,9 @@ class ProfileViewController: UIViewController {
         iv.image = UIImage(systemName: "person.circle.fill", withConfiguration: config)
         iv.tintColor = .systemGray4
         iv.contentMode = .scaleAspectFill
-        iv.backgroundColor = .white
+        iv.backgroundColor = .systemBackground
         iv.clipsToBounds = true
-        iv.layer.borderColor = UIColor.white.cgColor
+        iv.layer.borderColor = UIColor.systemBackground.cgColor
         iv.layer.borderWidth = 3.0
         iv.translatesAutoresizingMaskIntoConstraints = false
         return iv
@@ -35,6 +35,7 @@ class ProfileViewController: UIViewController {
         ("Patient detail", "person.text.rectangle"),
         ("Assessment", "clipboard"),
         ("Assignment", "doc.text"),
+        ("Assessment Progress", "chart.line.uptrend.xyaxis"),
         ("Progress", "chart.bar"),
         ("Notes", "note.text")
     ]
@@ -60,6 +61,13 @@ class ProfileViewController: UIViewController {
         super.viewWillAppear(animated)
         setupNavigationBarAppearance()
         populateHeaderData() // Refresh in case data was updated in sub views
+    }
+    
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        if traitCollection.hasDifferentColorAppearance(comparedTo: previousTraitCollection) {
+            profileImageView.layer.borderColor = UIColor.systemBackground.resolvedColor(with: traitCollection).cgColor
+        }
     }
     
     private func setupNavigationBarAppearance() {
@@ -199,6 +207,12 @@ extension ProfileViewController: UITableViewDelegate, UITableViewDataSource {
             assignmentVC.patientID = self.patientData?.patientID
             assignmentVC.hidesBottomBarWhenPushed = true
             navigationController?.pushViewController(assignmentVC, animated: true)
+            
+        case "Assessment Progress":
+            let progressVC = AssessmentProgressViewController()
+            progressVC.patient = self.patientData
+            progressVC.hidesBottomBarWhenPushed = true
+            navigationController?.pushViewController(progressVC, animated: true)
             
         case "Progress":
             let progressVC = PatientProgressViewController()

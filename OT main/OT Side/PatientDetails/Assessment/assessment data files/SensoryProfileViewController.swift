@@ -131,7 +131,7 @@ class SensoryProfileViewController: UIViewController {
         let l = UILabel()
         l.translatesAutoresizingMaskIntoConstraints = false
         l.font = .systemFont(ofSize: 13, weight: .medium)
-        l.textColor = UIColor.white.withAlphaComponent(0.8)
+        l.textColor = .label
         l.textAlignment = .center
         return l
     }()
@@ -401,12 +401,12 @@ class SensorySectionHeader: UITableViewHeaderFooterView {
     private let cardView: UIView = {
         let v = UIView()
         v.translatesAutoresizingMaskIntoConstraints = false
-        v.backgroundColor = UIColor.white.withAlphaComponent(0.95)
-        v.layer.cornerRadius = 12
+        v.backgroundColor = .secondarySystemGroupedBackground
+        v.layer.cornerRadius = 14
         v.layer.shadowColor = UIColor.black.cgColor
-        v.layer.shadowOpacity = 0.06
-        v.layer.shadowOffset = CGSize(width: 0, height: 2)
-        v.layer.shadowRadius = 4
+        v.layer.shadowOpacity = 0.1
+        v.layer.shadowOffset = CGSize(width: 0, height: 3)
+        v.layer.shadowRadius = 5
         return v
     }()
 
@@ -513,7 +513,7 @@ class SensoryQuestionCell: UITableViewCell {
     private let questionLabel: UILabel = {
         let l = UILabel()
         l.translatesAutoresizingMaskIntoConstraints = false
-        l.font = .systemFont(ofSize: 15)
+        l.font = .systemFont(ofSize: 16, weight: .medium)
         l.textColor = .label
         l.numberOfLines = 0
         return l
@@ -536,11 +536,11 @@ class SensoryQuestionCell: UITableViewCell {
             questionLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10),
             questionLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             questionLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            segmentedControl.topAnchor.constraint(equalTo: questionLabel.bottomAnchor, constant: 8),
+            segmentedControl.topAnchor.constraint(equalTo: questionLabel.bottomAnchor, constant: 12),
             segmentedControl.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             segmentedControl.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            segmentedControl.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -10),
-            segmentedControl.heightAnchor.constraint(equalToConstant: 32)
+            segmentedControl.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -16),
+            segmentedControl.heightAnchor.constraint(equalToConstant: 36)
         ])
     }
 

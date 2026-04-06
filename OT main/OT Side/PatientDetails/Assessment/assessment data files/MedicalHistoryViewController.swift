@@ -40,7 +40,7 @@ class MedicalHistoryViewController: UIViewController, UITableViewDataSource, UIT
     private let cardView: UIView = {
         let v = UIView()
         v.translatesAutoresizingMaskIntoConstraints = false
-        v.backgroundColor = .white
+        v.backgroundColor = .systemBackground
         v.layer.cornerRadius = 24
         v.layer.shadowColor = UIColor.black.cgColor
         v.layer.shadowOpacity = 0.1
@@ -72,11 +72,11 @@ class MedicalHistoryViewController: UIViewController, UITableViewDataSource, UIT
         let b = UIButton(type: .system)
         b.translatesAutoresizingMaskIntoConstraints = false
         b.setTitle("Done", for: .normal)
-        b.backgroundColor = UIColor(red: 0.0, green: 0.48, blue: 1.0, alpha: 1.0)
+        b.backgroundColor = UIColor.systemBlue
         b.setTitleColor(.white, for: .normal)
         b.layer.cornerRadius = 25
         b.titleLabel?.font = .systemFont(ofSize: 18, weight: .bold)
-        b.layer.shadowColor = UIColor.blue.withAlphaComponent(0.3).cgColor
+        b.layer.shadowColor = UIColor.systemBlue.withAlphaComponent(0.3).cgColor
         b.layer.shadowOffset = CGSize(width: 0, height: 4)
         b.layer.shadowOpacity = 0.3
         b.layer.shadowRadius = 5
@@ -328,7 +328,7 @@ class MedicalConditionCell: UITableViewCell {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         selectionStyle = .none; backgroundColor = .clear
         label.font = .systemFont(ofSize: 16, weight: .medium)
-        label.textColor = .darkGray; label.translatesAutoresizingMaskIntoConstraints = false
+        label.textColor = .secondaryLabel; label.translatesAutoresizingMaskIntoConstraints = false
         icon.translatesAutoresizingMaskIntoConstraints = false; icon.contentMode = .scaleAspectFit
         contentView.addSubview(label); contentView.addSubview(icon)
         NSLayoutConstraint.activate([
@@ -344,9 +344,9 @@ class MedicalConditionCell: UITableViewCell {
     func configure(with item: MedicalCondition) {
         label.text = item.name
         if item.isActive {
-            icon.image = UIImage(systemName: "checkmark.circle.fill"); icon.tintColor = UIColor(red: 0, green: 0.48, blue: 1, alpha: 1); label.textColor = .black
+            icon.image = UIImage(systemName: "checkmark.circle.fill"); icon.tintColor = UIColor.systemBlue; label.textColor = .label
         } else {
-            icon.image = UIImage(systemName: "circle"); icon.tintColor = .systemGray3; label.textColor = .darkGray
+            icon.image = UIImage(systemName: "circle"); icon.tintColor = .systemGray3; label.textColor = .secondaryLabel
         }
     }
 }
@@ -359,7 +359,7 @@ class OtherConditionCell: UITableViewCell, UITextFieldDelegate {
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         selectionStyle = .none; backgroundColor = .clear
-        titleLabel.text = "Other:"; titleLabel.font = .systemFont(ofSize: 16, weight: .bold); titleLabel.textColor = .black; titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        titleLabel.text = "Other:"; titleLabel.font = .systemFont(ofSize: 16, weight: .bold); titleLabel.textColor = .label; titleLabel.translatesAutoresizingMaskIntoConstraints = false
         textField.placeholder = "Enter condition..."; textField.font = .systemFont(ofSize: 16); textField.borderStyle = .none; textField.translatesAutoresizingMaskIntoConstraints = false; textField.delegate = self
         textField.addTarget(self, action: #selector(textChanged), for: .editingChanged)
         contentView.addSubview(titleLabel); contentView.addSubview(textField)

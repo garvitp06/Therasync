@@ -49,7 +49,7 @@ class ChatInputAccessoryView: UIView, UITextViewDelegate {
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-        backgroundColor = .white
+        backgroundColor = .systemBackground
         autoresizingMask = .flexibleHeight
         setupUI()
     }

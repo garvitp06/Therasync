@@ -348,7 +348,7 @@ class UpdateProfileViewController: UIViewController, UIImagePickerControllerDele
     private func createCard(rows: [(String, UITextField)]) -> UIView {
         let card = UIView()
         card.translatesAutoresizingMaskIntoConstraints = false
-        card.backgroundColor = .white
+        card.backgroundColor = .systemBackground
         card.layer.cornerRadius = 20
         card.layer.masksToBounds = true
         var previousBottom = card.topAnchor

@@ -35,7 +35,7 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate, UITextF
     private let titleTextField: UITextField = {
         let tf = UITextField()
         tf.placeholder = "Assignment Title"
-        tf.backgroundColor = .white
+        tf.backgroundColor = .systemBackground
         tf.layer.cornerRadius = 25
         tf.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 16, height: 50))
         tf.leftViewMode = .always
@@ -46,7 +46,7 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate, UITextF
     private let instructionTextView: UITextView = {
         let tv = UITextView()
         tv.font = .systemFont(ofSize: 16)
-        tv.backgroundColor = .white
+        tv.backgroundColor = .systemBackground
         tv.layer.cornerRadius = 25
         tv.textContainerInset = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
         tv.text = "Assignment Instruction"
@@ -145,7 +145,7 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate, UITextF
         contentView.addSubview(mainStack)
         
         let typeContainer = UIView()
-        typeContainer.backgroundColor = .white
+        typeContainer.backgroundColor = .systemBackground
         typeContainer.layer.cornerRadius = 25
         typeContainer.heightAnchor.constraint(equalToConstant: 55).isActive = true
         typeContainer.addSubview(typeTextField)
@@ -216,7 +216,7 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate, UITextF
     @objc private func pickerDoneTapped() {
         let row = typePicker.selectedRow(inComponent: 0)
         typeTextField.text = typeOptions[row]
-        typeTextField.textColor = .black
+        typeTextField.textColor = .label
         let isQuiz = typeOptions[row] == "Quiz"
         questionsStack.isHidden = !isQuiz
         addQuestionButton.isHidden = !isQuiz
@@ -231,7 +231,7 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate, UITextF
 
         let tf = UITextField()
         tf.placeholder = "Enter question \(questionTextFields.count + 1)"
-        tf.backgroundColor = .white
+        tf.backgroundColor = .systemBackground
         tf.layer.cornerRadius = 20
         tf.heightAnchor.constraint(equalToConstant: 45).isActive = true
         tf.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: 45))
@@ -374,7 +374,7 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate, UITextF
         container.alignment = .center
         
         let card = UIView()
-        card.backgroundColor = .white
+        card.backgroundColor = .systemBackground
         card.layer.cornerRadius = 15
         card.heightAnchor.constraint(greaterThanOrEqualToConstant: 56).isActive = true
         
@@ -440,7 +440,7 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate, UITextF
     func textViewDidBeginEditing(_ textView: UITextView) {
         if textView.textColor == .lightGray {
             textView.text = nil
-            textView.textColor = .black
+            textView.textColor = .label
         }
     }
 }

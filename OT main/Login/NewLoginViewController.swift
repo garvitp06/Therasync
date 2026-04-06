@@ -21,7 +21,7 @@ class NewLoginViewController: UIViewController {
         let l = UILabel()
         l.text = "TheraSync"
         l.font = .systemFont(ofSize: 34, weight: .bold)
-        l.textColor = .black
+        l.textColor = .label
         l.translatesAutoresizingMaskIntoConstraints = false
         return l
     }()
@@ -439,7 +439,14 @@ class NewLoginViewController: UIViewController {
         navigationController?.pushViewController(register(), animated: true)
     }
     @objc private func handleTermsTap() {
-        let vc = TermsViewController(); vc.delegate = self; present(vc, animated: true)
+        let vc = TermsViewController()
+        vc.delegate = self
+        let nav = UINavigationController(rootViewController: vc)
+        if let sheet = nav.sheetPresentationController {
+            sheet.detents = [.large()]
+            sheet.prefersGrabberVisible = true
+        }
+        present(nav, animated: true)
     }
     @objc private func handleForgotPasswordTap() {
         navigationController?.pushViewController(ForgotPasswordViewController(), animated: true)

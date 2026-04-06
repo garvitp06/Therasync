@@ -24,9 +24,9 @@ final class ADOSAssessmentViewController: UIViewController {
         return pv
     }()
     
-    private let questionContainer: UIView = { let v = UIView(); v.translatesAutoresizingMaskIntoConstraints = false; v.backgroundColor = .white; v.layer.cornerRadius = 18; return v }()
-    private let questionLabel: UILabel = { let l = UILabel(); l.translatesAutoresizingMaskIntoConstraints = false; l.numberOfLines = 0; l.font = .systemFont(ofSize: 18); l.textColor = .black; return l }()
-    private let cardContainerView: UIView = { let v = UIView(); v.translatesAutoresizingMaskIntoConstraints = false; v.backgroundColor = .white; v.layer.cornerRadius = 18; return v }()
+    private let questionContainer: UIView = { let v = UIView(); v.translatesAutoresizingMaskIntoConstraints = false; v.backgroundColor = .systemBackground; v.layer.cornerRadius = 18; return v }()
+    private let questionLabel: UILabel = { let l = UILabel(); l.translatesAutoresizingMaskIntoConstraints = false; l.numberOfLines = 0; l.font = .systemFont(ofSize: 18); l.textColor = .label; return l }()
+    private let cardContainerView: UIView = { let v = UIView(); v.translatesAutoresizingMaskIntoConstraints = false; v.backgroundColor = .systemBackground; v.layer.cornerRadius = 18; return v }()
     private let optionsTableView: UITableView = { let tv = UITableView(frame: .zero, style: .plain); tv.translatesAutoresizingMaskIntoConstraints = false; tv.backgroundColor = .clear; tv.separatorStyle = .none; return tv }()
     private let nextButton: UIButton = {
         let b = UIButton(type: .system)
@@ -42,6 +42,7 @@ final class ADOSAssessmentViewController: UIViewController {
     }()
 
     private var tableHeightConstraint: NSLayoutConstraint?
+    private var tableObserver: NSKeyValueObservation?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -58,19 +59,17 @@ final class ADOSAssessmentViewController: UIViewController {
         setupUI()
         setupNavBar()
         
-        optionsTableView.addObserver(self, forKeyPath: "contentSize", options: .new, context: nil)
+        tableObserver = optionsTableView.observe(\.contentSize, options: .new) { [weak self] _, _ in
+            guard let self = self else { return }
+            self.tableHeightConstraint?.constant = self.optionsTableView.contentSize.height
+            self.view.layoutIfNeeded()
+        }
+        
         loadQuestion(animated: false)
     }
     
     deinit {
-        optionsTableView.removeObserver(self, forKeyPath: "contentSize")
-    }
-    
-    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
-        if keyPath == "contentSize" {
-            tableHeightConstraint?.constant = optionsTableView.contentSize.height
-            view.layoutIfNeeded()
-        }
+        // NSKeyValueObservation automatically cleans up
     }
     @objc private func handleAIUpdate() {
             guard let pid = patientID else { return }

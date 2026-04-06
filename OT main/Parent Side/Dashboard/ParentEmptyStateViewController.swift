@@ -8,7 +8,7 @@ class ParentEmptyStateViewController: UIViewController {
         let label = UILabel()
         label.text = "No Patient Added"
         label.font = .systemFont(ofSize: 24, weight: .bold)
-        label.textColor = .black
+        label.textColor = .label
         label.textAlignment = .center
         return label
     }()
@@ -29,7 +29,7 @@ class ParentEmptyStateViewController: UIViewController {
         tf.font = .systemFont(ofSize: 32, weight: .bold)
         tf.textAlignment = .center
         tf.keyboardType = .numberPad
-        tf.backgroundColor = .white
+        tf.backgroundColor = .systemBackground
         tf.layer.cornerRadius = 15
         tf.layer.borderWidth = 1
         tf.layer.borderColor = UIColor.systemGray5.cgColor

@@ -70,6 +70,13 @@ class MemoryGameViewController: UIViewController {
         NotificationCenter.default.removeObserver(self)
     }
 
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        if traitCollection.hasDifferentColorAppearance(comparedTo: previousTraitCollection) {
+            applyTheme()
+        }
+    }
+
     // MARK: - Setup
     private func setupUI() {
         view.addSubview(gradientView)
@@ -133,13 +140,13 @@ class MemoryGameViewController: UIViewController {
     // MARK: - Theme Logic
     @objc private func applyTheme() {
         let isHighContrast = UserDefaults.standard.bool(forKey: "High Contrast")
-        let isDarkMode = UserDefaults.standard.bool(forKey: "Dark Mode")
-        let color: UIColor = isDarkMode ? .white : .black
+        let isDarkMode = traitCollection.userInterfaceStyle == .dark
+        let color: UIColor = .label
         
         DispatchQueue.main.async {
             if isHighContrast {
                 self.gradientView.isHidden = true
-                self.view.backgroundColor = isDarkMode ? .black : .white
+                self.view.backgroundColor = .systemBackground
             } else {
                 self.gradientView.isHidden = false
             }
@@ -147,10 +154,10 @@ class MemoryGameViewController: UIViewController {
             self.tileButtons.forEach {
                 if isHighContrast {
                     $0.layer.borderWidth = 6
-                    $0.layer.borderColor = isDarkMode ? UIColor.white.cgColor : UIColor.black.cgColor
+                    $0.layer.borderColor = UIColor.label.resolvedColor(with: self.traitCollection).cgColor
                 } else {
                     $0.layer.borderWidth = 4
-                    $0.layer.borderColor = isDarkMode ? UIColor.darkGray.cgColor : UIColor.white.cgColor
+                    $0.layer.borderColor = UIColor.systemGray4.resolvedColor(with: self.traitCollection).cgColor
                 }
             }
             
@@ -171,7 +178,6 @@ class MemoryGameViewController: UIViewController {
         guard isGameActive else { return }
         let shouldReduceMotion = UserDefaults.standard.bool(forKey: "Reduced Motion")
         let isHighContrast = UserDefaults.standard.bool(forKey: "High Contrast")
-        let isDarkMode = UserDefaults.standard.bool(forKey: "Dark Mode")
         
         AudioServicesPlaySystemSound(1104)
         if UserDefaults.standard.bool(forKey: "Global Haptics") { hapticGenerator.impactOccurred() }
@@ -180,7 +186,7 @@ class MemoryGameViewController: UIViewController {
         let duration = shouldReduceMotion ? 0.0 : 0.3
         let scale: CGFloat = shouldReduceMotion ? 1.0 : 0.9
         
-        let normalBorderColor = isHighContrast ? (isDarkMode ? UIColor.white.cgColor : UIColor.black.cgColor) : (isDarkMode ? UIColor.darkGray.cgColor : UIColor.white.cgColor)
+        let normalBorderColor = isHighContrast ? UIColor.label.resolvedColor(with: traitCollection).cgColor : UIColor.systemGray4.resolvedColor(with: traitCollection).cgColor
         
         UIView.animate(withDuration: duration, animations: {
             btn.alpha = 0.3

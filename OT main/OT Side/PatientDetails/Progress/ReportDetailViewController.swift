@@ -11,7 +11,7 @@ class ReportDetailViewController: UIViewController {
     
     private let textContainer: UIView = {
         let v = UIView()
-        v.backgroundColor = .white
+        v.backgroundColor = .systemBackground
         v.layer.cornerRadius = 16
         v.layer.shadowColor = UIColor.black.cgColor
         v.layer.shadowOpacity = 0.15
@@ -26,7 +26,7 @@ class ReportDetailViewController: UIViewController {
         tv.isEditable = false
         tv.isSelectable = false
         tv.backgroundColor = .clear
-        tv.textColor = .black
+        tv.textColor = .label
         tv.translatesAutoresizingMaskIntoConstraints = false
         return tv
     }()

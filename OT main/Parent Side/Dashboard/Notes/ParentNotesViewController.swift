@@ -51,6 +51,17 @@ class ParentNotesViewController: UIViewController {
         return btn
     }()
 
+    // MARK: - Initializers
+    init() {
+        super.init(nibName: nil, bundle: nil)
+        self.hidesBottomBarWhenPushed = true
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        self.hidesBottomBarWhenPushed = true
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemGroupedBackground
@@ -61,8 +72,15 @@ class ParentNotesViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(false, animated: animated)
+        tabBarController?.tabBar.isHidden = true
         setupNavBar()
+    }
 
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        if self.isMovingFromParent {
+            tabBarController?.tabBar.isHidden = false
+        }
     }
 
     private func setupUI() {
@@ -136,7 +154,12 @@ class ParentNotesViewController: UIViewController {
     }
     private func fetchParentNotes() {
         guard let pID = patientID else { return }
+        
+        // Hide UI while loading
+        tableView.isHidden = true
+        emptyStateView.isHidden = true
         loadingIndicator.startAnimating()
+        
         Task {
             do {
                 let user = try await supabase.auth.session.user
@@ -149,7 +172,13 @@ class ParentNotesViewController: UIViewController {
                     self.updateState()
                     self.tableView.reloadData()
                 }
-            } catch { print(error) }
+            } catch { 
+                print(error)
+                await MainActor.run {
+                    self.loadingIndicator.stopAnimating()
+                    self.updateState()
+                }
+            }
         }
     }
 

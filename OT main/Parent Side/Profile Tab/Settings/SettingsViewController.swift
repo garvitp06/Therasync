@@ -23,6 +23,7 @@ class SettingsViewController: UIViewController, UITableViewDelegate, UITableView
         super.viewWillAppear(animated)
         // 1. Force the bar to be visible
         navigationController?.setNavigationBarHidden(false, animated: animated)
+        tabBarController?.tabBar.isHidden = true
         // 2. Apply centered small title styling
         setupNavBar()
     }

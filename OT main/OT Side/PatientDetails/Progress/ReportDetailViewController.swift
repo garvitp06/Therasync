@@ -3,6 +3,8 @@ import PDFKit
 
 class ReportDetailViewController: UIViewController {
     
+    var isParentSide: Bool = false
+    
     // Data Variables
     var assessments: [AssessmentLogResponse] = []
     var submission: AssignmentSubmission?
@@ -31,26 +33,69 @@ class ReportDetailViewController: UIViewController {
         return tv
     }()
     
+    // MARK: - Initializers
+    init() {
+        super.init(nibName: nil, bundle: nil)
+        self.hidesBottomBarWhenPushed = true
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        self.hidesBottomBarWhenPushed = true
+    }
+
     // MARK: - Lifecycle
     override func loadView() {
-        self.view = GradientView()
+        if isParentSide {
+            self.view = ParentGradientView()
+        } else {
+            self.view = GradientView()
+        }
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "Report Details"
-        setupNavBar()
         setupUI()
         textView.attributedText = buildAttributedReport()
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        setupNavBar()
+        tabBarController?.tabBar.isHidden = true
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        if self.isMovingFromParent {
+            tabBarController?.tabBar.isHidden = false
+        }
+    }
+    
     private func setupNavBar() {
+        navigationController?.setNavigationBarHidden(false, animated: true)
+        
         let appearance = UINavigationBarAppearance()
         appearance.configureWithTransparentBackground()
-        appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
+        
+        // Conditional coloring
+        let mainColor: UIColor = isParentSide ? .label : .white
+        appearance.titleTextAttributes = [.foregroundColor: mainColor]
+        
         navigationController?.navigationBar.standardAppearance = appearance
         navigationController?.navigationBar.scrollEdgeAppearance = appearance
-        navigationController?.navigationBar.tintColor = .white
+        navigationController?.navigationBar.compactAppearance = appearance
+        navigationController?.navigationBar.tintColor = mainColor
+        
+        if isParentSide {
+            let backBtn = UIBarButtonItem(image: UIImage(systemName: "chevron.backward"), style: .plain, target: self, action: #selector(handleBack))
+            navigationItem.leftBarButtonItem = backBtn
+        }
+    }
+    
+    @objc private func handleBack() {
+        navigationController?.popViewController(animated: true)
     }
     
     private func setupUI() {
@@ -79,8 +124,10 @@ class ReportDetailViewController: UIViewController {
         formatter.dateStyle = .long
         let dateStr = reportDate.map { formatter.string(from: $0) } ?? "Unknown Date"
         
+        let themeColor: UIColor = isParentSide ? .systemOrange : .systemBlue
+        
         // Title
-        full.append(styled("CLINICAL PROGRESS REPORT\n", font: .boldSystemFont(ofSize: 20), color: .systemBlue))
+        full.append(styled("CLINICAL PROGRESS REPORT\n", font: .boldSystemFont(ofSize: 20), color: themeColor))
         full.append(styled("TheraSync · \(dateStr)\n\n", font: .systemFont(ofSize: 13), color: .systemGray))
         
         // Patient info box (simulated)
@@ -155,9 +202,11 @@ class ReportDetailViewController: UIViewController {
             let contentWidth = pageRect.width - margin * 2
             var y = margin
             
+            let brandColor = isParentSide ? UIColor.systemOrange : UIColor(red: 0.18, green: 0.48, blue: 0.96, alpha: 1)
+            
             // ── Header Band ──────────────────────────────────────────────
             let headerRect = CGRect(x: 0, y: 0, width: pageRect.width, height: 80)
-            UIColor(red: 0.18, green: 0.48, blue: 0.96, alpha: 1).setFill()
+            brandColor.setFill()
             UIBezierPath(rect: headerRect).fill()
             
             let titleAttr: [NSAttributedString.Key: Any] = [
@@ -177,9 +226,10 @@ class ReportDetailViewController: UIViewController {
             
             // Patient box
             let boxRect = CGRect(x: margin, y: y, width: contentWidth, height: 56)
-            UIColor(red: 0.95, green: 0.97, blue: 1.0, alpha: 1).setFill()
+            let boxBg = isParentSide ? UIColor.systemOrange.withAlphaComponent(0.05) : UIColor(red: 0.95, green: 0.97, blue: 1.0, alpha: 1)
+            boxBg.setFill()
             UIBezierPath(roundedRect: boxRect, cornerRadius: 6).fill()
-            UIColor(red: 0.18, green: 0.48, blue: 0.96, alpha: 0.3).setStroke()
+            brandColor.withAlphaComponent(0.3).setStroke()
             UIBezierPath(roundedRect: boxRect, cornerRadius: 6).stroke()
             
             let boldAttr: [NSAttributedString.Key: Any] = [.font: UIFont.boldSystemFont(ofSize: 11), .foregroundColor: UIColor.black]
@@ -246,12 +296,13 @@ class ReportDetailViewController: UIViewController {
     // MARK: - PDF Drawing Helpers
     @discardableResult
     private func drawSectionHeader(_ title: String, at y: CGFloat, margin: CGFloat, width: CGFloat) -> CGFloat {
+        let brandColor = isParentSide ? UIColor.systemOrange : UIColor(red: 0.18, green: 0.48, blue: 0.96, alpha: 1)
         let rect = CGRect(x: margin, y: y, width: width, height: 22)
-        UIColor(red: 0.18, green: 0.48, blue: 0.96, alpha: 0.12).setFill()
+        brandColor.withAlphaComponent(0.12).setFill()
         UIBezierPath(roundedRect: rect, cornerRadius: 4).fill()
         let attr: [NSAttributedString.Key: Any] = [
             .font: UIFont.boldSystemFont(ofSize: 10),
-            .foregroundColor: UIColor(red: 0.18, green: 0.48, blue: 0.96, alpha: 1)
+            .foregroundColor: brandColor
         ]
         title.draw(at: CGPoint(x: margin + 8, y: y + 6), withAttributes: attr)
         return y + 30

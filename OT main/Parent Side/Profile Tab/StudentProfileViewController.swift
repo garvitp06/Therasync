@@ -13,6 +13,15 @@ class StudentProfileViewController: UIViewController {
     private var switchItems: [String] = []    // switch child rows (also chevron)
     private var unlinkItems: [String] = []    // red, no chevron
     private let logoutItem = "Log out"
+    
+    // MARK: - Initializer
+    init() {
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+    }
 
     // MARK: - UI Components
     private let tableView: UITableView = {
@@ -72,6 +81,7 @@ class StudentProfileViewController: UIViewController {
         super.viewWillAppear(animated)
         applyNavBarAppearance()
         navigationController?.setNavigationBarHidden(false, animated: animated)
+        tabBarController?.tabBar.isHidden = false
         fetchAllLinkedPatients()
     }
 
@@ -99,10 +109,15 @@ class StudentProfileViewController: UIViewController {
         tableView.dataSource = self
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(equalTo: view.topAnchor),
-            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            tableView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
+        
+        // iPad Optimization
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            tableView.cellLayoutMarginsFollowReadableWidth = true
+        }
     }
 
     private func setupHeaderView() {

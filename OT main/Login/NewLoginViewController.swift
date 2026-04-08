@@ -212,18 +212,21 @@ class NewLoginViewController: UIViewController {
     private func setupConstraints() {
         let m: CGFloat = 28
         let safe = view.safeAreaLayoutGuide
+        
+        // Use readableContentGuide for horizontal constraints on iPad to avoid over-stretching
+        let horizontalGuide = view.readableContentGuide
 
         NSLayoutConstraint.activate([
             titleLabel.topAnchor.constraint(equalTo: safe.topAnchor, constant: 86),
-            titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: m),
+            titleLabel.leadingAnchor.constraint(equalTo: horizontalGuide.leadingAnchor, constant: m),
 
             subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 4),
-            subtitleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: m),
+            subtitleLabel.leadingAnchor.constraint(equalTo: horizontalGuide.leadingAnchor, constant: m),
 
             // Email
             emailContainer.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: 30),
-            emailContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: m),
-            emailContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -m),
+            emailContainer.leadingAnchor.constraint(equalTo: horizontalGuide.leadingAnchor, constant: m),
+            emailContainer.trailingAnchor.constraint(equalTo: horizontalGuide.trailingAnchor, constant: -m),
             emailContainer.heightAnchor.constraint(equalToConstant: 52),
 
             emailIconView.leadingAnchor.constraint(equalTo: emailContainer.leadingAnchor, constant: 14),
@@ -238,8 +241,8 @@ class NewLoginViewController: UIViewController {
 
             // Password
             passwordContainer.topAnchor.constraint(equalTo: emailContainer.bottomAnchor, constant: 14),
-            passwordContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: m),
-            passwordContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -m),
+            passwordContainer.leadingAnchor.constraint(equalTo: horizontalGuide.leadingAnchor, constant: m),
+            passwordContainer.trailingAnchor.constraint(equalTo: horizontalGuide.trailingAnchor, constant: -m),
             passwordContainer.heightAnchor.constraint(equalToConstant: 52),
 
             passwordIconView.leadingAnchor.constraint(equalTo: passwordContainer.leadingAnchor, constant: 14),
@@ -254,11 +257,11 @@ class NewLoginViewController: UIViewController {
 
             // Forgot
             forgotPasswordButton.topAnchor.constraint(equalTo: passwordContainer.bottomAnchor, constant: 8),
-            forgotPasswordButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -m),
+            forgotPasswordButton.trailingAnchor.constraint(equalTo: horizontalGuide.trailingAnchor, constant: -m),
 
             // Terms
             checkboxButton.topAnchor.constraint(equalTo: forgotPasswordButton.bottomAnchor, constant: 12),
-            checkboxButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: m),
+            checkboxButton.leadingAnchor.constraint(equalTo: horizontalGuide.leadingAnchor, constant: m),
             checkboxButton.widthAnchor.constraint(equalToConstant: 24),
             checkboxButton.heightAnchor.constraint(equalToConstant: 24),
 
@@ -270,8 +273,8 @@ class NewLoginViewController: UIViewController {
 
             // Login
             loginButton.topAnchor.constraint(equalTo: checkboxButton.bottomAnchor, constant: 24),
-            loginButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: m),
-            loginButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -m),
+            loginButton.leadingAnchor.constraint(equalTo: horizontalGuide.leadingAnchor, constant: m),
+            loginButton.trailingAnchor.constraint(equalTo: horizontalGuide.trailingAnchor, constant: -m),
             loginButton.heightAnchor.constraint(equalToConstant: 52),
 
             // Create account

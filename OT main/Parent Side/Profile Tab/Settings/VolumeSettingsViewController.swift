@@ -58,13 +58,33 @@ class VolumeSettingsViewController: UIViewController {
     }
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        navigationController?.setNavigationBarHidden(false, animated: animated)
+        tabBarController?.tabBar.isHidden = true
+        setupNavBar()
     }
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        if isMovingFromParent {
-            navigationController?.setNavigationBarHidden(true, animated: animated)
-        }
+    }
+    
+    private func setupNavBar() {
+        navigationController?.setNavigationBarHidden(false, animated: true)
+        
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithTransparentBackground()
+        appearance.titleTextAttributes = [
+            .foregroundColor: UIColor.label,
+            .font: UIFont.systemFont(ofSize: 17, weight: .semibold)
+        ]
+        
+        navigationController?.navigationBar.standardAppearance = appearance
+        navigationController?.navigationBar.scrollEdgeAppearance = appearance
+        
+        let backBtn = UIBarButtonItem(image: UIImage(systemName: "chevron.backward"), style: .plain, target: self, action: #selector(handleBack))
+        backBtn.tintColor = .label
+        navigationItem.leftBarButtonItem = backBtn
+    }
+
+    @objc private func handleBack() {
+        navigationController?.popViewController(animated: true)
     }
     
     private func setupUI() {

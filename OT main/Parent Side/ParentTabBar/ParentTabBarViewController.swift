@@ -12,31 +12,46 @@ class ParentTabBarViewController: UITabBarController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.tabBar.backgroundColor = .clear
-        
-        // Match the brand orange from ParentGradientView
+        setupTabBarAppearance()
+        setupViewControllers()
+    }
+
+    private func setupTabBarAppearance() {
         let brandOrange = UIColor(red: 255/255, green: 166/255, blue: 0/255, alpha: 1.0)
         self.tabBar.tintColor = brandOrange
         self.tabBar.unselectedItemTintColor = .systemGray
         
-        // Use appearance API for better iOS 15+ stability
+        // Match background: enable translucency
+        self.tabBar.isTranslucent = true
+        
         let appearance = UITabBarAppearance()
+        // Use transparent background so our ParentGradientView shows through
         appearance.configureWithTransparentBackground()
+        appearance.backgroundColor = .clear 
+        appearance.shadowColor = nil
+        appearance.shadowImage = nil
         
         // Selected attributes
         appearance.stackedLayoutAppearance.selected.iconColor = brandOrange
-        appearance.stackedLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: brandOrange]
+        appearance.stackedLayoutAppearance.selected.titleTextAttributes = [
+            .foregroundColor: brandOrange,
+            .font: UIFont.systemFont(ofSize: 11, weight: .medium)
+        ]
         
         // Normal (unselected) attributes
         appearance.stackedLayoutAppearance.normal.iconColor = .systemGray
-        appearance.stackedLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor.systemGray]
+        appearance.stackedLayoutAppearance.normal.titleTextAttributes = [
+            .foregroundColor: UIColor.systemGray,
+            .font: UIFont.systemFont(ofSize: 11, weight: .regular)
+        ]
         
         self.tabBar.standardAppearance = appearance
         if #available(iOS 15.0, *) {
             self.tabBar.scrollEdgeAppearance = appearance
         }
-        
-        // Set up all the view controllers for each tab
+    }
+
+    private func setupViewControllers() {
         viewControllers = [
             createTab(root: DashboardViewController(),
                       title: "Dashboard",
@@ -54,13 +69,8 @@ class ParentTabBarViewController: UITabBarController {
     }
 
     private func createTab(root: UIViewController, title: String, icon: String) -> UINavigationController {
-        
-        // 1. Set the tab bar item properties ON THE ROOT VC
         root.tabBarItem.title = title
         root.tabBarItem.image = UIImage(systemName: icon)
-        
-        // 2. Wrap the root VC in a navigation controller
-        // This is essential for navigation (like pushing ProfileViewController)
         let navController = UINavigationController(rootViewController: root)
         return navController
     }

@@ -55,7 +55,6 @@ final class ReportsViewController: UIViewController {
     private let emptyStateLabel: UILabel = {
             let l = UILabel()
             l.text = "No reports available yet."
-            // Changed from .white to .black
             l.textColor = .label
             l.font = .systemFont(ofSize: 18, weight: .medium)
             l.textAlignment = .center
@@ -64,6 +63,16 @@ final class ReportsViewController: UIViewController {
             l.translatesAutoresizingMaskIntoConstraints = false
             return l
         }()
+
+    // MARK: - Initializers
+    init() {
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+    }
+
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -71,15 +80,14 @@ final class ReportsViewController: UIViewController {
         title = "Reports"
         navigationItem.largeTitleDisplayMode = .always
         setupUI()
-        findLinkedChildAndFetchReports()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(false, animated: true)
         navigationController?.navigationBar.prefersLargeTitles = true
+        tabBarController?.tabBar.isHidden = false
 
-        // Transparent nav bar so gradient shows through
         let appearance = UINavigationBarAppearance()
         appearance.configureWithTransparentBackground()
         appearance.titleTextAttributes = [.foregroundColor: UIColor.label]
@@ -89,11 +97,17 @@ final class ReportsViewController: UIViewController {
         navigationController?.navigationBar.compactAppearance = appearance
         navigationController?.navigationBar.tintColor = .label
 
-        // Prevent auto-scroll jump when large title kicks in
         tableView.setContentOffset(.zero, animated: false)
 
-        if let pid = linkedPatient?.patientID, !isLoading {
-            Task { await fetchReports(for: pid) }
+        // Always verify we are showing the RIGHT child when the view appears
+        let savedIDNum = UserDefaults.standard.string(forKey: "LastSelectedChildID")
+        if linkedPatient == nil || linkedPatient?.patientID != savedIDNum {
+            findLinkedChildAndFetchReports()
+        } else if !isLoading {
+            // Already matched, but refresh content if not loading
+            if let pid = linkedPatient?.patientID {
+                Task { await fetchReports(for: pid) }
+            }
         }
     }
     
@@ -122,22 +136,25 @@ final class ReportsViewController: UIViewController {
 
             tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            tableView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
 
             activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor),
 
             emptyStateLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             emptyStateLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            emptyStateLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 40),
-            emptyStateLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -40)
+            emptyStateLabel.leadingAnchor.constraint(equalTo: view.readableContentGuide.leadingAnchor, constant: 20),
+            emptyStateLabel.trailingAnchor.constraint(equalTo: view.readableContentGuide.trailingAnchor, constant: -20)
         ])
+        
+        if #available(iOS 13.0, *) {
+            if UIDevice.current.userInterfaceIdiom == .pad {
+                tableView.cellLayoutMarginsFollowReadableWidth = true
+            }
+        }
     }
     
-    // MARK: - Core Logic: Fetching
-    
-    // MARK: - Updated Data Fetching
     private func findLinkedChildAndFetchReports() {
         guard let user = supabase.auth.currentUser else { return }
         
@@ -146,8 +163,9 @@ final class ReportsViewController: UIViewController {
         
         Task {
             do {
-                // 1. Find the patient linked to this parent's unique Auth ID
-                // Matches DashboardViewController logic for consistency
+                // NEW: Use the specifically selected child's ID from UserDefaults if available
+                let savedIDNum = UserDefaults.standard.string(forKey: "LastSelectedChildID")
+
                 let response = try await supabase
                     .from("patients")
                     .select()
@@ -161,9 +179,9 @@ final class ReportsViewController: UIViewController {
                 
                 let patients = try decoder.decode([Patient].self, from: response.data)
                 
-                if let child = patients.first {
+                // Prioritize matching the savedIDNum
+                if let child = patients.first(where: { $0.patientID == savedIDNum }) ?? patients.first {
                     self.linkedPatient = child
-                    // Use the string ID (e.g., "68432") to fetch clinical data
                     await fetchReports(for: child.patientID)
                 } else {
                     await showEmptyState(message: "No child profile linked to this account.")
@@ -178,9 +196,8 @@ final class ReportsViewController: UIViewController {
     private func fetchReports(for patientID: String) async {
         do {
             let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601 // Critical for 'created_at' timestamps
+            decoder.dateDecodingStrategy = .iso8601
             
-            // 2. Fetch Assessments (Selecting all columns to avoid RLS hidden filters)
             let assesResponse = try await supabase
                 .from("assessments")
                 .select()
@@ -190,7 +207,6 @@ final class ReportsViewController: UIViewController {
                 
             let asses = try decoder.decode([AssessmentLogResponse].self, from: assesResponse.data)
             
-            // 3. Fetch Assignments
             let subsResponse = try await supabase
                 .from("assignment_submissions")
                 .select()
@@ -200,7 +216,6 @@ final class ReportsViewController: UIViewController {
                 
             let subs = try decoder.decode([AssignmentSubmission].self, from: subsResponse.data)
             
-            // 4. Grouping Logic (Start of Day)
             let calendar = Calendar.current
             var allDates = Set<Date>()
             
@@ -212,7 +227,6 @@ final class ReportsViewController: UIViewController {
             
             for date in sortedDates {
                 let dayAssessments = asses.filter { calendar.isDate($0.created_at, inSameDayAs: date) }
-                
                 let dayAssignment = subs.first {
                     guard let subDate = $0.submitted_at else { return false }
                     return calendar.isDate(subDate, inSameDayAs: date)
@@ -228,7 +242,6 @@ final class ReportsViewController: UIViewController {
             }
             
             await MainActor.run {
-                // Updated to match the struct name consistently
                 self.reportGroups = finalReports
                 self.isLoading = false
                 self.activityIndicator.stopAnimating()
@@ -268,37 +281,34 @@ extension ReportsViewController: UITableViewDataSource, UITableViewDelegate {
         
         let report = reportGroups[indexPath.row]
         cell.configure(with: report)
-        
-        // Pass the correct type (ParentReportModel)
         cell.onTapDownload = { [weak self] in
             self?.generateAndSharePDF(for: report)
         }
-        
         return cell
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        
         let report = reportGroups[indexPath.row]
         
-        // Navigate to Details
         let detailVC = ReportDetailViewController()
+        detailVC.isParentSide = true // Set theme flag
         detailVC.patient = self.linkedPatient
         detailVC.reportDate = report.date
         detailVC.assessments = report.assessments
         detailVC.submission = report.submission
+        detailVC.hidesBottomBarWhenPushed = true
         
         navigationController?.pushViewController(detailVC, animated: true)
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 90
+        return 92
     }
     
-    // Function signature now strictly uses ParentReportModel
     private func generateAndSharePDF(for report: ParentReportModel) {
         let pdfGen = ReportDetailViewController()
+        pdfGen.isParentSide = true // Set theme flag for drawing logic (color matching)
         pdfGen.patient = self.linkedPatient
         pdfGen.reportDate = report.date
         pdfGen.assessments = report.assessments
@@ -314,6 +324,14 @@ extension ReportsViewController: UITableViewDataSource, UITableViewDelegate {
         do {
             try pdfData.write(to: tempURL)
             let shareSheet = UIActivityViewController(activityItems: [tempURL], applicationActivities: nil)
+            
+            // FIXED: Handle iPad presentation crash
+            if let popover = shareSheet.popoverPresentationController {
+                popover.sourceView = self.view
+                popover.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 0, height: 0)
+                popover.permittedArrowDirections = []
+            }
+            
             present(shareSheet, animated: true)
         } catch {
             print("PDF Error: \(error)")
@@ -322,10 +340,8 @@ extension ReportsViewController: UITableViewDataSource, UITableViewDelegate {
 }
 
 // MARK: - 4. Unique Custom Cell
-// Renamed to ParentReportsCell to avoid conflict with OT side
 class ParentReportsCell: UITableViewCell {
     static let identifier = "ParentReportsCell"
-    
     var onTapDownload: (() -> Void)?
     
     private let containerView: UIView = {
@@ -432,12 +448,10 @@ class ParentReportsCell: UITableViewCell {
         ])
     }
     
-    // Configuration now uses ParentReportModel
     func configure(with report: ParentReportModel) {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .none
-        
         dateLabel.text = formatter.string(from: report.date)
         summaryLabel.text = report.summaryText
     }

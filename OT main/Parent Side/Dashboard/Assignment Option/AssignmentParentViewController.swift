@@ -66,6 +66,16 @@ class AssignmentParentViewController: UIViewController, UITableViewDelegate, UIT
     }()
     
     // MARK: - Lifecycle
+    init() {
+        super.init(nibName: nil, bundle: nil)
+        self.hidesBottomBarWhenPushed = true
+    }
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        self.hidesBottomBarWhenPushed = true
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         print("[DEBUG] View Did Load")
@@ -76,7 +86,15 @@ class AssignmentParentViewController: UIViewController, UITableViewDelegate, UIT
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         print("[DEBUG] View Will Appear")
+        tabBarController?.tabBar.isHidden = true
         fetchAssignments()
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        if self.isMovingFromParent {
+            tabBarController?.tabBar.isHidden = false
+        }
     }
     
     // MARK: - Data Fetching
@@ -156,16 +174,23 @@ class AssignmentParentViewController: UIViewController, UITableViewDelegate, UIT
         
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            tableView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             
             noAssignmentsLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             noAssignmentsLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            noAssignmentsLabel.leadingAnchor.constraint(equalTo: view.readableContentGuide.leadingAnchor, constant: 20),
+            noAssignmentsLabel.trailingAnchor.constraint(equalTo: view.readableContentGuide.trailingAnchor, constant: -20),
             
             loadingIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             loadingIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         ])
+        
+        // iPad Optimization
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            tableView.cellLayoutMarginsFollowReadableWidth = true
+        }
     }
     
     // MARK: - TableView Methods

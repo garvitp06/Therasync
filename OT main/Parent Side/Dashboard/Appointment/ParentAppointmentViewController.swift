@@ -25,6 +25,17 @@ class ParentAppointmentViewController: UIViewController,
         return tv
     }()
 
+    // MARK: - Initializer
+    init() {
+        super.init(nibName: nil, bundle: nil)
+        self.hidesBottomBarWhenPushed = true
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        self.hidesBottomBarWhenPushed = true
+    }
+
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -43,8 +54,16 @@ class ParentAppointmentViewController: UIViewController,
 
         navigationController?.setNavigationBarHidden(false, animated: animated)
         navigationController?.navigationBar.prefersLargeTitles = false
+        tabBarController?.tabBar.isHidden = true
 
         fetchAppointments()
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        if self.isMovingFromParent {
+            tabBarController?.tabBar.isHidden = false
+        }
     }
 
     // MARK: - Fetch Appointments
@@ -192,6 +211,14 @@ class ParentAppointmentViewController: UIViewController,
         navigationController?.navigationBar.scrollEdgeAppearance = appearance
         navigationController?.navigationBar.compactAppearance = appearance
         navigationController?.navigationBar.tintColor = .label
+        
+        // Add robust Back Button for iPad
+        let backBtn = UIBarButtonItem(image: UIImage(systemName: "chevron.backward"), style: .plain, target: self, action: #selector(handleBack))
+        navigationItem.leftBarButtonItem = backBtn
+    }
+
+    @objc private func handleBack() {
+        navigationController?.popViewController(animated: true)
     }
 
     // MARK: - UI Setup
@@ -211,18 +238,20 @@ class ParentAppointmentViewController: UIViewController,
         view.addSubview(tableView)
 
         NSLayoutConstraint.activate([
-            customCalendar.topAnchor.constraint(
-                equalTo: view.safeAreaLayoutGuide.topAnchor,
-                constant: 10
-            ),
-            customCalendar.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            customCalendar.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            customCalendar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
+            customCalendar.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
+            customCalendar.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20),
             customCalendar.heightAnchor.constraint(equalToConstant: 320),
 
             tableView.topAnchor.constraint(equalTo: customCalendar.bottomAnchor, constant: 10),
-            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            tableView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
+        
+        // iPad Optimization
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            tableView.cellLayoutMarginsFollowReadableWidth = true
+        }
     }
 }

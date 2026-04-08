@@ -133,6 +133,7 @@ final class DashboardViewController: UIViewController {
         
         // 1. Hide the bar so your manual "Dashboard" label is at the top
         navigationController?.setNavigationBarHidden(true, animated: animated)
+        tabBarController?.tabBar.isHidden = false
         loadSelectedChild()
         applyTheme()
         view.layoutIfNeeded()
@@ -345,66 +346,97 @@ final class DashboardViewController: UIViewController {
     }
 
     private func setupLayout() {
-            let grid = makeGrid()
+        let grid = makeGrid()
 
-            [
-                titleLabel, subtitleLabel, quoteContainerView,
-                quickAccessLabel, grid, profileImageView
-            ].forEach {
-                $0.translatesAutoresizingMaskIntoConstraints = false
-                view.addSubview($0)
-            }
-            
-            quoteContainerView.addSubview(quoteTextLabel)
-            quoteTextLabel.translatesAutoresizingMaskIntoConstraints = false
-
-            NSLayoutConstraint.activate([
-                // Profile avatar — top right
-                profileImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 44),
-                profileImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-                profileImageView.widthAnchor.constraint(equalToConstant: 44),
-                profileImageView.heightAnchor.constraint(equalToConstant: 44),
-
-                titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 40),
-                titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-
-                subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 2),
-                subtitleLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
-
-                quoteContainerView.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: 20),
-                quoteContainerView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-                quoteContainerView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-                
-                quoteTextLabel.topAnchor.constraint(equalTo: quoteContainerView.topAnchor, constant: 16),
-                quoteTextLabel.leadingAnchor.constraint(equalTo: quoteContainerView.leadingAnchor, constant: 16),
-                quoteTextLabel.trailingAnchor.constraint(equalTo: quoteContainerView.trailingAnchor, constant: -16),
-                quoteTextLabel.bottomAnchor.constraint(equalTo: quoteContainerView.bottomAnchor, constant: -16),
-
-                quickAccessLabel.topAnchor.constraint(equalTo: quoteContainerView.bottomAnchor, constant: 100),
-                quickAccessLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-
-                grid.topAnchor.constraint(equalTo: quickAccessLabel.bottomAnchor, constant: 14),
-                grid.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-                grid.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-                grid.bottomAnchor.constraint(lessThanOrEqualTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20)
-            ])
+        [
+            titleLabel, subtitleLabel, quoteContainerView,
+            quickAccessLabel, grid, profileImageView
+        ].forEach {
+            $0.translatesAutoresizingMaskIntoConstraints = false
+            view.addSubview($0)
         }
+        
+        quoteContainerView.addSubview(quoteTextLabel)
+        quoteTextLabel.translatesAutoresizingMaskIntoConstraints = false
+
+        // Determine if we are on iPad for adaptive margins
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
+        let horizontalPadding: CGFloat = isPad ? 44 : 20
+        let topPadding: CGFloat = 40
+
+        NSLayoutConstraint.activate([
+            // Profile avatar — top right
+            profileImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: topPadding + 4),
+            profileImageView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -horizontalPadding),
+            profileImageView.widthAnchor.constraint(equalToConstant: isPad ? 60 : 44),
+            profileImageView.heightAnchor.constraint(equalToConstant: isPad ? 60 : 44),
+
+            titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: topPadding),
+            titleLabel.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: horizontalPadding),
+
+            subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 2),
+            subtitleLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
+
+            quoteContainerView.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: 20),
+            quoteContainerView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: horizontalPadding),
+            quoteContainerView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -horizontalPadding),
+            
+            quoteTextLabel.topAnchor.constraint(equalTo: quoteContainerView.topAnchor, constant: 16),
+            quoteTextLabel.leadingAnchor.constraint(equalTo: quoteContainerView.leadingAnchor, constant: 24),
+            quoteTextLabel.trailingAnchor.constraint(equalTo: quoteContainerView.trailingAnchor, constant: -24),
+            quoteTextLabel.bottomAnchor.constraint(equalTo: quoteContainerView.bottomAnchor, constant: -16),
+
+            quickAccessLabel.topAnchor.constraint(equalTo: quoteContainerView.bottomAnchor, constant: isPad ? 60 : 40),
+            quickAccessLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
+
+            grid.topAnchor.constraint(equalTo: quickAccessLabel.bottomAnchor, constant: 14),
+            grid.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: horizontalPadding),
+            grid.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -horizontalPadding),
+            grid.bottomAnchor.constraint(lessThanOrEqualTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20)
+        ])
+        
+        if isPad {
+            profileImageView.layer.cornerRadius = 30
+        }
+    }
 
     private func makeGrid() -> UIStackView {
-        let row1 = UIStackView(arrangedSubviews: [assignmentCard, appointmentCard])
-        let row2 = UIStackView(arrangedSubviews: [chatCard, notesCard])
-        let row3 = UIStackView(arrangedSubviews: [gamesCard, UIView()])
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
+        
+        let allCards = [assignmentCard, appointmentCard, chatCard, notesCard, gamesCard]
+        
+        if isPad {
+            // 3 Columns for iPad
+            let row1 = UIStackView(arrangedSubviews: [assignmentCard, appointmentCard, chatCard])
+            let row2 = UIStackView(arrangedSubviews: [notesCard, gamesCard, UIView()])
+            
+            [row1, row2].forEach {
+                $0.axis = .horizontal
+                $0.spacing = 20
+                $0.distribution = .fillEqually
+            }
+            
+            let grid = UIStackView(arrangedSubviews: [row1, row2])
+            grid.axis = .vertical
+            grid.spacing = 20
+            return grid
+        } else {
+            // 2 Columns for iPhone
+            let row1 = UIStackView(arrangedSubviews: [assignmentCard, appointmentCard])
+            let row2 = UIStackView(arrangedSubviews: [chatCard, notesCard])
+            let row3 = UIStackView(arrangedSubviews: [gamesCard, UIView()])
 
-        [row1, row2, row3].forEach {
-            $0.axis = .horizontal
-            $0.spacing = 14
-            $0.distribution = .fillEqually
+            [row1, row2, row3].forEach {
+                $0.axis = .horizontal
+                $0.spacing = 14
+                $0.distribution = .fillEqually
+            }
+
+            let grid = UIStackView(arrangedSubviews: [row1, row2, row3])
+            grid.axis = .vertical
+            grid.spacing = 16
+            return grid
         }
-
-        let grid = UIStackView(arrangedSubviews: [row1, row2, row3])
-        grid.axis = .vertical
-        grid.spacing = 16
-        return grid
     }
 
     // MARK: - Actions

@@ -1,11 +1,3 @@
-//
-//  ParentNoteDetailViewController.swift
-//  OT main
-//
-//  Created by Garvit Pareek on 18/01/2026.
-//
-
-
 import UIKit
 import Supabase
 // Dedicated delegate just for the Parent side
@@ -19,6 +11,17 @@ class ParentNoteDetailViewController: UIViewController, UITextViewDelegate, UITe
     var patientID: String?
     var noteContent: String?
     var fullDateString: String?
+    
+    // MARK: - Initializers
+    init() {
+        super.init(nibName: nil, bundle: nil)
+        self.hidesBottomBarWhenPushed = true
+    }
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        self.hidesBottomBarWhenPushed = true
+    }
     
     private var containerBottomConstraint: NSLayoutConstraint?
 

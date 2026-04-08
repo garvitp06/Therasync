@@ -56,6 +56,17 @@ class ParentChatDetailViewController: UIViewController, UITableViewDelegate, UIT
     override var inputAccessoryView: UIView? { return customInputView }
     override var canBecomeFirstResponder: Bool { return true }
 
+    // MARK: - Initializer
+    init() {
+        super.init(nibName: nil, bundle: nil)
+        self.hidesBottomBarWhenPushed = true
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        self.hidesBottomBarWhenPushed = true
+    }
+
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -77,12 +88,16 @@ class ParentChatDetailViewController: UIViewController, UITableViewDelegate, UIT
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(false, animated: animated)
+        tabBarController?.tabBar.isHidden = true
         setupNativeNavBar()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         listener?.remove()
+        if self.isMovingFromParent {
+            tabBarController?.tabBar.isHidden = false
+        }
     }
     
     // REMOVED: viewDidLayoutSubviews with manual inset calculation.
@@ -99,6 +114,14 @@ class ParentChatDetailViewController: UIViewController, UITableViewDelegate, UIT
         navigationController?.navigationBar.scrollEdgeAppearance = appearance
         navigationController?.navigationBar.tintColor = .label
         navigationItem.rightBarButtonItem = nil
+        
+        // Add robust Back Button for iPad
+        let backBtn = UIBarButtonItem(image: UIImage(systemName: "chevron.backward"), style: .plain, target: self, action: #selector(handleBack))
+        navigationItem.leftBarButtonItem = backBtn
+    }
+    
+    @objc private func handleBack() {
+        navigationController?.popViewController(animated: true)
     }
     
     private func setupUI() {

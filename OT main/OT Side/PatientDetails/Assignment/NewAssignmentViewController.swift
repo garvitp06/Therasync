@@ -49,6 +49,7 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate, UITextF
     private var localAttachmentURLs: [URL] = []
     private var aiRecommendationState: AIRecommendationState = .idle
     private var suggestedQuestions: [String] = []
+    private var activeField: UIView?
     
     // MARK: - UI Components
     private let scrollView: UIScrollView = {
@@ -291,13 +292,23 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate, UITextF
         setupLayout()
         setupPickers()
         setupInteractions()
+        setupKeyboardHandling()
+        titleTextField.delegate = self
         typeTextField.delegate = self
         instructionTextView.delegate = self
+        
+        let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        tap.cancelsTouchesInView = false
+        view.addGestureRecognizer(tap)
         
         // Fetch patient assessments on load
         if let pid = patientID {
             fetchPatientAssessments(for: pid)
         }
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
     
     override func viewDidLayoutSubviews() {
@@ -565,10 +576,14 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate, UITextF
         tf.heightAnchor.constraint(equalToConstant: 45).isActive = true
         tf.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: 45))
         tf.leftViewMode = .always
+        tf.delegate = self
         
         let deleteBtn = UIButton(type: .system)
         deleteBtn.setImage(UIImage(systemName: "minus.circle.fill"), for: .normal)
         deleteBtn.tintColor = .systemRed
+        deleteBtn.translatesAutoresizingMaskIntoConstraints = false
+        deleteBtn.widthAnchor.constraint(equalToConstant: 30).isActive = true
+        deleteBtn.heightAnchor.constraint(equalToConstant: 30).isActive = true
         
         deleteBtn.addAction(UIAction(handler: { [weak self, weak container] _ in
             self?.confirmDeletion(title: "Delete Question", message: "Are you sure you want to remove this question?") {
@@ -607,6 +622,38 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate, UITextF
         typeTextField.inputAccessoryView = toolbar
     }
     
+    private func setupKeyboardHandling() {
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow), name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide), name: UIResponder.keyboardWillHideNotification, object: nil)
+    }
+
+    @objc private func keyboardWillShow(notification: NSNotification) {
+        guard let userInfo = notification.userInfo,
+              let keyboardFrame = userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue else { return }
+        
+        let keyboardSize = keyboardFrame.cgRectValue.size
+        let contentInsets = UIEdgeInsets(top: 0, left: 0, bottom: keyboardSize.height, right: 0)
+        
+        scrollView.contentInset = contentInsets
+        scrollView.scrollIndicatorInsets = contentInsets
+
+        if let activeField = activeField {
+            let rect = activeField.convert(activeField.bounds, to: scrollView)
+            scrollView.scrollRectToVisible(rect, animated: true)
+        }
+    }
+
+    @objc private func keyboardWillHide(notification: NSNotification) {
+        let contentInsets = UIEdgeInsets.zero
+        scrollView.contentInset = contentInsets
+        scrollView.scrollIndicatorInsets = contentInsets
+        activeField = nil
+    }
+
+    @objc private func dismissKeyboard() {
+        view.endEditing(true)
+    }
+
     private func setupInteractions() {
         addQuestionButton.addTarget(self, action: #selector(didTapAddQuestion), for: .touchUpInside)
         attachmentButton.addTarget(self, action: #selector(didTapAttachments), for: .touchUpInside)
@@ -641,10 +688,14 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate, UITextF
         tf.heightAnchor.constraint(equalToConstant: 45).isActive = true
         tf.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: 45))
         tf.leftViewMode = .always
+        tf.delegate = self
         
         let deleteBtn = UIButton(type: .system)
         deleteBtn.setImage(UIImage(systemName: "minus.circle.fill"), for: .normal)
         deleteBtn.tintColor = .systemRed
+        deleteBtn.translatesAutoresizingMaskIntoConstraints = false
+        deleteBtn.widthAnchor.constraint(equalToConstant: 30).isActive = true
+        deleteBtn.heightAnchor.constraint(equalToConstant: 30).isActive = true
         
         deleteBtn.addAction(UIAction(handler: { [weak self, weak container] _ in
             self?.confirmDeletion(title: "Delete Question", message: "Are you sure you want to remove this question?") {
@@ -831,10 +882,27 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate, UITextF
     }
 
     func textViewDidBeginEditing(_ textView: UITextView) {
+        activeField = textView
         if textView.textColor == .lightGray {
             textView.text = nil
             textView.textColor = .label
         }
+    }
+    
+    func textViewDidEndEditing(_ textView: UITextView) {
+        activeField = nil
+        if textView.text.isEmpty {
+            textView.text = "Assignment Instruction"
+            textView.textColor = .lightGray
+        }
+    }
+
+    func textFieldDidBeginEditing(_ textField: UITextField) {
+        activeField = textField
+    }
+
+    func textFieldDidEndEditing(_ textField: UITextField) {
+        activeField = nil
     }
 }
 

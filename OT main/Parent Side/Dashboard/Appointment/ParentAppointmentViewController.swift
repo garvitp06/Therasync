@@ -66,7 +66,7 @@ class ParentAppointmentViewController: UIViewController,
     private func fetchAppointments() {
         Task {
             do {
-                let currentUser = try await supabase.auth.session.user
+                let currentUser = try await try await supabase.auth.user()
                 let currentUserID = currentUser.id
 
                 // Step 1: Get the linked patient's UUID

@@ -1,23 +1,7 @@
-//
-//  ReportIssueViewController.swift
-//  OT main
-//
-//  Created by Garvit Pareek on 17/01/2026.
-//
-
-
-//
-//  ReportIssueViewController.swift
-//  OT main
-//
-//  Created by Alishri Poddar
-//
-
-
-
 import UIKit
+import PhotosUI
 
-class ReportIssueViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+class ReportIssueViewController: UIViewController, PHPickerViewControllerDelegate {
     
     // Back to standard GradientView
     private let backgroundView: GradientView = {
@@ -30,7 +14,6 @@ class ReportIssueViewController: UIViewController, UIImagePickerControllerDelega
         let label = UILabel()
         label.text = "Describe the issue you're experiencing:"
         label.font = .systemFont(ofSize: 16, weight: .medium)
-        // Back to standard dynamicLabel
         label.textColor = .dynamicLabel
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -40,7 +23,6 @@ class ReportIssueViewController: UIViewController, UIImagePickerControllerDelega
         let tv = UITextView()
         tv.layer.cornerRadius = 12
         tv.font = .systemFont(ofSize: 16)
-        // Back to standard dynamicCard & dynamicLabel
         tv.backgroundColor = .dynamicCard
         tv.textColor = .dynamicLabel
         tv.translatesAutoresizingMaskIntoConstraints = false
@@ -70,9 +52,7 @@ class ReportIssueViewController: UIViewController, UIImagePickerControllerDelega
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        // This function is now available via the extension in OTSettingsViewController (or globally)
         applyOTNavigationStyling(title: "Report Issue")
-        
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: "Submit", style: .done, target: self, action: #selector(submitTapped))
         navigationItem.rightBarButtonItem?.tintColor = .white
     }
@@ -123,9 +103,11 @@ class ReportIssueViewController: UIViewController, UIImagePickerControllerDelega
     }
     
     @objc func addPhotoTapped() {
-        let picker = UIImagePickerController()
+        var config = PHPickerConfiguration()
+        config.selectionLimit = 5
+        config.filter = .images
+        let picker = PHPickerViewController(configuration: config)
         picker.delegate = self
-        picker.sourceType = .photoLibrary
         present(picker, animated: true)
     }
     
@@ -137,15 +119,22 @@ class ReportIssueViewController: UIViewController, UIImagePickerControllerDelega
         present(alert, animated: true)
     }
     
-    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-        if let image = info[.originalImage] as? UIImage {
-            let iv = UIImageView(image: image)
-            iv.contentMode = .scaleAspectFill
-            iv.layer.cornerRadius = 8
-            iv.clipsToBounds = true
-            iv.widthAnchor.constraint(equalToConstant: 80).isActive = true
-            imagesStackView.addArrangedSubview(iv)
+    // MARK: - PHPickerViewControllerDelegate
+    func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+        dismiss(animated: true)
+        for result in results {
+            result.itemProvider.loadObject(ofClass: UIImage.self) { [weak self] object, _ in
+                guard let self = self, let image = object as? UIImage else { return }
+                DispatchQueue.main.async {
+                    let iv = UIImageView(image: image)
+                    iv.contentMode = .scaleAspectFill
+                    iv.layer.cornerRadius = 8
+                    iv.clipsToBounds = true
+                    iv.widthAnchor.constraint(equalToConstant: 80).isActive = true
+                    self.imagesStackView.addArrangedSubview(iv)
+                }
+            }
         }
-        picker.dismiss(animated: true)
     }
 }
+

@@ -49,6 +49,12 @@ class ProfileViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         populateHeaderData()
+        
+        if #available(iOS 17.0, *) {
+            registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
+                self.profileImageView.layer.borderColor = UIColor.systemBackground.resolvedColor(with: self.traitCollection).cgColor
+            }
+        }
     }
     
     override func viewDidLayoutSubviews() {
@@ -63,12 +69,6 @@ class ProfileViewController: UIViewController {
         populateHeaderData() // Refresh in case data was updated in sub views
     }
     
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        if traitCollection.hasDifferentColorAppearance(comparedTo: previousTraitCollection) {
-            profileImageView.layer.borderColor = UIColor.systemBackground.resolvedColor(with: traitCollection).cgColor
-        }
-    }
     
     private func setupNavigationBarAppearance() {
         navigationItem.largeTitleDisplayMode = .never

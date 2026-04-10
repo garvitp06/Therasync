@@ -156,7 +156,7 @@ class ParentEmptyStateViewController: UIViewController {
 
         Task {
             do {
-                let user = try await supabase.auth.session.user
+                let user = try await try await supabase.auth.user()
                 let currentUID = user.id
 
                 // Step 1: Update Patients Table (This part is working for you now)

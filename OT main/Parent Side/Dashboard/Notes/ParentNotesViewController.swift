@@ -158,7 +158,7 @@ class ParentNotesViewController: UIViewController {
         
         Task {
             do {
-                let user = try await supabase.auth.session.user
+                let user = try await try await supabase.auth.user()
                 let fetched: [Note] = try await supabase.from("notes").select()
                     .eq("patient_id", value: pID).eq("parent_uid", value: user.id.uuidString)
                     .order("created_at", ascending: false).execute().value
@@ -198,7 +198,7 @@ class ParentNotesViewController: UIViewController {
 
         Task {
             do {
-                let user = try await supabase.auth.session.user
+                let user = try await try await supabase.auth.user()
                 let newNoteID = UUID()
                 
                 // Create the local note object with all required fields

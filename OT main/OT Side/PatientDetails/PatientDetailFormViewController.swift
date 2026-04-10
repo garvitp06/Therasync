@@ -135,13 +135,16 @@ class PatientDetailFormViewController: UIViewController, PHPickerViewControllerD
         profileImageView.layer.cornerRadius = profileImageView.bounds.width / 2
     }
     
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        if traitCollection.hasDifferentColorAppearance(comparedTo: previousTraitCollection) {
-            profileImageView.layer.borderColor = UIColor.systemBackground.resolvedColor(with: traitCollection).cgColor
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        if #available(iOS 17.0, *) {
+            registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
+                self.profileImageView.layer.borderColor = UIColor.systemBackground.resolvedColor(with: self.traitCollection).cgColor
+            }
         }
     }
-    
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         setupNavigationBarAppearance()

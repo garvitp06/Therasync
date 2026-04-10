@@ -16,7 +16,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func saveDeviceToken(_ token: String) {
         Task {
             do {
-                let user = try await supabase.auth.session.user
+                let user = try await try await supabase.auth.user()
                 try await supabase
                     .from("profiles")
                     .update(["fcm_token": token])

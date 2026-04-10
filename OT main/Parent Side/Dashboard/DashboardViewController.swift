@@ -153,7 +153,7 @@ final class DashboardViewController: UIViewController {
     private func verifyLinkingAndLoadData() {
         Task {
             do {
-                let user = try await supabase.auth.session.user
+                let user = try await try await supabase.auth.user()
                 
                 // 1. Fetch the linking status from the profile
                 let profileResponse = try await supabase
@@ -220,7 +220,7 @@ final class DashboardViewController: UIViewController {
     func fetchLinkedChildren() {
         Task {
             do {
-                let parent = try await supabase.auth.session.user
+                let parent = try await try await supabase.auth.user()
                 let children: [Patient] = try await supabase
                     .from("patients")
                     .select()
@@ -235,7 +235,7 @@ final class DashboardViewController: UIViewController {
     private func loadSelectedChild() {
         Task {
             do {
-                let user = try await supabase.auth.session.user
+                let user = try await try await supabase.auth.user()
                 let currentUserId = user.id.uuidString
 
                 let response = try await supabase
@@ -284,7 +284,7 @@ final class DashboardViewController: UIViewController {
     func fetchParentDashboardData() {
         Task {
             do {
-                let user = try await supabase.auth.session.user
+                let user = try await try await supabase.auth.user()
                 
                 // Fetch patients where the parent_uid matches the logged-in user
                 let linkedPatients: [Patient] = try await supabase
@@ -313,7 +313,7 @@ final class DashboardViewController: UIViewController {
     func fetchMyChild() {
         Task {
             do {
-                let user = try await supabase.auth.session.user
+                let user = try await try await supabase.auth.user()
                 let response: [Patient] = try await supabase
                     .from("patients")
                     .select()

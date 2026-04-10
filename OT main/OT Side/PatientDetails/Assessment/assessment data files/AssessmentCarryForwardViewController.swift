@@ -112,6 +112,13 @@ final class AssessmentCarryForwardViewController: UIViewController {
         setupNavBar()
         setupUI()
         fetchPreviousAssessment()
+        
+        if #available(iOS 17.0, *) {
+            registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
+                self.reviewButton.layer.borderColor = UIColor.systemBlue.cgColor
+                self.cardView.layer.shadowColor = UIColor.black.cgColor
+            }
+        }
     }
 
     // MARK: - Nav Bar
@@ -338,11 +345,4 @@ final class AssessmentCarryForwardViewController: UIViewController {
         }
     }
 
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        if traitCollection.hasDifferentColorAppearance(comparedTo: previousTraitCollection) {
-            reviewButton.layer.borderColor = UIColor.systemBlue.cgColor
-            cardView.layer.shadowColor = UIColor.black.cgColor
-        }
-    }
 }

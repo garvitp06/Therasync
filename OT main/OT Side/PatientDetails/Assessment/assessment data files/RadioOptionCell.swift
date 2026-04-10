@@ -53,6 +53,12 @@ final class RadioOptionCell: UITableViewCell {
         selectionStyle = .none
         backgroundColor = .clear
         contentView.backgroundColor = .clear
+        
+        if #available(iOS 17.0, *) {
+            registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
+                self.outerCircle.layer.borderColor = (self.innerDot.isHidden ? UIColor.systemGray4 : UIColor.systemBlue).resolvedColor(with: self.traitCollection).cgColor
+            }
+        }
     }
 
     required init?(coder: NSCoder) {
@@ -103,13 +109,6 @@ final class RadioOptionCell: UITableViewCell {
         }
     }
 
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        if traitCollection.hasDifferentColorAppearance(comparedTo: previousTraitCollection) {
-            // Re-evalute border color based on current selection and local trait collection
-            outerCircle.layer.borderColor = (innerDot.isHidden ? UIColor.systemGray4 : UIColor.systemBlue).resolvedColor(with: traitCollection).cgColor
-        }
-    }
 
     /// Hide separator for last cell (to keep bottom rounded card look)
     func showSeparator(_ show: Bool) {

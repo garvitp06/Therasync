@@ -145,7 +145,7 @@ class StudentProfileViewController: UIViewController {
         nameLabel.text = ""
         Task {
             do {
-                let user = try await supabase.auth.session.user
+                let user = try await try await supabase.auth.user()
                 let decoder = JSONDecoder()
                 let formatter = DateFormatter()
                 formatter.dateFormat = "yyyy-MM-dd"
@@ -241,7 +241,7 @@ class StudentProfileViewController: UIViewController {
         guard let target = linkedPatients.first(where: { $0.patientID == id }) else { return }
         Task {
             do {
-                let user = try await supabase.auth.session.user
+                let user = try await try await supabase.auth.user()
                 try await supabase.from("profiles")
                     .update(["linked_patient_id": id])
                     .eq("id", value: user.id).execute()
@@ -262,7 +262,7 @@ class StudentProfileViewController: UIViewController {
         guard let patient = currentPatient else { return }
         Task {
             do {
-                let user = try await supabase.auth.session.user
+                let user = try await try await supabase.auth.user()
                 try await supabase.from("patients")
                     .update(["parent_uid": String?.none])
                     .eq("patient_id_number", value: patient.patientID).execute()
@@ -303,7 +303,7 @@ class StudentProfileViewController: UIViewController {
     private func performLink(code: String) {
         Task {
             do {
-                let user = try await supabase.auth.session.user
+                let user = try await try await supabase.auth.user()
                 let update = try await supabase.from("patients")
                     .update(["parent_uid": user.id.uuidString])
                     .eq("patient_id_number", value: code).select().execute()

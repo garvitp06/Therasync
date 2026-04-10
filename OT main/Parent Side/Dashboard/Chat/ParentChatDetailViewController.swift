@@ -139,7 +139,7 @@ class ParentChatDetailViewController: UIViewController, UITableViewDelegate, UIT
         loadingIndicator.startAnimating()
         Task {
             do {
-                let user = try await supabase.auth.session.user
+                let user = try await try await supabase.auth.user()
                 let parentAuthId = user.id.uuidString
                 
                 let targetPatientID = self.patientID ?? UserDefaults.standard.string(forKey: "LastSelectedChildID")

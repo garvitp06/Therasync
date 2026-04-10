@@ -369,7 +369,7 @@ class NewLoginViewController: UIViewController {
     func routeUser() {
         Task {
             do {
-                let user = try await supabase.auth.session.user
+                let user = try await try await supabase.auth.user()
                 let fetched: [Patient] = try await supabase
                     .from("patients").select()
                     .eq("parent_uid", value: user.id).execute().value
@@ -386,7 +386,7 @@ class NewLoginViewController: UIViewController {
         Task { [weak self] in
             do {
                 // 1. Fetch the currently authenticated user
-                let user = try await supabase.auth.session.user
+                let user = try await try await supabase.auth.user()
                 
                 // 2. Fetch the specific profile fields for this user
                 let response = try await supabase.from("profiles")

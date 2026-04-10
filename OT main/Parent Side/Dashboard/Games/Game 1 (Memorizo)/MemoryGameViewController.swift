@@ -64,18 +64,18 @@ class MemoryGameViewController: UIViewController {
         
         startButton.addTarget(self, action: #selector(startGame), for: .touchUpInside)
         hapticGenerator.prepare()
+        
+        if #available(iOS 17.0, *) {
+            registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
+                self.applyTheme()
+            }
+        }
     }
 
     deinit {
         NotificationCenter.default.removeObserver(self)
     }
 
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        if traitCollection.hasDifferentColorAppearance(comparedTo: previousTraitCollection) {
-            applyTheme()
-        }
-    }
 
     // MARK: - Setup
     private func setupUI() {

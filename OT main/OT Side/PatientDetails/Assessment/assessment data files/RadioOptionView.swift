@@ -60,10 +60,14 @@ class RadioOptionView: UIControl {
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupViews()
-        
-        // Add Tap Gesture so the whole row is clickable
         let tap = UITapGestureRecognizer(target: self, action: #selector(didTapView))
         self.addGestureRecognizer(tap)
+        
+        if #available(iOS 17.0, *) {
+            registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
+                self.outerCircle.layer.borderColor = (self.isOn ? UIColor.systemBlue : UIColor.systemGray4).resolvedColor(with: self.traitCollection).cgColor
+            }
+        }
     }
 
     required init?(coder: NSCoder) {
@@ -125,12 +129,6 @@ class RadioOptionView: UIControl {
         }
     }
 
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        if traitCollection.hasDifferentColorAppearance(comparedTo: previousTraitCollection) {
-            outerCircle.layer.borderColor = (isOn ? UIColor.systemBlue : UIColor.systemGray4).resolvedColor(with: traitCollection).cgColor
-        }
-    }
 
     func showSeparator(_ show: Bool) {
         separator.isHidden = !show

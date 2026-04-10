@@ -150,7 +150,7 @@ class ParentNoteDetailViewController: UIViewController, UITextViewDelegate, UITe
     private func executeSupabaseSave(id: UUID, pID: String, title: String, body: String) {
         Task {
             do {
-                let user = try await supabase.auth.session.user
+                let user = try await try await supabase.auth.user()
                 try await supabase.from("notes").upsert([
                     "id": id.uuidString,
                     "patient_id": pID,
@@ -171,7 +171,7 @@ class ParentNoteDetailViewController: UIViewController, UITextViewDelegate, UITe
 
         Task {
             do {
-                let user = try await supabase.auth.session.user
+                let user = try await try await supabase.auth.user()
                 try await supabase.from("notes").upsert([
                     "id": id.uuidString,
                     "patient_id": pID,

@@ -60,7 +60,11 @@ class SupportTicketViewController: UIViewController, PHPickerViewControllerDeleg
         let tap = UITapGestureRecognizer(target: self, action: #selector(pickImage))
         attachmentView.addGestureRecognizer(tap)
         
-        
+        if #available(iOS 17.0, *) {
+            registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, previousTraitCollection: UITraitCollection) in
+                self.updateLayerColors()
+            }
+        }
 
         updateLayerColors()
     }
@@ -99,10 +103,6 @@ class SupportTicketViewController: UIViewController, PHPickerViewControllerDeleg
     private func updateLayerColors() {
         let isDark = UserDefaults.standard.bool(forKey: "Dark Mode")
         textView.layer.borderColor = isDark ? UIColor.secondaryLabel.cgColor : UIColor.systemGray4.cgColor
-    }
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        updateLayerColors()
     }
     
     private func setupUI() {

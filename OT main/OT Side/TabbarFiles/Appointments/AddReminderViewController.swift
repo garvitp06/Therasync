@@ -298,7 +298,8 @@ class AddReminderViewController: UIViewController, UITextFieldDelegate, UITableV
     private func fetchAllPatients() {
         Task {
             do {
-                let therapistID = try await supabase.auth.session.user.id
+                let user = try await supabase.auth.user()
+                let therapistID = user.id
                 
                 let results: [PatientLookup] = try await supabase
                     .from("patients")
@@ -371,7 +372,8 @@ class AddReminderViewController: UIViewController, UITextFieldDelegate, UITableV
         
         Task {
             do {
-                let therapistID = try await supabase.auth.session.user.id
+                let user = try await supabase.auth.user()
+                let therapistID = user.id
                 let newAppt = Appointment(
                     id: nil, title: title, date: finalDate, status: "confirmed",
                     createdByRole: "therapist", patientId: patientID,

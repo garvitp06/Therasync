@@ -73,7 +73,7 @@ class SplashViewController: UIViewController {
     private func checkParentLinkingAndRoute() {
         Task {
             do {
-                let user = try await supabase.auth.session.user
+                let user = try await supabase.auth.user()
                 
                 let response = try await supabase
                     .from("profiles")

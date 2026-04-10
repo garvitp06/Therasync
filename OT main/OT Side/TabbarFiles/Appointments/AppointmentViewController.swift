@@ -110,7 +110,8 @@ class AppointmentViewController: UIViewController,
     func fetchAppointments() {
         Task {
             do {
-                let userID = try await supabase.auth.session.user.id
+                let user = try await supabase.auth.user()
+                let userID = user.id
                 
                 let response = try await supabase
                     .from("appointments")

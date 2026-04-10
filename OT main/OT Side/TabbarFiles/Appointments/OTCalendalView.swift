@@ -297,16 +297,16 @@ class CalendarDayCell: UICollectionViewCell {
             dotView.widthAnchor.constraint(equalToConstant: 4),
             dotView.heightAnchor.constraint(equalToConstant: 4)
         ])
+
+        if #available(iOS 17.0, *) {
+            registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, previousTraitCollection: UITraitCollection) in
+                self.todayRing.layer.borderColor = UIColor.systemBlue.resolvedColor(with: self.traitCollection).cgColor
+            }
+        }
     }
     
     required init?(coder: NSCoder) { fatalError() }
     
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        if traitCollection.hasDifferentColorAppearance(comparedTo: previousTraitCollection) {
-            todayRing.layer.borderColor = UIColor.systemBlue.resolvedColor(with: traitCollection).cgColor
-        }
-    }
     
     func configure(isToday: Bool, isSelected: Bool, hasAppointment: Bool) {
         // Toggle Views

@@ -1,6 +1,8 @@
 import UIKit
 import Supabase
-class ParentUpdateProfileViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+import PhotosUI
+
+class ParentUpdateProfileViewController: UIViewController, PHPickerViewControllerDelegate, UINavigationControllerDelegate {
     // MARK: - Data Input
     var patient: Patient?
     // MARK: - Init
@@ -210,15 +212,28 @@ class ParentUpdateProfileViewController: UIViewController, UIImagePickerControll
         }
     }
     @objc private func handleChangePhoto() {
-        let picker = UIImagePickerController()
+        var config = PHPickerConfiguration()
+        config.filter = .images
+        config.selectionLimit = 1
+        
+        let picker = PHPickerViewController(configuration: config)
         picker.delegate = self
-        picker.allowsEditing = true
         present(picker, animated: true)
     }
-    func imagePickerController(_ picker: UIImagePickerController,
-                               didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
-        if let img = info[.editedImage] as? UIImage { profileImageView.image = img }
+
+    // MARK: - PHPickerViewControllerDelegate
+    func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
         dismiss(animated: true)
+        
+        guard let result = results.first else { return }
+        
+        result.itemProvider.loadObject(ofClass: UIImage.self) { [weak self] (object, error) in
+            if let image = object as? UIImage {
+                DispatchQueue.main.async {
+                    self?.profileImageView.image = image
+                }
+            }
+        }
     }
     // MARK: - Keyboard
     private func setupKeyboardHandling() {

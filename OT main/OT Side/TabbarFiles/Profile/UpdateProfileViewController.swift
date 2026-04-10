@@ -1,5 +1,7 @@
 import UIKit
 import Supabase
+import PhotosUI
+
 struct OTProfileUpdatePayloads: Encodable {
     let first_name: String
     let last_name: String
@@ -9,7 +11,8 @@ struct OTProfileUpdatePayloads: Encodable {
     let experience: String
     var avatar_url: String? = nil
 }
-class UpdateProfileViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+
+class UpdateProfileViewController: UIViewController, PHPickerViewControllerDelegate, UINavigationControllerDelegate {
     // MARK: - Properties
     private var hasChangedPhoto = false
     // MARK: - Init
@@ -260,18 +263,29 @@ class UpdateProfileViewController: UIViewController, UIImagePickerControllerDele
         }
     }
     @objc private func handleChangePhoto() {
-        let picker = UIImagePickerController()
+        var config = PHPickerConfiguration()
+        config.filter = .images
+        config.selectionLimit = 1
+        
+        let picker = PHPickerViewController(configuration: config)
         picker.delegate = self
-        picker.sourceType = .photoLibrary
         present(picker, animated: true)
     }
-    func imagePickerController(_ picker: UIImagePickerController,
-                               didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
-        if let img = info[.originalImage] as? UIImage {
-            profileImageView.image = img
-            hasChangedPhoto = true
-        }
+
+    // MARK: - PHPickerViewControllerDelegate
+    func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
         dismiss(animated: true)
+        
+        guard let result = results.first else { return }
+        
+        result.itemProvider.loadObject(ofClass: UIImage.self) { [weak self] (object, error) in
+            if let image = object as? UIImage {
+                DispatchQueue.main.async {
+                    self?.profileImageView.image = image
+                    self?.hasChangedPhoto = true
+                }
+            }
+        }
     }
     // MARK: - Keyboard
     private func setupKeyboardHandling() {

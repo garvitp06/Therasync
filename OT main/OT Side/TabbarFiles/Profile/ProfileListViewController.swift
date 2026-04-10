@@ -7,7 +7,7 @@ class ProfileListViewController: UIViewController {
     
     // MARK: - Data Models
     private let regularItems = ["Update Profile", "Settings", "Terms & Conditions", "About Us"]
-    private let actionItems = ["Log out"]
+    private let actionItems = ["Log out", "Delete Account"]
     
     // MARK: - UI Components
     private let tableView: UITableView = {
@@ -189,17 +189,53 @@ class ProfileListViewController: UIViewController {
         let alert = UIAlertController(title: "Log Out", message: "Are you sure you want to log out of your account?", preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         alert.addAction(UIAlertAction(title: "Log Out", style: .destructive, handler: { _ in
-            Task {
-                try? await supabase.auth.signOut()
-                await MainActor.run {
-                    let loginVC = NewLoginViewController()
-                    let nav = UINavigationController(rootViewController: loginVC)
-                    nav.setNavigationBarHidden(true, animated: false)
-                    self.view.window?.rootViewController = nav
-                }
-            }
+            self.performLogout()
         }))
         self.present(alert, animated: true)
+    }
+
+    private func performLogout() {
+        Task {
+            try? await supabase.auth.signOut()
+            await MainActor.run {
+                self.navigateToLogin()
+            }
+        }
+    }
+
+    private func handleDeleteAccount() {
+        let alert = UIAlertController(title: "Delete Account", message: "Are you sure you want to permanently delete your account and all associated data? This action cannot be undone.", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
+            self.performAccountDeletion()
+        }))
+        self.present(alert, animated: true)
+    }
+
+    private func performAccountDeletion() {
+        Task {
+            do {
+                guard let user = supabase.auth.currentUser else { return }
+                try await supabase.from("profiles").delete().eq("id", value: user.id).execute()
+                try await supabase.auth.signOut()
+                await MainActor.run {
+                    self.navigateToLogin()
+                }
+            } catch {
+                print("❌ OT Account Deletion Error: \(error)")
+            }
+        }
+    }
+
+    private func navigateToLogin() {
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first else { return }
+        
+        let loginVC = NewLoginViewController()
+        let nav = UINavigationController(rootViewController: loginVC)
+        nav.setNavigationBarHidden(true, animated: false)
+        window.rootViewController = nav
+        UIView.transition(with: window, duration: 0.35, options: .transitionCrossDissolve, animations: nil)
     }
 }
 
@@ -257,7 +293,11 @@ extension ProfileListViewController: UITableViewDataSource, UITableViewDelegate 
             default: break
             }
         } else {
-            handleLogout()
+            if indexPath.row == 0 {
+                handleLogout()
+            } else {
+                handleDeleteAccount()
+            }
         }
     }
 }

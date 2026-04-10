@@ -13,6 +13,7 @@ class StudentProfileViewController: UIViewController {
     private var switchItems: [String] = []    // switch child rows (also chevron)
     private var unlinkItems: [String] = []    // red, no chevron
     private let logoutItem = "Log out"
+    private let deleteAccountItem = "Delete Account"
     
     // MARK: - Initializer
     init() {
@@ -220,6 +221,8 @@ class StudentProfileViewController: UIViewController {
             showAddChildPopup()
         case "Log out":
             handleLogoutConfirmation()
+        case "Delete Account":
+            handleDeleteAccountConfirmation()
         default:
             if title.hasPrefix("Switch to ") {
                 // derive patientID from the matching switchItem index
@@ -276,7 +279,7 @@ class StudentProfileViewController: UIViewController {
                 let remaining = isSlot1 ? (data?["linked_patient_id_2"] as? String) : slot1
                 await MainActor.run {
                     if let next = remaining, !next.isEmpty {
-                        self.showToast(message: "Unlinked. Returning to other profile.")
+                        self.showToast(msg: "Unlinked. Returning to other profile.")
                         self.fetchAllLinkedPatients()
                     } else {
                         self.navigateToEmptyState()
@@ -305,7 +308,7 @@ class StudentProfileViewController: UIViewController {
                     .update(["parent_uid": user.id.uuidString])
                     .eq("patient_id_number", value: code).select().execute()
                 if update.data.isEmpty {
-                    await MainActor.run { self.showToast(message: "Patient already linked to another profile.") }
+                    await MainActor.run { self.showToast(msg: "Patient already linked to another profile.") }
                     return
                 }
                 let resp = try await supabase.from("profiles")
@@ -317,31 +320,11 @@ class StudentProfileViewController: UIViewController {
                 var field = ""
                 if slot1 == nil || slot1?.isEmpty == true { field = "linked_patient_id" }
                 else if slot2 == nil || slot2?.isEmpty == true { field = "linked_patient_id_2" }
-                else { await MainActor.run { self.showToast(message: "Maximum 2 children reached.") }; return }
+                else { await MainActor.run { self.showToast(msg: "Maximum 2 children reached.") }; return }
                 try await supabase.from("profiles").update([field: code]).eq("id", value: user.id).execute()
-                await MainActor.run { self.showToast(message: "Child added!"); self.fetchAllLinkedPatients() }
+                await MainActor.run { self.showToast(msg: "Child added!"); self.fetchAllLinkedPatients() }
             } catch {
-                await MainActor.run { self.showToast(message: "Error linking. Try again.") }
-            }
-        }
-    }
-
-    private func handleLogoutConfirmation() {
-        let alert = UIAlertController(title: "Log Out", message: "Are you sure you want to sign out?", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        alert.addAction(UIAlertAction(title: "Log Out", style: .destructive) { _ in self.performLogout() })
-        present(alert, animated: true)
-    }
-
-    private func performLogout() {
-        Task {
-            try? await supabase.auth.signOut()
-            await MainActor.run {
-                guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                      let window = windowScene.windows.first else { return }
-                let nav = UINavigationController(rootViewController: NewLoginViewController())
-                nav.setNavigationBarHidden(true, animated: false)
-                window.rootViewController = nav
+                await MainActor.run { self.showToast(msg: "Error linking. Try again.") }
             }
         }
     }
@@ -353,26 +336,76 @@ class StudentProfileViewController: UIViewController {
         UIView.transition(with: window, duration: 0.4, options: .transitionCrossDissolve, animations: nil)
     }
 
-    private func showToast(message: String) {
-        let toast = UIView()
-        toast.backgroundColor = UIColor.label.withAlphaComponent(0.8)
-        toast.layer.cornerRadius = 20
+    private func handleLogoutConfirmation() {
+        let alert = UIAlertController(title: "Log out", message: "Are you sure you want to log out?", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Log out", style: .destructive) { _ in
+            self.performLogout()
+        })
+        present(alert, animated: true)
+    }
+
+    private func handleDeleteAccountConfirmation() {
+        let alert = UIAlertController(title: "Delete Account", message: "Are you sure you want to permanently delete your account and all associated data? This action cannot be undone.", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { _ in
+            self.performAccountDeletion()
+        })
+        present(alert, animated: true)
+    }
+
+    private func performAccountDeletion() {
+        Task {
+            do {
+                guard let user = supabase.auth.currentUser else { return }
+                try await supabase.from("profiles").delete().eq("id", value: user.id).execute()
+                try await supabase.auth.signOut()
+                await MainActor.run {
+                    self.navigateToLogin()
+                }
+            } catch {
+                print("❌ Account Deletion Error: \(error)")
+            }
+        }
+    }
+
+    private func performLogout() {
+        Task {
+            try? await supabase.auth.signOut()
+            await MainActor.run {
+                self.navigateToLogin()
+            }
+        }
+    }
+
+    private func navigateToLogin() {
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first else { return }
+        let loginVC = NewLoginViewController()
+        let nav = UINavigationController(rootViewController: loginVC)
+        nav.setNavigationBarHidden(true, animated: false)
+        window.rootViewController = nav
+        UIView.transition(with: window, duration: 0.35, options: .transitionCrossDissolve, animations: nil)
+    }
+
+    private func showToast(msg: String) {
+        let toast = UILabel()
+        toast.text = msg
+        toast.backgroundColor = UIColor.black.withAlphaComponent(0.7)
+        toast.textColor = .white
+        toast.textAlignment = .center
+        toast.font = .systemFont(ofSize: 14, weight: .medium)
+        toast.layer.cornerRadius = 20; toast.clipsToBounds = true
         toast.translatesAutoresizingMaskIntoConstraints = false
-        let label = UILabel()
-        label.textColor = .systemBackground; label.text = message
-        label.font = .systemFont(ofSize: 14, weight: .medium)
-        label.textAlignment = .center; label.translatesAutoresizingMaskIntoConstraints = false
-        toast.addSubview(label); view.addSubview(toast)
+        view.addSubview(toast)
         NSLayoutConstraint.activate([
-            toast.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
+            toast.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
             toast.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             toast.heightAnchor.constraint(equalToConstant: 40),
-            label.leadingAnchor.constraint(equalTo: toast.leadingAnchor, constant: 20),
-            label.trailingAnchor.constraint(equalTo: toast.trailingAnchor, constant: -20),
-            label.centerYAnchor.constraint(equalTo: toast.centerYAnchor)
+            toast.widthAnchor.constraint(greaterThanOrEqualToConstant: 200)
         ])
-        toast.transform = CGAffineTransform(translationX: 0, y: -20); toast.alpha = 0
-        UIView.animate(withDuration: 0.5, delay: 0, usingSpringWithDamping: 0.7, initialSpringVelocity: 0.5) {
+        toast.alpha = 0; toast.transform = CGAffineTransform(translationX: 0, y: 20)
+        UIView.animate(withDuration: 0.5, delay: 0, options: .curveEaseOut) {
             toast.alpha = 1; toast.transform = .identity
         } completion: { _ in
             UIView.animate(withDuration: 0.5, delay: 2.0, options: .curveEaseIn) {
@@ -392,8 +425,8 @@ extension StudentProfileViewController: UITableViewDataSource, UITableViewDelega
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         switch section {
         case 0: return mainItems.count
-        case 1: return hasSwitchSection ? switchItems.count : (unlinkItems.count + 1) // unlink + logout
-        case 2: return unlinkItems.count + 1
+        case 1: return hasSwitchSection ? switchItems.count : (unlinkItems.count + 2)
+        case 2: return unlinkItems.count + 2
         default: return 0
         }
     }
@@ -416,8 +449,7 @@ extension StudentProfileViewController: UITableViewDataSource, UITableViewDelega
             isDestructive = false
             showChevron = true
         default:
-            // destructive section: unlink rows first, then logout
-            let allDestructive = unlinkItems + [logoutItem]
+            let allDestructive = unlinkItems + [logoutItem, deleteAccountItem]
             title = allDestructive[indexPath.row]
             isDestructive = true
             showChevron = false
@@ -447,7 +479,7 @@ extension StudentProfileViewController: UITableViewDataSource, UITableViewDelega
         case 1 where hasSwitchSection:
             title = switchItems[indexPath.row]
         default:
-            let allDestructive = unlinkItems + [logoutItem]
+            let allDestructive = unlinkItems + [logoutItem, deleteAccountItem]
             title = allDestructive[indexPath.row]
         }
 

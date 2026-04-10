@@ -4,6 +4,14 @@
 <dict>
 	<key>GEMINI_API_KEY</key>
 	<string>$(GEMINI_API_KEY)</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Therasync uses your camera so students can record video submissions for their therapy assignments.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Therasync accesses your photo library to attach images and videos to assignments, reports, and support tickets.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Therasync may save therapy-related media to your photo library.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Therasync uses Face ID to protect your parental settings and account.</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIRequiresFullScreen</key>

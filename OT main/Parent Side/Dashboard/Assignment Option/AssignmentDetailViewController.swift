@@ -424,6 +424,35 @@ class AssignmentDetailViewController: UIViewController,
     }
     // MARK: - Actions
     @objc private func recordVideoTapped() {
+        let status = AVCaptureDevice.authorizationStatus(for: .video)
+        switch status {
+        case .authorized:
+            openCamera()
+        case .notDetermined:
+            AVCaptureDevice.requestAccess(for: .video) { granted in
+                DispatchQueue.main.async {
+                    if granted { self.openCamera() }
+                }
+            }
+        case .denied, .restricted:
+            let alert = UIAlertController(
+                title: "Camera Access Required",
+                message: "Therasync needs camera access to record assignment videos. Please enable it in Settings.",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+            alert.addAction(UIAlertAction(title: "Open Settings", style: .default) { _ in
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            })
+            present(alert, animated: true)
+        @unknown default:
+            openCamera()
+        }
+    }
+
+    private func openCamera() {
         guard UIImagePickerController.isSourceTypeAvailable(.camera) else { return }
         let picker = UIImagePickerController()
         picker.sourceType  = .camera

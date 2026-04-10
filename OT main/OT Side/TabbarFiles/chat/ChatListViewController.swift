@@ -111,7 +111,7 @@ class ChatListViewController: UIViewController {
         
         Task {
             do {
-                let user = try await supabase.auth.session.user
+                let user = try await supabase.auth.user()
                 let otId = user.id.uuidString
                 self.currentOtID = otId
                 let safeOtId = otId.lowercased()

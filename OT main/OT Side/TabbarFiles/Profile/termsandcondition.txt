@@ -1,29 +1,29 @@
-1. Introduction & Acceptance of Terms
+TheraSync Terms and Conditions & Medical Disclaimer
 
-• Purpose: States that by accessing or using the TheraSync apps (Pro, Connect, Kids), the user agrees to these terms.
+Last Updated: April 2026
 
-• Key points:
-  • Defines "User" (OT, Patient) and "App/Services".
-  • Acknowledgment that terms are a legally binding agreement.
-  • Statement that if the user does not agree, they must not use the apps.
+1. MEDICAL DISCLAIMER AND LIMITATION OF LIABILITY
+THERASYNC (THE "APP") IS A THERAPY ASSISTANCE AND TRACKING TOOL. IT IS NOT A MEDICAL DEVICE. THE APP AND ANY CONTENT, SUGGESTIONS, OR AI-GENERATED RECOMMENDATIONS (SUCH AS ASSIGNMENT QUESTIONS OR ASSESSMENT LOGS) ARE PROVIDED FOR INFORMATIONAL AND EDUCATIONAL PURPOSES ONLY.
 
-2. Eligibility and User Accounts
+THE APP IS NOT INTENDED TO BE A SUBSTITUTE FOR PROFESSIONAL MEDICAL ADVICE, DIAGNOSIS, OR TREATMENT. ALWAYS SEEK THE ADVICE OF YOUR PHYSICIAN OR OTHER QUALIFIED HEALTH PROVIDER WITH ANY QUESTIONS YOU MAY HAVE REGARDING A MEDICAL CONDITION. NEVER DISREGARD PROFESSIONAL MEDICAL ADVICE OR DELAY IN SEEKING IT BECAUSE OF SOMETHING YOU HAVE READ OR ACCESSED VIA THIS APP.
 
-• Purpose: Defines who can use the apps and the responsibilities of account holders.
+RELIANCE ON ANY INFORMATION PROVIDED BY THE APP IS SOLELY AT YOUR OWN RISK. THERASYNC AND ITS DEVELOPERS DISCLAIM ALL LIABILITY FOR ANY DECISIONS MADE BASED ON APP DATA.
 
-• Key points:
-  • OT (TheraSync Pro): Must be a licensed and qualified occupational therapist or similar professional. Account creation, security, confidentiality.
-  • Mentor (TheraSync Connect): Must be a parent, guardian, or authorized caregiver linked by an OT. Consent to monitor a child's progress. Account security.
-  • Child (TheraSync Kids): No account creation; access is granted and managed by a Mentor. Age restrictions (e.g., parental consent required for children under 13 per COPPA), privacy protections, etc.
+2. ACCEPTANCE OF TERMS
+By accessing or using the TheraSync apps (Pro, Connect, Kids), you agree to be bound by these Terms. If you do not agree, do not use the service.
 
-3. Privacy and Data Handling
-• Purpose: Explain what data is collected and how it is used.
-• Key points: Types of data (health-related, identifiers), storage & encryption, data sharing with third parties only when required, user rights, contact info for privacy concerns.
+3. PRIVACY AND DATA SECURITY
+We collect health-related data (diagnoses, medications, assessment scores) to provide therapy tracking services. While we use industry-standard security (Supabase/Firebase), you acknowledge the inherent risks of digital data storage.
 
-4. Use Restrictions, Content, and Safety
-• Purpose: Describe allowed and disallowed activities, responsibility for content.
-• Key points: No misuse of apps, clinical disclaimers, no illegal content, reporting channels.
+4. USER ACCOUNTS
+Users are responsible for maintaining the confidentiality of their login credentials. Any activity under your account is your responsibility.
 
-(End of sample terms — replace with your full legal text as required.)
+5. CONTENT SUBMISSIONS
+By uploading videos or images for therapy assignments, you represent that you have the necessary consents (especially for minors) to share such content with your designated therapist.
 
+6. TERMINATION
+We reserve the right to terminate or suspend access to our service immediately, without prior notice, for conduct that we believe violates these Terms or is harmful to other users of the service, us, or third parties, or for any other reason.
+
+7. CONTACT US
+If you have any questions about these Terms, please contact support via the Support Ticket feature in the app.
 

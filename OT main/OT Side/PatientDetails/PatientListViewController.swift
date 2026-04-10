@@ -197,7 +197,7 @@ class PatientListViewController: UIViewController {
         if isInitialLoading { loadingIndicator.startAnimating() }
         Task {
             do {
-                let user = try await supabase.auth.session.user
+                let user = try await supabase.auth.user()
                 let currentUserId = user.id.uuidString
                 let decoder = JSONDecoder()
                 let formatter = DateFormatter()

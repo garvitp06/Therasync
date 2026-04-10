@@ -16,10 +16,21 @@ class ParentGradientView: UIView {
         updateGradient()
     }
 
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        if traitCollection.hasDifferentColorAppearance(comparedTo: previousTraitCollection) {
-            updateGradient()
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setupTraitTracking()
+    }
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setupTraitTracking()
+    }
+
+    private func setupTraitTracking() {
+        if #available(iOS 17.0, *) {
+            registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, previousTraitCollection: UITraitCollection) in
+                self.updateGradient()
+            }
         }
     }
 

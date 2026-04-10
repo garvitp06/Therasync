@@ -24,10 +24,21 @@ class GradientView: UIView {
         gradientLayer.endPoint   = CGPoint(x: 0.5, y: 1)
     }
 
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        if traitCollection.hasDifferentColorAppearance(comparedTo: previousTraitCollection) {
-            updateColors()
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setupTraitTracking()
+    }
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setupTraitTracking()
+    }
+
+    private func setupTraitTracking() {
+        if #available(iOS 17.0, *) {
+            registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
+                self.updateColors()
+            }
         }
     }
 

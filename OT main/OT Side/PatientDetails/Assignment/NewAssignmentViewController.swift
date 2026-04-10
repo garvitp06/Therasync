@@ -163,7 +163,7 @@ class NewAssignmentViewController: UIViewController, UITextViewDelegate, UITextF
     
     private let aiHeaderSubtitleLabel: UILabel = {
         let l = UILabel()
-        l.text = "Based on patient's assessment reports"
+        l.text = "AI suggestions — always verify clinical suitability"
         l.font = .systemFont(ofSize: 12, weight: .regular)
         l.textColor = UIColor.white.withAlphaComponent(0.8)
         l.translatesAutoresizingMaskIntoConstraints = false

@@ -10,4 +10,4 @@
 
 // ⚠️  DO NOT commit real keys here. Add your keys locally and keep Config.xcconfig in .gitignore.
 ANTHROPIC_API_KEY=YOUR_ANTHROPIC_KEY_HERE
-GEMINI_API_KEY=AIzaSyDn1zu1p5R939zxKcc1jRG6XOG34eC4zKc
+GEMINI_API_KEY=https://swbsmgdheozfglbckmpk.supabase.co/functions/v1/gemini-proxy

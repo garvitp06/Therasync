@@ -1010,15 +1010,18 @@ extension NewAssignmentViewController {
         ]
         
         do {
-            // Using the current free gemini-2.5-flash model
-            guard let url = URL(string: "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=\(apiKey)") else {
+            // Using the current free gemini model via Supabase Edge Function
+            let proxyURL = "\(supabaseURL)/functions/v1/gemini-proxy"
+            guard let url = URL(string: proxyURL) else {
                 throw URLError(.badURL)
             }
-            
+
             var request = URLRequest(url: url)
             request.httpMethod = "POST"
             request.timeoutInterval = 30
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            // Supabase anon key for Edge Function auth
+            request.setValue("Bearer \(supabaseKey)", forHTTPHeaderField: "Authorization")
             request.httpBody = try JSONSerialization.data(withJSONObject: body)
             
             print("📡 Calling Gemini API...")
@@ -1054,7 +1057,7 @@ extension NewAssignmentViewController {
             
             print("📝 Gemini raw response: \(rawText)")
             
-            guard let jsonData = rawText.data(using: .utf8),
+            guard let jsonData = rawText.data(using: String.Encoding.utf8),
                   let questions = try? JSONDecoder().decode([String].self, from: jsonData),
                   !questions.isEmpty else {
                 print("❌ Could not parse questions array from response")

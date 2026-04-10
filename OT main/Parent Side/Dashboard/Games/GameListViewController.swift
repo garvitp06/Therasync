@@ -44,7 +44,6 @@ class GameListViewController: UIViewController, UITableViewDelegate, UITableView
         super.viewWillAppear(animated)
         // Always show the bar when this screen is about to appear
         navigationController?.setNavigationBarHidden(false, animated: animated)
-        tabBarController?.tabBar.isHidden = true
         setupNavBar()
     }
 
@@ -54,9 +53,8 @@ class GameListViewController: UIViewController, UITableViewDelegate, UITableView
         // Check if we are being "popped" (going back to Dashboard)
         // or "pushed" (going forward to a game)
         if isMovingFromParent {
-            // We are going BACK to Dashboard -> Hide the nav bar and show tab bar
+            // We are going BACK to Dashboard -> Hide the nav bar
             navigationController?.setNavigationBarHidden(true, animated: animated)
-            tabBarController?.tabBar.isHidden = false
         } else {
             // We are going FORWARD to a game -> Keep the nav bar VISIBLE
             navigationController?.setNavigationBarHidden(false, animated: animated)

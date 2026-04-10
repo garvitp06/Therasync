@@ -72,15 +72,11 @@ class ParentNotesViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(false, animated: animated)
-        tabBarController?.tabBar.isHidden = true
         setupNavBar()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        if self.isMovingFromParent {
-            tabBarController?.tabBar.isHidden = false
-        }
     }
 
     private func setupUI() {

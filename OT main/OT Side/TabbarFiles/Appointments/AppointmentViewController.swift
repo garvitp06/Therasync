@@ -63,12 +63,12 @@ class AppointmentViewController: UIViewController,
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupNavBar()
         setupUI()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        setupNavBar()
         navigationController?.setNavigationBarHidden(false, animated: animated)
         navigationController?.navigationBar.prefersLargeTitles = true
         fetchAppointments()
@@ -76,15 +76,29 @@ class AppointmentViewController: UIViewController,
     
     // MARK: - Native Nav Bar Setup
     private func setupNavBar() {
-        self.title = "Appointments"
+        self.navigationItem.title = "Appointments"
+        self.title = "Appointments" // Sets both tab bar and nav bar title
+        navigationItem.largeTitleDisplayMode = .always
+        
         let addBtn = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(didTapAdd))
-        addBtn.tintColor = .black
+        addBtn.tintColor = .white
         navigationItem.rightBarButtonItem = addBtn
         
         let appearance = UINavigationBarAppearance()
         appearance.configureWithTransparentBackground()
-        appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
-        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.white]
+        appearance.backgroundColor = .clear // Keep it transparent to see our gradient
+        
+        let titleAttributes: [NSAttributedString.Key: Any] = [
+            .foregroundColor: UIColor.white,
+            .font: UIFont.systemFont(ofSize: 18, weight: .bold)
+        ]
+        let largeTitleAttributes: [NSAttributedString.Key: Any] = [
+            .foregroundColor: UIColor.white,
+            .font: UIFont.systemFont(ofSize: 34, weight: .bold)
+        ]
+        
+        appearance.titleTextAttributes = titleAttributes
+        appearance.largeTitleTextAttributes = largeTitleAttributes
         
         navigationController?.navigationBar.standardAppearance = appearance
         navigationController?.navigationBar.scrollEdgeAppearance = appearance
@@ -428,9 +442,15 @@ class AppointmentViewController: UIViewController,
     // MARK: - UI Setup
     func setupUI() {
         let gradient = GradientView()
-        gradient.frame = view.bounds
-        gradient.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        gradient.translatesAutoresizingMaskIntoConstraints = false
         view.insertSubview(gradient, at: 0)
+        
+        NSLayoutConstraint.activate([
+            gradient.topAnchor.constraint(equalTo: view.topAnchor),
+            gradient.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            gradient.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            gradient.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
 
         view.addSubview(segmentedControl)
         

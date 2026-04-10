@@ -18,9 +18,20 @@ class LinkedCaregiversViewController: UIViewController, UITableViewDelegate, UIT
         btn.setTitleColor(.white, for: .normal)
         btn.titleLabel?.font = .systemFont(ofSize: 18, weight: .bold)
         btn.layer.cornerRadius = 25
-        btn.translatesAutoresizingMaskIntoConstraints = false
         return btn
     }()
+    
+    // MARK: - Initializer
+    init() {
+        super.init(nibName: nil, bundle: nil)
+        self.hidesBottomBarWhenPushed = true
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        self.hidesBottomBarWhenPushed = true
+    }
+
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -32,7 +43,6 @@ class LinkedCaregiversViewController: UIViewController, UITableViewDelegate, UIT
     }
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        tabBarController?.tabBar.isHidden = true
         setupNavBar()
     }
     override func viewWillDisappear(_ animated: Bool) {

@@ -10,6 +10,17 @@ class SettingsViewController: UIViewController, UITableViewDelegate, UITableView
         case support = "Support"
     }
     
+    // MARK: - Initializer
+    init() {
+        super.init(nibName: nil, bundle: nil)
+        self.hidesBottomBarWhenPushed = true
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        self.hidesBottomBarWhenPushed = true
+    }
+
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -23,14 +34,13 @@ class SettingsViewController: UIViewController, UITableViewDelegate, UITableView
         super.viewWillAppear(animated)
         // 1. Force the bar to be visible
         navigationController?.setNavigationBarHidden(false, animated: animated)
-        tabBarController?.tabBar.isHidden = true
         // 2. Apply centered small title styling
         setupNavBar()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        // Only hide the bar when going BACK to Dashboard/Profile, not when pushing child VCs
+        // Only hide the bar when going BACK to Profile, not when pushing child VCs
         if isMovingFromParent {
             navigationController?.setNavigationBarHidden(true, animated: animated)
         }

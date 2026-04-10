@@ -131,9 +131,9 @@ final class DashboardViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        // 1. Hide the bar so your manual "Dashboard" label is at the top
+        // 1. Hide the nav bar (using custom labels) — tab bar shown by ParentTabBarViewController delegate
         navigationController?.setNavigationBarHidden(true, animated: animated)
-        tabBarController?.tabBar.isHidden = false
+        
         loadSelectedChild()
         applyTheme()
         view.layoutIfNeeded()

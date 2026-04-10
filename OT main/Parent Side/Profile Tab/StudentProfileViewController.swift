@@ -81,7 +81,6 @@ class StudentProfileViewController: UIViewController {
         super.viewWillAppear(animated)
         applyNavBarAppearance()
         navigationController?.setNavigationBarHidden(false, animated: animated)
-        tabBarController?.tabBar.isHidden = false
         fetchAllLinkedPatients()
     }
 

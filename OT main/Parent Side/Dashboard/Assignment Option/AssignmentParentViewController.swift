@@ -86,15 +86,11 @@ class AssignmentParentViewController: UIViewController, UITableViewDelegate, UIT
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         print("[DEBUG] View Will Appear")
-        tabBarController?.tabBar.isHidden = true
         fetchAssignments()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        if self.isMovingFromParent {
-            tabBarController?.tabBar.isHidden = false
-        }
     }
     
     // MARK: - Data Fetching

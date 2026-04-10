@@ -107,7 +107,6 @@ class ParentUpdateProfileViewController: UIViewController, UIImagePickerControll
     }
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        tabBarController?.tabBar.isHidden = true
         navigationController?.setNavigationBarHidden(false, animated: animated)
         let isDark = UserDefaults.standard.bool(forKey: "Dark Mode")
         let color: UIColor = isDark ? .white : .black

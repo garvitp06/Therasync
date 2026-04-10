@@ -54,16 +54,12 @@ class ParentAppointmentViewController: UIViewController,
 
         navigationController?.setNavigationBarHidden(false, animated: animated)
         navigationController?.navigationBar.prefersLargeTitles = false
-        tabBarController?.tabBar.isHidden = true
 
         fetchAppointments()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        if self.isMovingFromParent {
-            tabBarController?.tabBar.isHidden = false
-        }
     }
 
     // MARK: - Fetch Appointments

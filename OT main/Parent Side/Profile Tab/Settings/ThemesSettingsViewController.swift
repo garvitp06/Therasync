@@ -9,11 +9,21 @@ class ThemesSettingsViewController: UIViewController, UITableViewDelegate, UITab
     
     private let tableView = UITableView(frame: .zero, style: .insetGrouped)
     
-    private let options = [
-        ("High Contrast", "Increases visibility of buttons and text"),
-        ("Reduced Motion", "Simplifies animations for sensitive eyes"),
+    private var options = [
         ("Dark Mode", "Reduces screen brightness and glare")
     ]
+    
+    // MARK: - Initializer
+    init() {
+        super.init(nibName: nil, bundle: nil)
+        self.hidesBottomBarWhenPushed = true
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        self.hidesBottomBarWhenPushed = true
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
@@ -71,7 +81,6 @@ class ThemesSettingsViewController: UIViewController, UITableViewDelegate, UITab
     }
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        tabBarController?.tabBar.isHidden = true
         setupNavBar()
         // Sync the window style to the saved state
         let isDarkMode = UserDefaults.standard.bool(forKey: "Dark Mode")

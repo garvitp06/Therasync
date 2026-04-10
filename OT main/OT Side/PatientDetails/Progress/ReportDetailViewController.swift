@@ -63,14 +63,10 @@ class ReportDetailViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         setupNavBar()
-        tabBarController?.tabBar.isHidden = true
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        if self.isMovingFromParent {
-            tabBarController?.tabBar.isHidden = false
-        }
     }
     
     private func setupNavBar() {

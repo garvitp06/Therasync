@@ -40,6 +40,18 @@ class SupportTicketViewController: UIViewController, PHPickerViewControllerDeleg
         iv.translatesAutoresizingMaskIntoConstraints = false
         return iv
     }()
+    
+    // MARK: - Initializer
+    init() {
+        super.init(nibName: nil, bundle: nil)
+        self.hidesBottomBarWhenPushed = true
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        self.hidesBottomBarWhenPushed = true
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
@@ -54,7 +66,6 @@ class SupportTicketViewController: UIViewController, PHPickerViewControllerDeleg
     }
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        tabBarController?.tabBar.isHidden = true
         setupNavBar()
     }
     override func viewWillDisappear(_ animated: Bool) {

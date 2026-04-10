@@ -71,6 +71,15 @@ class ParentNoteDetailViewController: UIViewController, UITextViewDelegate, UITe
         titleTextField.addTarget(self, action: #selector(titleDidChange), for: .editingChanged)
     }
 
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(false, animated: animated)
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+    }
+
     private func setupLayout() {
         view.addSubview(titleTextField)
         view.addSubview(timeLabel)

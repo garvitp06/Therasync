@@ -119,6 +119,12 @@ class PatientDetailFormViewController: UIViewController, PHPickerViewControllerD
         let fields = [firstNameField, lastNameField, genderField, bloodGroupField, addressField, parentNameField, referredByField, existingDiagnosisField, existingMedicationField]
         fields.forEach { $0.delegate = self }
         existingMedicationField.returnKeyType = .done
+        
+        if #available(iOS 17.0, *) {
+            registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
+                self.profileImageView.layer.borderColor = UIColor.systemBackground.resolvedColor(with: self.traitCollection).cgColor
+            }
+        }
     }
     private func setupDismissKeyboardGesture() {
         let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
@@ -135,15 +141,6 @@ class PatientDetailFormViewController: UIViewController, PHPickerViewControllerD
         profileImageView.layer.cornerRadius = profileImageView.bounds.width / 2
     }
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        
-        if #available(iOS 17.0, *) {
-            registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (self: Self, _) in
-                self.profileImageView.layer.borderColor = UIColor.systemBackground.resolvedColor(with: self.traitCollection).cgColor
-            }
-        }
-    }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)

@@ -2,6 +2,9 @@
 
 • Purpose: States that by accessing or using the TheraSync apps (Pro, Connect, Kids), the user agrees to these terms.
 
+⚠️ WARNING: DATA CONTROLLER NOTICE
+The Occupational Therapist (OT) is the Data Controller for all patient information. TheraSync acts solely as a Data Processor. We do not own, govern, or make independent decisions regarding your medical data.
+
 • Key points:
   • Defines "User" (OT, Patient) and "App/Services".
   • Acknowledgment that terms are a legally binding agreement.
@@ -19,10 +22,13 @@
 3. Privacy and Data Handling
 • Purpose: Explain what data is collected and how it is used.
 • Key points: Types of data (health-related, identifiers), storage & encryption, data sharing with third parties only when required, user rights, contact info for privacy concerns.
+• Apple Data Sharing Disclaimer: Apple Inc. receives zero patient data from TheraSync. Apple bears no responsibility for the storage, handling, or processing of any medical or personal data entered into this application.
 
 4. Use Restrictions, Content, and Safety
 • Purpose: Describe allowed and disallowed activities, responsibility for content.
 • Key points: No misuse of apps, clinical disclaimers, no illegal content, reporting channels.
 
 (End of sample terms — replace with your full legal text as required.)
+
+Disclaimer: Apple is not a party to this privacy policy or terms of service agreement.
 

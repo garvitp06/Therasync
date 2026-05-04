@@ -47,7 +47,27 @@ final class ConditionViewController: UIViewController {
         setupNavBar()
         setupLayout()
         
-        textView.text = loadTextFile(named: "termsandcondition")
+        let text = loadTextFile(named: "termsandcondition")
+        textView.attributedText = applyWarningFormatting(to: text)
+    }
+    
+    private func applyWarningFormatting(to text: String) -> NSAttributedString {
+        let attrString = NSMutableAttributedString(string: text, attributes: [
+            .font: UIFont.systemFont(ofSize: 16, weight: .regular),
+            .foregroundColor: UIColor.secondaryLabel
+        ])
+        
+        let warningText = "⚠️ WARNING: DATA CONTROLLER NOTICE\nThe Occupational Therapist (OT) is the Data Controller for all patient information. TheraSync acts solely as a Data Processor. We do not own, govern, or make independent decisions regarding your medical data."
+        
+        if let range = text.range(of: warningText) {
+            let nsRange = NSRange(range, in: text)
+            // Amber background
+            attrString.addAttribute(.backgroundColor, value: UIColor.systemOrange.withAlphaComponent(0.2), range: nsRange)
+            attrString.addAttribute(.foregroundColor, value: UIColor.label, range: nsRange)
+            attrString.addAttribute(.font, value: UIFont.systemFont(ofSize: 16, weight: .semibold), range: nsRange)
+        }
+        
+        return attrString
     }
     
     override func viewWillAppear(_ animated: Bool) {

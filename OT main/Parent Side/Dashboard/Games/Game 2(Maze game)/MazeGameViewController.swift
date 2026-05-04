@@ -296,7 +296,7 @@ class MazeGameViewController: UIViewController {
         case .changed:
             handleTracing(at: location)
         case .ended, .cancelled:
-            if distance(from: location, to: endImageView.center) < 60 {
+            if progressLayer.strokeEnd >= 0.95 {
                 gameWon()
             } else {
                 resetProgress()
@@ -339,6 +339,7 @@ class MazeGameViewController: UIViewController {
         var closestDist: CGFloat = .greatestFiniteMagnitude
         var activeSegmentIndex = 0
         var distanceAlongActiveSegment: CGFloat = 0.0
+        var bestProjectedPoint = point
         
         for i in 0..<mazePoints.count - 1 {
             let start = mazePoints[i]
@@ -353,6 +354,7 @@ class MazeGameViewController: UIViewController {
                 activeSegmentIndex = i
                 // How far along THIS segment are we?
                 distanceAlongActiveSegment = distance(from: start, to: projectedPoint)
+                bestProjectedPoint = projectedPoint
             }
         }
         
@@ -366,9 +368,19 @@ class MazeGameViewController: UIViewController {
         // 4. Convert to percentage
         let percent = max(0, min(1, currentDistance / totalLength))
         
-        // Only allow forward progress to prevent jitter
-        if percent > progressLayer.strokeEnd {
-            progressLayer.strokeEnd = percent
+        // Prevent cheating by fast swiping or jumping gaps
+        if percent - progressLayer.strokeEnd > 0.15 {
+            gameLost()
+            return
+        }
+        
+        // Update both progress line and rabbit position
+        progressLayer.strokeEnd = percent
+        startImageView.center = bestProjectedPoint
+        
+        // Check for win condition interactively
+        if percent >= 0.98 {
+            gameWon()
         }
     }
     
@@ -423,6 +435,12 @@ class MazeGameViewController: UIViewController {
         animation.duration = 0.5
         progressLayer.add(animation, forKey: "dim")
         progressLayer.strokeEnd = 0
+        
+        if let start = mazePoints.first {
+            UIView.animate(withDuration: 0.5) {
+                self.startImageView.center = start
+            }
+        }
     }
     
     private func showOverlay(isWin: Bool) {

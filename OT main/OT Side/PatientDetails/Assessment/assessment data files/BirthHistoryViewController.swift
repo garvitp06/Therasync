@@ -118,6 +118,9 @@ final class BirthHistoryViewController: UIViewController {
         if session.didFetch {
             applyDictionary(session.data)
             tableView.reloadData()
+            if session.data.isEmpty {
+                showDisclaimerAlert()
+            }
         } else {
             fetchFromSupabase()
         }
@@ -157,6 +160,7 @@ final class BirthHistoryViewController: UIViewController {
                 guard let first = decoded.first else {
                     await MainActor.run {
                         AssessmentSessionManager.shared.updateBirthHistory(for: pid, data: [:], didFetch: true)
+                        self.showDisclaimerAlert()
                     }
                     return
                 }
@@ -192,6 +196,19 @@ final class BirthHistoryViewController: UIViewController {
             }
         }
         return dict
+    }
+    
+    private func showDisclaimerAlert() {
+        // Prevent showing multiple alerts if one is already presented
+        guard presentedViewController == nil else { return }
+        
+        let alert = UIAlertController(
+            title: "Sensitive Information",
+            message: "The birth history section contains sensitive medical information. Please ensure patient privacy and handle this data with care.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "I Understand", style: .default, handler: nil))
+        present(alert, animated: true)
     }
     
     // MARK: - Actions

@@ -127,6 +127,10 @@ class MedicalHistoryViewController: UIViewController, UITableViewDataSource, UIT
         }
         otherConditionText = sessionData.notes
         tableView.reloadData()
+        
+        if sessionData.conditions.isEmpty && sessionData.notes.isEmpty {
+            showDisclaimerAlert()
+        }
     }
     
     private func fetchExistingData() {
@@ -166,6 +170,10 @@ class MedicalHistoryViewController: UIViewController, UITableViewDataSource, UIT
                             self.tableView.reloadData()
                         }
                     }
+                } else {
+                    await MainActor.run {
+                        self.showDisclaimerAlert()
+                    }
                 }
             } catch {
                 print("Fetch Error: \(error)")
@@ -178,6 +186,18 @@ class MedicalHistoryViewController: UIViewController, UITableViewDataSource, UIT
         let activeNames = Set(conditions.filter { $0.isActive }.map { $0.name })
         // FIX: Use update method
         AssessmentSessionManager.shared.updateMedicalHistory(for: pid, conditions: activeNames, notes: otherConditionText, didFetch: true)
+    }
+    
+    private func showDisclaimerAlert() {
+        guard presentedViewController == nil else { return }
+        
+        let alert = UIAlertController(
+            title: "Sensitive Information",
+            message: "The medical history section contains sensitive medical information. Please ensure patient privacy and handle this data with care.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "I Understand", style: .default, handler: nil))
+        present(alert, animated: true)
     }
     
     @objc private func saveData() {

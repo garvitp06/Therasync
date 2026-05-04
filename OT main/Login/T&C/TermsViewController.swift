@@ -152,10 +152,10 @@ final class TermsViewController: UIViewController {
         if let fname = termsFileName,
            let url = Bundle.main.url(forResource: fname, withExtension: "txt"),
            let s = try? String(contentsOf: url, encoding: .utf8) {
-            textView.text = s
+            textView.attributedText = applyWarningFormatting(to: s)
             return
         }
-        textView.text = """
+        let fallbackText = """
         1. Introduction & Acceptance of Terms
 
         • Purpose: States that by accessing or using the TheraSync apps (Pro, Connect, Kids), the user agrees to these terms.
@@ -166,6 +166,26 @@ final class TermsViewController: UIViewController {
 
         (Replace this fallback by adding TermsAndConditions.txt to the app bundle.)
         """
+        textView.attributedText = applyWarningFormatting(to: fallbackText)
+    }
+
+    private func applyWarningFormatting(to text: String) -> NSAttributedString {
+        let attrString = NSMutableAttributedString(string: text, attributes: [
+            .font: UIFont.systemFont(ofSize: 15),
+            .foregroundColor: UIColor.label
+        ])
+        
+        let warningText = "⚠️ WARNING: DATA CONTROLLER NOTICE\nThe Occupational Therapist (OT) is the Data Controller for all patient information. TheraSync acts solely as a Data Processor. We do not own, govern, or make independent decisions regarding your medical data."
+        
+        if let range = text.range(of: warningText) {
+            let nsRange = NSRange(range, in: text)
+            // Amber background
+            attrString.addAttribute(.backgroundColor, value: UIColor.systemOrange.withAlphaComponent(0.2), range: nsRange)
+            attrString.addAttribute(.foregroundColor, value: UIColor.label, range: nsRange)
+            attrString.addAttribute(.font, value: UIFont.systemFont(ofSize: 15, weight: .semibold), range: nsRange)
+        }
+        
+        return attrString
     }
 
     // MARK: - Actions
